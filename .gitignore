@@ -1,0 +1,30 @@
+# Dependencies
+node_modules/
+aangan_rn/node_modules/
+
+# Expo
+.expo/
+aangan_rn/.expo/
+aangan_rn/dist/
+
+# Environment variables (contains secrets)
+.env
+aangan_rn/.env
+
+# iOS / Android native builds
+aangan_rn/ios/
+aangan_rn/android/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+
+# Temp files
+*.log
+/tmp/
+
+# Claude
+.claude/
