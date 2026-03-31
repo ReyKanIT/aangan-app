@@ -36,13 +36,14 @@
       },
       "edgeToEdgeEnabled": true,
       "permissions": [
-        "CAMERA",
-        "READ_EXTERNAL_STORAGE",
-        "WRITE_EXTERNAL_STORAGE",
-        "ACCESS_FINE_LOCATION",
-        "ACCESS_COARSE_LOCATION",
-        "RECEIVE_SMS",
-        "READ_SMS"
+        "android.permission.CAMERA",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.RECEIVE_SMS",
+        "android.permission.READ_SMS",
+        "android.permission.RECORD_AUDIO"
       ]
     },
     "web": {
@@ -84,8 +85,9 @@
     ],
     "extra": {
       "eas": {
-        "projectId": ""
+        "projectId": "a708f68e-dc74-4d43-8e97-100ead7d466b"
       }
-    }
+    },
+    "owner": "reykanit"
   }
 }
