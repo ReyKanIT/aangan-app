@@ -1,0 +1,58 @@
+export const VALIDATION = {
+  phoneLength: 10,
+  phoneRegex: /^[6-9]\d{9}$/,
+  otpLength: 6,
+  otpTimer: 60,
+  minDisplayNameLength: 2,
+  maxDisplayNameLength: 50,
+  maxBioLength: 200,
+  maxPostLength: 2000,
+  maxPhotosPerUpload: 20,
+};
+
+export const RELATIONSHIP_MAP: Record<string, string> = {
+  father: 'पिता',
+  mother: 'माँ',
+  son: 'बेटा',
+  daughter: 'बेटी',
+  brother: 'भाई',
+  sister: 'बहन',
+  husband: 'पति',
+  wife: 'पत्नी',
+  grandfather_paternal: 'दादा',
+  grandmother_paternal: 'दादी',
+  grandfather_maternal: 'नाना',
+  grandmother_maternal: 'नानी',
+  uncle_paternal: 'चाचा',
+  aunt_paternal: 'चाची',
+  uncle_maternal: 'मामा',
+  aunt_maternal: 'मामी',
+  nephew: 'भतीजा',
+  niece: 'भतीजी',
+  cousin: 'चचेरा भाई/बहन',
+  son_in_law: 'दामाद',
+  daughter_in_law: 'बहू',
+  father_in_law: 'ससुर',
+  mother_in_law: 'सास',
+  brother_in_law: 'देवर/जीजा',
+  sister_in_law: 'ननद/भाभी',
+  grandson: 'पोता/नाती',
+  granddaughter: 'पोती/नातिन',
+  other: 'अन्य',
+};
+
+export const EVENT_TYPES = [
+  { value: 'wedding', label: 'विवाह', emoji: '💍' },
+  { value: 'birthday', label: 'जन्मदिन', emoji: '🎂' },
+  { value: 'puja', label: 'पूजा', emoji: '🪔' },
+  { value: 'festival', label: 'त्योहार', emoji: '🎉' },
+  { value: 'reunion', label: 'मिलन', emoji: '👨‍👩‍👧‍👦' },
+  { value: 'other', label: 'अन्य', emoji: '📅' },
+];
+
+export const AUDIENCE_OPTIONS = [
+  { value: 'all', label: 'सभी परिवार', sublabel: 'All Family' },
+  { value: 'level_1', label: 'Level 1', sublabel: 'Direct Family' },
+  { value: 'level_2', label: 'Level 2', sublabel: 'Close Family' },
+  { value: 'level_3', label: 'Level 3', sublabel: 'Extended Family' },
+];

@@ -28,3 +28,8 @@ aangan_rn/android/
 
 # Claude
 .claude/
+
+# Web app
+aangan_web/node_modules/
+aangan_web/.next/
+aangan_web/.env.local
