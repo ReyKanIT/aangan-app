@@ -81,11 +81,11 @@ export const Typography = {
     color: Colors.white,
   } as TextStyle,
 
-  // Caption
+  // Caption — minimum 14px for Dadi Test (elderly readability)
   caption: {
     fontFamily: FontFamily.body,
-    fontSize: 12,
-    lineHeight: 16,
+    fontSize: 14,
+    lineHeight: 20,
     color: Colors.gray600,
   } as TextStyle,
 

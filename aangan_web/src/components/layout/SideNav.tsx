@@ -57,6 +57,11 @@ export default function SideNav() {
           );
         })}
       </ul>
+
+      {/* Version Footer */}
+      <div className="px-6 py-4 border-t border-cream-dark">
+        <p className="font-body text-xs text-brown-light">v0.5.0 — Voice + Chat</p>
+      </div>
     </nav>
   );
 }

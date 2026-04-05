@@ -911,6 +911,212 @@ const en = {
     am: 'AM',
     pm: 'PM',
   },
+
+  // ─── v0.2: Help & FAQ ────────────────────────────────────
+  help: {
+    title: 'Help & FAQ',
+    subtitle: 'Frequently Asked Questions',
+    contact_support: 'Contact Support',
+    contact_support_desc: 'Email us at support@aangan.app',
+    send_feedback: 'Send Feedback',
+
+    // FAQ Sections
+    section_getting_started: 'Getting Started',
+    section_events: 'Events',
+    section_family: 'Family Tree',
+    section_privacy: 'Privacy & Security',
+    section_account: 'Account',
+
+    // Getting Started FAQs
+    faq_create_account_q: 'How do I create an account?',
+    faq_create_account_a: 'Enter your mobile number on the login screen. You will receive a 6-digit OTP via SMS. Enter the OTP to verify and create your account. Then set up your profile with your name and photo.',
+    faq_add_family_q: 'How do I add family members?',
+    faq_add_family_a: 'Go to the Family tab and tap "Add Member". Search for existing users by name or phone number, select the relationship type, and send the request. The connection is created in both directions automatically.',
+    faq_create_post_q: 'How do I create a post?',
+    faq_create_post_a: 'Tap the "+" button on the home screen. Write your message, add photos if you want, choose who can see it (audience), and tap Post. Your post will appear in the feeds of selected family members.',
+
+    // Events FAQs
+    faq_create_event_q: 'How do I create an event?',
+    faq_create_event_a: 'Go to the Events tab and tap "Create Event". Fill in the event details like name, date, location, and type (wedding, puja, birthday, etc.). You can add ceremony schedules and set who gets invited.',
+    faq_rsvp_q: 'How do I RSVP to an event?',
+    faq_rsvp_a: 'Open the event from the Events tab or notification. Tap the RSVP button and select your response: Attending, Maybe, or Cannot Attend. You can also add notes and specify how many guests you are bringing.',
+    faq_upload_photos_q: 'How do I upload event photos?',
+    faq_upload_photos_a: 'Open the event and go to the Photos section. Tap "Upload Photos" and select photos from your gallery. Photos go through a review process before becoming visible to other members.',
+
+    // Family FAQs
+    faq_connection_levels_q: 'What are connection levels?',
+    faq_connection_levels_a: 'Level 1 is immediate family (parents, siblings, spouse, children). Level 2 is close family (uncles, aunts, cousins). Level 3 is extended family. These levels help control who sees your posts and events.',
+    faq_remove_member_q: 'How do I remove a family member?',
+    faq_remove_member_a: 'Go to the Family tab, find the member, and tap their profile. Select "Remove Member". This will remove the connection from both sides. The person will not be notified.',
+    faq_verify_relation_q: 'How do I verify a relationship?',
+    faq_verify_relation_a: 'When someone adds you as a family member, you will receive a notification. You can accept or decline the relationship request. Verified relationships show a checkmark.',
+
+    // Privacy FAQs
+    faq_who_sees_posts_q: 'Who can see my posts?',
+    faq_who_sees_posts_a: 'You control who sees each post. Choose "Entire Family" for everyone, specific levels (Level 1, 2, 3), or "Custom" to select individual members. Only you and selected people can see the post.',
+    faq_audience_control_q: 'How does audience control work?',
+    faq_audience_control_a: 'When creating a post or event, you choose the audience. "All" means all your family connections. "Level" restricts to specific connection levels. "Custom" lets you pick individual people or groups.',
+    faq_block_someone_q: 'How do I block someone?',
+    faq_block_someone_a: 'Go to the person\'s profile and tap the menu icon. Select "Block". Blocked users cannot see your posts, events, or profile. You can unblock them later from Settings > Privacy > Blocked Members.',
+
+    // Account FAQs
+    faq_change_profile_q: 'How do I change my profile?',
+    faq_change_profile_a: 'Go to Settings and tap "Edit" next to your profile card. You can change your display name, photo, bio, village, and other details. Your changes are saved immediately.',
+    faq_change_language_q: 'How do I change the language?',
+    faq_change_language_a: 'Go to Settings and use the Language toggle to switch between Hindi and English. The app will update immediately. Hindi is the default language.',
+    faq_contact_support_q: 'How do I contact support?',
+    faq_contact_support_a: 'Go to Settings > Help & Support. You can email us at support@aangan.app or use the Feedback form to report bugs and suggest features.',
+  },
+
+  // ─── v0.2: Feedback ──────────────────────────────────────
+  feedback: {
+    title: 'Send Feedback',
+    category: 'Category',
+    category_bug: 'Bug Report',
+    category_feature: 'Feature Request',
+    category_feedback: 'General Feedback',
+    category_other: 'Other',
+    message: 'Your Message',
+    message_placeholder: 'Tell us what happened or what you would like to see...',
+    char_count: '{{count}}/500',
+    submit: 'Submit Feedback',
+    submitting: 'Sending...',
+    success_title: 'Thank You!',
+    success_message: 'Your feedback has been sent. We will review it soon.',
+    error_no_category: 'Please select a category',
+    error_no_message: 'Please write your feedback',
+  },
+
+  // ─── v0.2: Content Reporting ─────────────────────────────
+  report: {
+    title: 'Report Content',
+    reason: 'Reason for Reporting',
+    reason_inappropriate: 'Inappropriate Content',
+    reason_spam: 'Spam',
+    reason_harassment: 'Harassment',
+    reason_fake_account: 'Fake Account',
+    reason_privacy_violation: 'Privacy Violation',
+    reason_other: 'Other',
+    description: 'Additional Details (Optional)',
+    description_placeholder: 'Tell us more about why you are reporting this...',
+    submit: 'Submit Report',
+    submitting: 'Submitting...',
+    success_title: 'Report Submitted',
+    success_message: 'Thank you for reporting. Our team will review this content.',
+    already_reported: 'You have already reported this content',
+    error_no_reason: 'Please select a reason',
+  },
+
+  // ─── v0.2: Legal ─────────────────────────────────────────
+  legal: {
+    terms_title: 'Terms of Service',
+    privacy_title: 'Privacy Policy',
+    last_updated: 'Last Updated: March 31, 2026',
+    accept: 'I Accept',
+    decline: 'Decline',
+  },
+
+  // ─── v0.3: Comments ──────────────────────────────────────
+  comments: {
+    title: 'Comments',
+    title_hindi: 'टिप्पणियाँ',
+    placeholder: 'Write a comment…',
+    placeholder_hindi: 'टिप्पणी लिखें…',
+    delete_confirm: 'Delete this comment?',
+    empty: 'No comments yet. Be the first!',
+    empty_hindi: 'अभी तक कोई टिप्पणी नहीं। पहले आप करें!',
+  },
+
+  // ─── v0.3: Messages ──────────────────────────────────────
+  messages: {
+    title: 'Messages',
+    title_hindi: 'संदेश',
+    send: 'Send',
+    placeholder: 'Type a message…',
+    placeholder_hindi: 'संदेश लिखें…',
+    empty: 'No messages yet',
+    empty_hindi: 'अभी तक कोई संदेश नहीं',
+    no_conversations: 'Start a conversation with a family member',
+    sent: 'Sent',
+    delivered: 'Delivered',
+  },
+
+  // ─── v0.3: Reactions ─────────────────────────────────────
+  reactions: {
+    like: 'Like',
+    namaste: 'Namaste',
+    namaste_hindi: 'नमस्ते 🙏',
+  },
+
+  // ─── v0.3: Invite ────────────────────────────────────────
+  invite: {
+    whatsapp_title: 'Invite via WhatsApp',
+    whatsapp_title_hindi: 'WhatsApp से आमंत्रित करें',
+    send_invite: 'Send Invite',
+    invite_msg: 'Join our family on Aangan!',
+  },
+
+  // ─── v0.3: Guided Onboarding ─────────────────────────────
+  onboarding_guided: {
+    guided_title: 'Getting Started',
+    guided_title_hindi: 'परिवार से शुरुआत करें',
+    step_parents: 'Add your parents',
+    step_parents_hindi: 'माँ-पिता जोड़ें',
+    step_siblings: 'Add your siblings',
+    step_siblings_hindi: 'भाई-बहन जोड़ें',
+    step_post: 'Make your first post',
+    step_post_hindi: 'पहली पोस्ट करें',
+    progress: '{{done}}/{{total}} done',
+    progress_hindi: '{{done}}/{{total}} पूरे हुए',
+  },
+
+  // ─── v0.3: Member Profile ────────────────────────────────
+  member_profile: {
+    member_profile: 'Member Profile',
+    member_profile_hindi: 'सदस्य प्रोफ़ाइल',
+    posts_by: 'Posts by {{name}}',
+    send_message: 'Send Message',
+    send_message_hindi: 'संदेश भेजें',
+    family_members: '{{count}} family members',
+    family_members_hindi: 'परिवार में {{count}} सदस्य',
+  },
+
+  // ─── v0.5: Support ────────────────────────────────────────
+  support: {
+    title: 'Help & Support',
+    contact_support: 'Contact Support',
+    my_tickets: 'My Tickets',
+    new_ticket: 'New Ticket',
+    ticket_number: 'Ticket #{{num}}',
+    select_topic: 'Select Topic',
+    enter_subject: 'Enter Subject',
+    describe_issue: 'Describe Your Issue',
+    submit_ticket: 'Submit',
+    ticket_created: 'Ticket Created!',
+    ticket_created_body: 'Ticket {{num}} has been created. Our team will respond shortly.',
+    reply: 'Reply',
+    send: 'Send',
+    type_message: 'Type a message...',
+    support_team: 'Support Team',
+    no_tickets: 'No tickets yet',
+    no_tickets_sub: 'Need help? Contact our support team.',
+    ticket_resolved: '✅ This ticket has been resolved.',
+    ticket_closed: '🔒 This ticket is closed.',
+    // Categories
+    cat_billing: 'Billing',
+    cat_account: 'Account',
+    cat_bug: 'Bug / Error',
+    cat_feature: 'Feature Request',
+    cat_complaint: 'Complaint',
+    cat_general: 'General Query',
+    // Status
+    status_open: 'Open',
+    status_assigned: 'Assigned',
+    status_in_progress: 'In Progress',
+    status_waiting: 'Waiting for You',
+    status_resolved: 'Resolved',
+    status_closed: 'Closed',
+  },
 } as const;
 
 export default en;

@@ -1,3 +1,8 @@
+// App Version
+export const APP_VERSION = '0.5.0';
+export const BUILD_NUMBER = '6';
+export const VERSION_NAME = 'Aangan v0.5.0 — Voice Enabled Operations';
+
 // Storage tiers
 export const STORAGE_TIERS = {
   base: { gb: 10, referrals: 0 },
@@ -110,3 +115,44 @@ export const RELATIONSHIP_MAP: Record<string, string> = {
   'भांजा': 'मामा',
   'भांजी': 'मामा',
 };
+
+// Content report reasons
+export const REPORT_REASONS = [
+  { key: 'inappropriate', labelEn: 'Inappropriate Content', labelHi: 'अनुचित सामग्री' },
+  { key: 'spam', labelEn: 'Spam', labelHi: 'स्पैम' },
+  { key: 'harassment', labelEn: 'Harassment', labelHi: 'उत्पीड़न' },
+  { key: 'fake_account', labelEn: 'Fake Account', labelHi: 'नकली अकाउंट' },
+  { key: 'privacy_violation', labelEn: 'Privacy Violation', labelHi: 'गोपनीयता का उल्लंघन' },
+  { key: 'other', labelEn: 'Other', labelHi: 'अन्य' },
+] as const;
+
+// Feedback categories
+export const FEEDBACK_CATEGORIES = [
+  { key: 'bug', labelEn: 'Bug Report', labelHi: 'बग रिपोर्ट' },
+  { key: 'feature', labelEn: 'Feature Request', labelHi: 'सुविधा अनुरोध' },
+  { key: 'feedback', labelEn: 'General Feedback', labelHi: 'सामान्य प्रतिक्रिया' },
+  { key: 'other', labelEn: 'Other', labelHi: 'अन्य' },
+] as const;
+
+// Security constants
+export const SECURITY = {
+  maxLoginAttempts: 5,
+  loginBlockMinutes: 15,
+  maxReportsPerDay: 10,
+  maxPostsPerHour: 20,
+  maxOtpAttempts: 5,
+  otpBlockMinutes: 5,
+  sessionTimeoutMinutes: 30,
+  minAppVersion: '0.2.0',
+} as const;
+
+// Support contacts
+export const SUPPORT = {
+  email: 'support@aangan.app',
+  legalEmail: 'legal@aangan.app',
+  privacyEmail: 'privacy@aangan.app',
+  website: 'https://aangan.app',
+} as const;
+
+// Web app base URL — used for QR code guest upload links
+export const WEB_URL = 'https://aangan.app';

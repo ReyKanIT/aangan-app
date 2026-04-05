@@ -11,13 +11,16 @@ import {
   RefreshControl,
   Modal,
   Dimensions,
+  Share,
+  Clipboard,
 } from 'react-native';
+import QRCode from 'react-native-qrcode-svg';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import * as ImagePicker from 'expo-image-picker';
 import { Colors } from '../../theme/colors';
 import { Typography, DADI_MIN_BUTTON_HEIGHT, DADI_MIN_TAP_TARGET } from '../../theme/typography';
 import { Spacing, BorderRadius, Shadow } from '../../theme/spacing';
-import { VALIDATION } from '../../config/constants';
+import { VALIDATION, WEB_URL } from '../../config/constants';
 import { usePhotoStore } from '../../stores/photoStore';
 import { useAuthStore } from '../../stores/authStore';
 import { useEventStore } from '../../stores/eventStore';
@@ -206,11 +209,33 @@ export default function EventPhotosScreen({ route, navigation }: Props) {
   const [showQR, setShowQR] = useState(false);
   const [showAudienceModal, setShowAudienceModal] = useState(false);
   const [audiencePhoto, setAudiencePhoto] = useState<EventPhoto | null>(null);
+  const [linkCopied, setLinkCopied] = useState(false);
+
+  // Guest upload URL for the QR code
+  const uploadUrl = `${WEB_URL}/upload/${eventId}`;
 
   const isHost = useMemo(() => {
     if (!session?.user || !currentEvent) return false;
     return currentEvent.creator_id === session.user.id;
   }, [session, currentEvent]);
+
+  const handleShareQR = useCallback(async () => {
+    try {
+      await Share.share({
+        message: `📸 फ़ोटो और वीडियो साझा करें | Share photos & videos\n\n${uploadUrl}`,
+        url: uploadUrl,
+        title: currentEvent?.title ?? 'Event Photos',
+      });
+    } catch (_) {
+      // User cancelled share
+    }
+  }, [uploadUrl, currentEvent]);
+
+  const handleCopyLink = useCallback(() => {
+    Clipboard.setString(uploadUrl);
+    setLinkCopied(true);
+    setTimeout(() => setLinkCopied(false), 2500);
+  }, [uploadUrl]);
 
   // Load event + photos
   const loadData = useCallback(async () => {
@@ -712,23 +737,69 @@ export default function EventPhotosScreen({ route, navigation }: Props) {
       >
         <View style={styles.qrModalOverlay}>
           <View style={styles.qrModalContent}>
-            <Text style={[Typography.h2, { textAlign: 'center', marginBottom: Spacing.sm }]}>
-              फ़ोटो गैलरी QR कोड
+            {/* Title */}
+            <Text style={[Typography.h2, { textAlign: 'center', marginBottom: Spacing.xs }]}>
+              📸 फ़ोटो अपलोड करें
             </Text>
-            <Text style={[Typography.bodySmall, { textAlign: 'center', color: Colors.brownLight, marginBottom: Spacing.xl }]}>
-              Scan to view and upload photos
+            <Text style={[Typography.bodySmall, { textAlign: 'center', color: Colors.brownLight, marginBottom: Spacing.lg }]}>
+              Scan QR code to upload photos & videos
             </Text>
-            {/* QR Code placeholder */}
-            <View style={styles.qrPlaceholder}>
-              <Text style={styles.qrPlaceholderText}>QR</Text>
-              <Text style={[Typography.caption, { textAlign: 'center', marginTop: Spacing.sm }]}>
-                aangan://events/{eventId}/photos
-              </Text>
+
+            {/* QR Code */}
+            <View style={styles.qrCodeWrapper}>
+              <QRCode
+                value={uploadUrl}
+                size={200}
+                color={Colors.brown}
+                backgroundColor={Colors.white}
+                logo={undefined}
+              />
             </View>
+
+            {/* URL Label */}
+            <Text
+              style={[Typography.caption, { textAlign: 'center', color: Colors.brownLight, marginTop: Spacing.md, marginBottom: Spacing.xs, paddingHorizontal: Spacing.md }]}
+              numberOfLines={2}
+            >
+              {uploadUrl}
+            </Text>
+
+            {/* Action Buttons */}
+            <View style={styles.qrActions}>
+              <TouchableOpacity
+                style={styles.qrActionBtn}
+                onPress={handleCopyLink}
+                activeOpacity={0.7}
+                accessibilityLabel="लिंक कॉपी करें — Copy link"
+              >
+                <Text style={styles.qrActionBtnText}>
+                  {linkCopied ? '✓ कॉपी हो गया' : '🔗 लिंक कॉपी करें'}
+                </Text>
+                <Text style={[Typography.caption, { color: Colors.haldiGold }]}>
+                  {linkCopied ? 'Copied!' : 'Copy Link'}
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.qrActionBtn, styles.qrActionBtnGold]}
+                onPress={handleShareQR}
+                activeOpacity={0.7}
+                accessibilityLabel="लिंक साझा करें — Share link"
+              >
+                <Text style={[styles.qrActionBtnText, { color: Colors.white }]}>
+                  📤 साझा करें
+                </Text>
+                <Text style={[Typography.caption, { color: Colors.cream }]}>
+                  Share
+                </Text>
+              </TouchableOpacity>
+            </View>
+
             <TouchableOpacity
               style={styles.qrCloseButton}
               onPress={() => setShowQR(false)}
               activeOpacity={0.7}
+              accessibilityLabel="बंद करें — Close"
             >
               <Text style={Typography.button}>बंद करें</Text>
               <Text style={[Typography.caption, { color: Colors.white, marginTop: 1 }]}>Close</Text>
@@ -1180,21 +1251,41 @@ const styles = StyleSheet.create({
     maxWidth: 400,
     alignItems: 'center',
   },
-  qrPlaceholder: {
-    width: 200,
-    height: 200,
+  qrCodeWrapper: {
+    padding: Spacing.md,
     backgroundColor: Colors.white,
+    borderRadius: BorderRadius.lg,
     borderWidth: 2,
-    borderColor: Colors.gray300,
+    borderColor: Colors.gray200,
+    marginBottom: Spacing.sm,
+  },
+  qrActions: {
+    flexDirection: 'row',
+    gap: Spacing.sm,
+    marginTop: Spacing.lg,
+    marginBottom: Spacing.lg,
+    width: '100%',
+  },
+  qrActionBtn: {
+    flex: 1,
+    minHeight: DADI_MIN_BUTTON_HEIGHT,
+    backgroundColor: Colors.cream,
+    borderWidth: 2,
+    borderColor: Colors.haldiGold,
     borderRadius: BorderRadius.lg,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: Spacing.xxl,
+    paddingHorizontal: Spacing.sm,
   },
-  qrPlaceholderText: {
-    ...Typography.h1,
-    color: Colors.gray400,
-    fontSize: 48,
+  qrActionBtnGold: {
+    backgroundColor: Colors.haldiGold,
+    borderColor: Colors.haldiGold,
+  },
+  qrActionBtnText: {
+    ...Typography.bodySmall,
+    color: Colors.haldiGold,
+    fontWeight: '700',
+    textAlign: 'center',
   },
   qrCloseButton: {
     backgroundColor: Colors.haldiGold,

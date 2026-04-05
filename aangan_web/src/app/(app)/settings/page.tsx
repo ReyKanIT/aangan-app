@@ -98,9 +98,48 @@ export default function SettingsPage() {
         {user?.phone_number && <p>📱 {user.phone_number}</p>}
       </div>
 
+      {/* v0.5 Voice Features */}
+      <div className="bg-cream-dark rounded-2xl p-4 mb-4">
+        <h3 className="font-heading text-lg text-brown mb-1">🎙️ वॉइस फ़ीचर्स</h3>
+        <p className="font-body text-xs text-brown-light mb-3">Voice Features (v0.5)</p>
+        <ul className="space-y-3 font-body text-sm text-brown">
+          <li className="flex items-start gap-2">
+            <span className="text-haldi-gold mt-0.5">🗣️</span>
+            <div>
+              <p className="font-semibold">वॉइस-टू-टेक्स्ट</p>
+              <p className="text-xs text-brown-light">Voice-to-Text in Hindi & English</p>
+            </div>
+          </li>
+          <li className="flex items-start gap-2">
+            <span className="text-haldi-gold mt-0.5">🎯</span>
+            <div>
+              <p className="font-semibold">वॉइस कमांड</p>
+              <p className="text-xs text-brown-light">Hands-free navigation with voice commands</p>
+            </div>
+          </li>
+          <li className="flex items-start gap-2">
+            <span className="text-haldi-gold mt-0.5">💬</span>
+            <div>
+              <p className="font-semibold">वॉइस मैसेज</p>
+              <p className="text-xs text-brown-light">Send voice messages in chat</p>
+            </div>
+          </li>
+          <li className="flex items-start gap-2">
+            <span className="text-haldi-gold mt-0.5">🌐</span>
+            <div>
+              <p className="font-semibold">भाषा चयन</p>
+              <p className="text-xs text-brown-light">Language selector on login (Hindi / English)</p>
+            </div>
+          </li>
+        </ul>
+      </div>
+
       <GoldButton variant="danger" className="w-full" onClick={handleSignOut}>
         साइन आउट — Sign Out
       </GoldButton>
+
+      {/* Version */}
+      <p className="font-body text-xs text-brown-light text-center mt-6">Aangan v0.5.0</p>
     </div>
   );
 }

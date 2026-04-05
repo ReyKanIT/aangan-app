@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { supabase } from '../config/supabase';
-import { secureLog } from '../utils/security';
+import { secureLog, safeError } from '../utils/security';
 import type { AanganEvent, AudienceType, EventType, Ceremony } from '../types/database';
 
 interface CreateEventInput {
@@ -62,13 +62,13 @@ export const useEventStore = create<EventState>((set, get) => ({
         .order('event_date', { ascending: true });
 
       if (error) {
-        set({ error: error.message, isLoading: false });
+        set({ error: safeError(error, 'कुछ गलत हो गया।'), isLoading: false });
         return;
       }
 
       set({ events: (data as AanganEvent[]) ?? [], isLoading: false });
     } catch (error: any) {
-      set({ error: error.message || 'Failed to fetch events', isLoading: false });
+      set({ error: safeError(error, 'Failed to fetch events'), isLoading: false });
     }
   },
 
@@ -115,7 +115,7 @@ export const useEventStore = create<EventState>((set, get) => ({
         .single();
 
       if (eventError || !event) {
-        set({ error: eventError?.message || 'Failed to create event' });
+        set({ error: safeError(eventError, 'इवेंट नहीं बन सका। दोबारा कोशिश करें।') });
         return false;
       }
 
@@ -136,7 +136,11 @@ export const useEventStore = create<EventState>((set, get) => ({
           .insert(rsvpRows);
 
         if (rsvpError) {
-          secureLog.warn('Failed to insert RSVPs:', rsvpError.message);
+          // Roll back the event — invitees would be stuck with no RSVP record
+          secureLog.warn('RSVP insert failed, rolling back event:', rsvpError.message);
+          await supabase.from('events').delete().eq('id', event.id);
+          set({ error: 'इवेंट नहीं बन सका। दोबारा कोशिश करें।' });
+          return false;
         }
       }
 
@@ -166,7 +170,7 @@ export const useEventStore = create<EventState>((set, get) => ({
       await get().fetchEvents();
       return true;
     } catch (error: any) {
-      set({ error: error.message || 'Failed to create event' });
+      set({ error: safeError(error, 'Failed to create event') });
       return false;
     }
   },
@@ -182,7 +186,7 @@ export const useEventStore = create<EventState>((set, get) => ({
         .eq('creator_id', session?.user?.id ?? '');
 
       if (error) {
-        set({ error: error.message });
+        set({ error: safeError(error, 'कुछ गलत हो गया।') });
         return false;
       }
 
@@ -197,7 +201,7 @@ export const useEventStore = create<EventState>((set, get) => ({
       }));
       return true;
     } catch (error: any) {
-      set({ error: error.message || 'Failed to update event' });
+      set({ error: safeError(error, 'Failed to update event') });
       return false;
     }
   },
@@ -218,7 +222,7 @@ export const useEventStore = create<EventState>((set, get) => ({
         .eq('creator_id', session.user.id);
 
       if (error) {
-        set({ error: error.message });
+        set({ error: safeError(error, 'कुछ गलत हो गया।') });
         return false;
       }
 
@@ -228,7 +232,7 @@ export const useEventStore = create<EventState>((set, get) => ({
       }));
       return true;
     } catch (error: any) {
-      set({ error: error.message || 'Failed to delete event' });
+      set({ error: safeError(error, 'Failed to delete event') });
       return false;
     }
   },
@@ -243,13 +247,13 @@ export const useEventStore = create<EventState>((set, get) => ({
         .single();
 
       if (error) {
-        set({ error: error.message, isLoading: false });
+        set({ error: safeError(error, 'कुछ गलत हो गया।'), isLoading: false });
         return;
       }
 
       set({ currentEvent: data as AanganEvent, isLoading: false });
     } catch (error: any) {
-      set({ error: error.message || 'Failed to fetch event', isLoading: false });
+      set({ error: safeError(error, 'Failed to fetch event'), isLoading: false });
     }
   },
 

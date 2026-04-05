@@ -22,6 +22,7 @@ import { EVENT_TYPES, VALIDATION, EVENT_BUNDLES } from '../../config/constants';
 import { useEventStore } from '../../stores/eventStore';
 import { useFamilyStore } from '../../stores/familyStore';
 import type { EventType, Ceremony, FamilyMember, BundleType } from '../../types/database';
+import VoiceMicButton from '../../components/voice/VoiceMicButton';
 
 type Props = NativeStackScreenProps<any, 'EventCreator'>;
 
@@ -306,13 +307,20 @@ export default function EventCreatorScreen({ navigation }: Props) {
             {'\u0936\u0940\u0930\u094D\u0937\u0915 *'}
           </Text>
           <Text style={styles.fieldSubLabel}>Event Title</Text>
-          <TextInput
-            style={styles.input}
-            value={title}
-            onChangeText={setTitle}
-            placeholder="\u0907\u0935\u0947\u0902\u091F \u0915\u093E \u0928\u093E\u092E"
-            placeholderTextColor={Colors.gray400}
-          />
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <TextInput
+              style={[styles.input, { flex: 1 }]}
+              value={title}
+              onChangeText={setTitle}
+              placeholder="\u0907\u0935\u0947\u0902\u091F \u0915\u093E \u0928\u093E\u092E"
+              placeholderTextColor={Colors.gray400}
+            />
+            <VoiceMicButton
+              onTranscript={(text) => setTitle(prev => prev + ' ' + text)}
+              mode="append"
+              size={24}
+            />
+          </View>
         </View>
 
         {/* Hindi Title */}
@@ -419,13 +427,20 @@ export default function EventCreatorScreen({ navigation }: Props) {
             {'\u0938\u094D\u0925\u093E\u0928 *'}
           </Text>
           <Text style={styles.fieldSubLabel}>Venue</Text>
-          <TextInput
-            style={styles.input}
-            value={venue}
-            onChangeText={setVenue}
-            placeholder="\u0938\u094D\u0925\u093E\u0928 \u0915\u093E \u0928\u093E\u092E"
-            placeholderTextColor={Colors.gray400}
-          />
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <TextInput
+              style={[styles.input, { flex: 1 }]}
+              value={venue}
+              onChangeText={setVenue}
+              placeholder="\u0938\u094D\u0925\u093E\u0928 \u0915\u093E \u0928\u093E\u092E"
+              placeholderTextColor={Colors.gray400}
+            />
+            <VoiceMicButton
+              onTranscript={(text) => setVenue(prev => prev + ' ' + text)}
+              mode="append"
+              size={24}
+            />
+          </View>
         </View>
 
         {/* Address */}
@@ -452,16 +467,23 @@ export default function EventCreatorScreen({ navigation }: Props) {
             {'\u0935\u093F\u0935\u0930\u0923'}
           </Text>
           <Text style={styles.fieldSubLabel}>Description (optional)</Text>
-          <TextInput
-            style={[styles.input, styles.textArea]}
-            value={description}
-            onChangeText={setDescription}
-            placeholder="\u0915\u094B\u0908 \u0935\u093F\u0936\u0947\u0937 \u091C\u093E\u0928\u0915\u093E\u0930\u0940..."
-            placeholderTextColor={Colors.gray400}
-            multiline
-            numberOfLines={3}
-            textAlignVertical="top"
-          />
+          <View style={{ flexDirection: 'row', alignItems: 'flex-start' }}>
+            <TextInput
+              style={[styles.input, styles.textArea, { flex: 1 }]}
+              value={description}
+              onChangeText={setDescription}
+              placeholder="\u0915\u094B\u0908 \u0935\u093F\u0936\u0947\u0937 \u091C\u093E\u0928\u0915\u093E\u0930\u0940..."
+              placeholderTextColor={Colors.gray400}
+              multiline
+              numberOfLines={3}
+              textAlignVertical="top"
+            />
+            <VoiceMicButton
+              onTranscript={(text) => setDescription(prev => prev + ' ' + text)}
+              mode="append"
+              size={24}
+            />
+          </View>
         </View>
 
         {/* RSVP Deadline */}

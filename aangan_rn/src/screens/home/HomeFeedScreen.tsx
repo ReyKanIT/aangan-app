@@ -12,6 +12,7 @@ import {
   Platform,
   StatusBar,
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Colors } from '../../theme/colors';
@@ -20,28 +21,159 @@ import { Spacing, BorderRadius, Shadow } from '../../theme/spacing';
 import { usePostStore } from '../../stores/postStore';
 import { useNotificationStore } from '../../stores/notificationStore';
 import { useAuthStore } from '../../stores/authStore';
+import { useLanguageStore } from '../../stores/languageStore';
 import { getUpcomingFestivals, formatFestivalDate, Festival } from '../../assets/data/festivals';
+import StoriesRow from '../../components/common/StoriesRow';
+import * as Location from 'expo-location';
+import { getPanchang, moonPhaseEmoji, yogaDescription, DELHI, type PanchangData, type PanchangLocation } from '../../services/panchangService';
 import type { Post } from '../../types/database';
 
 type Props = NativeStackScreenProps<any, 'HomeFeed'>;
 
-// -- Panchang static data --
-const PANCHANG_DATA = {
-  vikramSamvat: 2083,
-  maas: 'चैत्र',
-  tithi: 'शुक्ल षष्ठी',
-  paksha: 'शुक्ल पक्ष',
-  nakshatra: 'पुनर्वसु',
-  yoga: 'शोभन',
-  sunrise: '06:12',
-  sunset: '18:34',
-};
+const GUIDED_FLOW_DISMISSED_KEY = 'guided_flow_dismissed';
+
+// -- Panchang location cache --
+let cachedLocation: PanchangLocation | null = null;
+
+async function getDeviceLocation(): Promise<PanchangLocation> {
+  if (cachedLocation) return cachedLocation;
+  try {
+    const { status } = await Location.requestForegroundPermissionsAsync();
+    if (status !== 'granted') return DELHI;
+    const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
+    cachedLocation = {
+      lat: loc.coords.latitude,
+      lon: loc.coords.longitude,
+      utcOffset: new Date().getTimezoneOffset() / -60,
+    };
+    return cachedLocation;
+  } catch {
+    return DELHI;
+  }
+}
+
+// -- Onboarding progress type --
+interface OnboardingProgress {
+  added_parent: boolean;
+  added_sibling: boolean;
+  made_first_post: boolean;
+}
 
 // -- Sub-components --
 
+interface GuidedFlowStep {
+  key: keyof OnboardingProgress;
+  emoji: string;
+  label: string;
+  labelEn: string;
+  action: () => void;
+}
+
+interface GuidedFlowBannerProps {
+  progress: OnboardingProgress;
+  onDismiss: () => void;
+  navigation: Props['navigation'];
+  isHindi: boolean;
+}
+
+function GuidedFlowBanner({ progress, onDismiss, navigation, isHindi }: GuidedFlowBannerProps) {
+  const steps: GuidedFlowStep[] = [
+    {
+      key: 'added_parent',
+      emoji: '👨‍👩',
+      label: 'माँ-पिता जोड़ें',
+      labelEn: 'Add Parents',
+      action: () => navigation.navigate('FamilyTree'),
+    },
+    {
+      key: 'added_sibling',
+      emoji: '👫',
+      label: 'भाई-बहन जोड़ें',
+      labelEn: 'Add Siblings',
+      action: () => navigation.navigate('FamilyTree'),
+    },
+    {
+      key: 'made_first_post',
+      emoji: '📝',
+      label: 'पहली पोस्ट करें',
+      labelEn: 'Make First Post',
+      action: () => navigation.navigate('PostComposer'),
+    },
+  ];
+
+  const doneCount = steps.filter((s) => progress[s.key]).length;
+  const allDone = doneCount === steps.length;
+
+  if (allDone) return null;
+
+  return (
+    <View style={guidedFlowStyles.card}>
+      {/* Dismiss button */}
+      <TouchableOpacity
+        style={guidedFlowStyles.dismissButton}
+        onPress={onDismiss}
+        accessibilityRole="button"
+        accessibilityLabel="Dismiss getting started guide"
+      >
+        <Text style={guidedFlowStyles.dismissText}>{'✕'}</Text>
+      </TouchableOpacity>
+
+      {/* Title */}
+      <Text style={guidedFlowStyles.title}>{isHindi ? 'परिवार से शुरुआत करें 🌟' : 'Get Started with Family 🌟'}</Text>
+      <Text style={guidedFlowStyles.subtitle}>{isHindi ? 'Getting Started' : 'Complete these steps'}</Text>
+
+      {/* Steps */}
+      {steps.map((step) => {
+        const isDone = progress[step.key];
+        return (
+          <View key={step.key} style={guidedFlowStyles.stepRow}>
+            <Text style={guidedFlowStyles.stepCheck}>
+              {isDone ? '✅' : '○'}
+            </Text>
+            <Text
+              style={[
+                guidedFlowStyles.stepText,
+                isDone && guidedFlowStyles.stepTextDone,
+              ]}
+            >
+              {step.emoji}{'  '}{isHindi ? step.label : step.labelEn}
+            </Text>
+            {!isDone && (
+              <TouchableOpacity
+                style={guidedFlowStyles.stepButton}
+                onPress={step.action}
+                accessibilityRole="button"
+                accessibilityLabel={`Go to ${step.labelEn}`}
+              >
+                <Text style={guidedFlowStyles.stepButtonText}>{isHindi ? 'शुरू करें →' : 'Start →'}</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        );
+      })}
+
+      {/* Progress */}
+      <Text style={guidedFlowStyles.progressText}>
+        {doneCount}{'/'}{steps.length}{isHindi ? ' पूरे हुए' : ' completed'}
+      </Text>
+    </View>
+  );
+}
+
 function PanchangWidget() {
   const [expanded, setExpanded] = useState(false);
+  const [panchang, setPanchang] = useState<PanchangData>(() => getPanchang(new Date(), DELHI));
   const animatedHeight = React.useRef(new Animated.Value(0)).current;
+
+  // Load accurate Panchang using device GPS on mount
+  useEffect(() => {
+    let mounted = true;
+    getDeviceLocation().then((loc) => {
+      if (!mounted) return;
+      setPanchang(getPanchang(new Date(), loc));
+    });
+    return () => { mounted = false; };
+  }, []);
 
   const toggleExpand = useCallback(() => {
     const toValue = expanded ? 0 : 1;
@@ -55,8 +187,12 @@ function PanchangWidget() {
 
   const expandedHeight = animatedHeight.interpolate({
     inputRange: [0, 1],
-    outputRange: [0, 180],
+    outputRange: [0, 240],
   });
+
+  const phaseEmoji = moonPhaseEmoji(panchang.moonPhasePercent);
+  const yogaDesc = yogaDescription(panchang.yoga);
+  const yogaColor = yogaDesc === 'शुभ' ? Colors.mehndiGreen : yogaDesc === 'अशुभ' ? Colors.error : Colors.brownLight;
 
   return (
     <View style={panchangStyles.container}>
@@ -69,13 +205,13 @@ function PanchangWidget() {
         accessibilityHint={expanded ? 'Collapse calendar details' : 'Expand calendar details'}
       >
         <View style={panchangStyles.headerLeft}>
-          <Text style={panchangStyles.headerIcon}>{'🗓️'}</Text>
+          <Text style={panchangStyles.headerIcon}>{phaseEmoji}</Text>
           <View>
             <Text style={panchangStyles.headerTitle}>
               {'आज का पंचांग'}
             </Text>
             <Text style={panchangStyles.headerSubtitle}>
-              {'विक्रम संवत '}{PANCHANG_DATA.vikramSamvat}{' | '}{PANCHANG_DATA.maas}
+              {'विक्रम संवत '}{panchang.vikramSamvat}{' | '}{panchang.maas}
             </Text>
           </View>
         </View>
@@ -86,12 +222,20 @@ function PanchangWidget() {
 
       <Animated.View style={[panchangStyles.body, { height: expandedHeight, overflow: 'hidden' }]}>
         <View style={panchangStyles.grid}>
-          <PanchangRow label="तिथि" value={PANCHANG_DATA.tithi} />
-          <PanchangRow label="पक्ष" value={PANCHANG_DATA.paksha} />
-          <PanchangRow label="नक्षत्र" value={PANCHANG_DATA.nakshatra} />
-          <PanchangRow label="योग" value={PANCHANG_DATA.yoga} />
-          <PanchangRow label="सूर्योदय" value={PANCHANG_DATA.sunrise} />
-          <PanchangRow label="सूर्यास्त" value={PANCHANG_DATA.sunset} />
+          <PanchangRow label="तिथि" value={panchang.tithi} />
+          <PanchangRow label="पक्ष" value={panchang.paksha} />
+          <PanchangRow label="नक्षत्र" value={panchang.nakshatra} />
+          <PanchangRow label="वार" value={panchang.vara} />
+          <PanchangRow label="सूर्योदय" value={panchang.sunrise} />
+          <PanchangRow label="सूर्यास्त" value={panchang.sunset} />
+          <View style={[panchangStyles.row, { width: '100%' }]}>
+            <Text style={panchangStyles.rowLabel}>{'योग'}</Text>
+            <Text style={[panchangStyles.rowValue, { color: yogaColor }]}>
+              {panchang.yoga}
+              {'  '}
+              <Text style={[panchangStyles.yogaBadge, { color: yogaColor }]}>{'(' + yogaDesc + ')'}</Text>
+            </Text>
+          </View>
         </View>
       </Animated.View>
     </View>
@@ -252,6 +396,30 @@ function getTimeAgo(dateStr: string): string {
   return date.toLocaleDateString('hi-IN');
 }
 
+async function fetchOnboardingProgress(userId: string): Promise<OnboardingProgress> {
+  try {
+    // Import supabase client lazily to avoid circular deps at module level
+    const { supabase } = await import('../../config/supabase');
+    const { data, error } = await supabase
+      .from('onboarding_progress')
+      .select('added_parent, added_sibling, made_first_post')
+      .eq('user_id', userId)
+      .single();
+
+    if (error || !data) {
+      return { added_parent: false, added_sibling: false, made_first_post: false };
+    }
+
+    return {
+      added_parent: Boolean(data.added_parent),
+      added_sibling: Boolean(data.added_sibling),
+      made_first_post: Boolean(data.made_first_post),
+    };
+  } catch {
+    return { added_parent: false, added_sibling: false, made_first_post: false };
+  }
+}
+
 // -- Main Component --
 
 export default function HomeFeedScreen({ navigation }: Props) {
@@ -259,9 +427,54 @@ export default function HomeFeedScreen({ navigation }: Props) {
   const { posts, isLoading, hasMore, error, fetchPosts, refreshPosts, likePost } = usePostStore();
   const { unreadCount } = useNotificationStore();
   const { user } = useAuthStore();
+  const { isHindi, loadLanguage } = useLanguageStore();
+
+  // Guided flow state
+  const [guidedFlowDismissed, setGuidedFlowDismissed] = useState(true); // start hidden, reveal after async check
+  const [onboardingProgress, setOnboardingProgress] = useState<OnboardingProgress>({
+    added_parent: false,
+    added_sibling: false,
+    made_first_post: false,
+  });
 
   useEffect(() => {
     fetchPosts();
+    loadGuidedFlow();
+    loadLanguage();
+  }, []);
+
+  const loadGuidedFlow = useCallback(async () => {
+    try {
+      const dismissed = await AsyncStorage.getItem(GUIDED_FLOW_DISMISSED_KEY);
+      if (dismissed === 'true') {
+        setGuidedFlowDismissed(true);
+        return;
+      }
+      setGuidedFlowDismissed(false);
+
+      if (user?.id) {
+        const progress = await fetchOnboardingProgress(user.id);
+        setOnboardingProgress(progress);
+
+        // If all steps done, auto-dismiss permanently
+        if (progress.added_parent && progress.added_sibling && progress.made_first_post) {
+          await AsyncStorage.setItem(GUIDED_FLOW_DISMISSED_KEY, 'true');
+          setGuidedFlowDismissed(true);
+        }
+      }
+    } catch {
+      // Silently fail — guided flow is non-critical
+      setGuidedFlowDismissed(true);
+    }
+  }, [user]);
+
+  const handleDismissGuidedFlow = useCallback(async () => {
+    try {
+      await AsyncStorage.setItem(GUIDED_FLOW_DISMISSED_KEY, 'true');
+    } catch {
+      // Ignore
+    }
+    setGuidedFlowDismissed(true);
   }, []);
 
   const handleRefresh = useCallback(async () => {
@@ -282,16 +495,31 @@ export default function HomeFeedScreen({ navigation }: Props) {
     navigation.navigate('Notifications');
   }, [navigation]);
 
+  const handleNavigateDashboard = useCallback(() => {
+    navigation.navigate('Dashboard');
+  }, [navigation]);
+
   const handleNavigateComposer = useCallback(() => {
     navigation.navigate('PostComposer');
   }, [navigation]);
 
   const renderHeader = useCallback(() => (
     <View>
+      <StoriesRow isHindi={isHindi} />
+      {!guidedFlowDismissed && (
+        <View style={styles.guidedFlowWrapper}>
+          <GuidedFlowBanner
+            progress={onboardingProgress}
+            onDismiss={handleDismissGuidedFlow}
+            navigation={navigation}
+            isHindi={isHindi}
+          />
+        </View>
+      )}
       <PanchangWidget />
       <FestivalBanner />
     </View>
-  ), []);
+  ), [guidedFlowDismissed, onboardingProgress, handleDismissGuidedFlow, navigation, isHindi]);
 
   const renderItem = useCallback(({ item }: { item: Post }) => (
     <PostCard post={item} onLike={handleLike} />
@@ -314,22 +542,33 @@ export default function HomeFeedScreen({ navigation }: Props) {
       <View style={[styles.headerBar, { paddingTop: insets.top }]}>
         <View style={styles.headerContent}>
           <Text style={styles.headerTitle}>Aangan</Text>
-          <TouchableOpacity
-            style={styles.notificationButton}
-            onPress={handleNavigateNotifications}
-            accessibilityRole="button"
-            accessibilityLabel={`Notifications${unreadCount > 0 ? `, ${unreadCount} unread` : ''}`}
-            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-          >
-            <Text style={styles.bellIcon}>{'🔔'}</Text>
-            {unreadCount > 0 && (
-              <View style={styles.badge}>
-                <Text style={styles.badgeText}>
-                  {unreadCount > 99 ? '99+' : unreadCount}
-                </Text>
-              </View>
-            )}
-          </TouchableOpacity>
+          <View style={styles.headerActions}>
+            <TouchableOpacity
+              style={styles.dashboardButton}
+              onPress={handleNavigateDashboard}
+              accessibilityRole="button"
+              accessibilityLabel="Open dashboard"
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            >
+              <Text style={styles.dashboardIcon}>{'\uD83D\uDCCA'}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.notificationButton}
+              onPress={handleNavigateNotifications}
+              accessibilityRole="button"
+              accessibilityLabel={`Notifications${unreadCount > 0 ? `, ${unreadCount} unread` : ''}`}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            >
+              <Text style={styles.bellIcon}>{'🔔'}</Text>
+              {unreadCount > 0 && (
+                <View style={styles.badge}>
+                  <Text style={styles.badgeText}>
+                    {unreadCount > 99 ? '99+' : unreadCount}
+                  </Text>
+                </View>
+              )}
+            </TouchableOpacity>
+          </View>
         </View>
       </View>
 
@@ -406,6 +645,20 @@ const styles = StyleSheet.create({
     color: Colors.white,
     fontWeight: '700',
   },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.xs,
+  },
+  dashboardButton: {
+    width: DADI_MIN_TAP_TARGET,
+    height: DADI_MIN_TAP_TARGET,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  dashboardIcon: {
+    fontSize: 22,
+  },
   notificationButton: {
     width: DADI_MIN_TAP_TARGET,
     height: DADI_MIN_TAP_TARGET,
@@ -451,6 +704,10 @@ const styles = StyleSheet.create({
     color: Colors.error,
     marginLeft: Spacing.md,
   },
+  guidedFlowWrapper: {
+    paddingHorizontal: Spacing.lg,
+    paddingTop: Spacing.lg,
+  },
   listContent: {
     paddingBottom: 100,
   },
@@ -477,6 +734,85 @@ const styles = StyleSheet.create({
     color: Colors.white,
     lineHeight: 34,
     fontWeight: '300',
+  },
+});
+
+const guidedFlowStyles = StyleSheet.create({
+  card: {
+    backgroundColor: Colors.white,
+    borderLeftWidth: 4,
+    borderLeftColor: Colors.haldiGold,
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
+    ...Shadow.sm,
+  },
+  dismissButton: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    width: DADI_MIN_TAP_TARGET,
+    height: DADI_MIN_TAP_TARGET,
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1,
+  },
+  dismissText: {
+    fontSize: 18,
+    color: Colors.gray500,
+  },
+  title: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: Colors.brown,
+    marginBottom: 2,
+    paddingRight: DADI_MIN_TAP_TARGET,
+  },
+  subtitle: {
+    fontSize: 12,
+    color: Colors.brownLight,
+    marginBottom: Spacing.md,
+  },
+  stepRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: Spacing.sm,
+    minHeight: DADI_MIN_TAP_TARGET,
+  },
+  stepCheck: {
+    fontSize: 24,
+    marginRight: Spacing.sm,
+    width: 30,
+    textAlign: 'center',
+  },
+  stepText: {
+    fontSize: 16,
+    color: Colors.brown,
+    flex: 1,
+  },
+  stepTextDone: {
+    color: Colors.gray400,
+    textDecorationLine: 'line-through',
+  },
+  stepButton: {
+    backgroundColor: Colors.haldiGold,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.xs,
+    borderRadius: BorderRadius.sm,
+    minHeight: 36,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  stepButtonText: {
+    ...Typography.labelSmall,
+    color: Colors.white,
+    fontWeight: '600',
+  },
+  progressText: {
+    ...Typography.caption,
+    color: Colors.haldiGoldDark,
+    marginTop: Spacing.md,
+    fontWeight: '600',
   },
 });
 
@@ -539,6 +875,10 @@ const panchangStyles = StyleSheet.create({
     ...Typography.body,
     color: Colors.brown,
     marginTop: 2,
+  },
+  yogaBadge: {
+    ...Typography.caption,
+    fontWeight: '600',
   },
 });
 

@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { supabase } from '../config/supabase';
-import { secureLog } from '../utils/security';
+import { secureLog, safeError } from '../utils/security';
 import type { User } from '../types/database';
 import { Session } from '@supabase/supabase-js';
 
@@ -72,12 +72,12 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       const fullPhone = `+91${phone}`;
       const { error } = await supabase.auth.signInWithOtp({ phone: fullPhone });
       if (error) {
-        set({ error: error.message });
+        set({ error: safeError(error, "कुछ गलत हो गया। फिर से कोशिश करें।") });
         return false;
       }
       return true;
     } catch (error: any) {
-      set({ error: error.message || 'Failed to send OTP' });
+      set({ error: safeError(error, 'OTP नहीं भेजा जा सका। दोबारा कोशिश करें।') });
       return false;
     }
   },
@@ -92,7 +92,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         type: 'sms',
       });
       if (error) {
-        set({ error: error.message });
+        set({ error: safeError(error, "कुछ गलत हो गया। फिर से कोशिश करें।") });
         return false;
       }
       if (data.session) {
@@ -102,7 +102,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       }
       return false;
     } catch (error: any) {
-      set({ error: error.message || 'Verification failed' });
+      set({ error: safeError(error, 'OTP गलत है या समय समाप्त हो गया।') });
       return false;
     }
   },
@@ -112,12 +112,12 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     try {
       const { error } = await supabase.auth.signInWithOtp({ email });
       if (error) {
-        set({ error: error.message });
+        set({ error: safeError(error, "कुछ गलत हो गया। फिर से कोशिश करें।") });
         return false;
       }
       return true;
     } catch (error: any) {
-      set({ error: error.message || 'Failed to send email OTP' });
+      set({ error: safeError(error, 'Email OTP नहीं भेजा जा सका।') });
       return false;
     }
   },
@@ -131,7 +131,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         type: 'email',
       });
       if (error) {
-        set({ error: error.message });
+        set({ error: safeError(error, "कुछ गलत हो गया। फिर से कोशिश करें।") });
         return false;
       }
       if (data.session) {
@@ -141,7 +141,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       }
       return false;
     } catch (error: any) {
-      set({ error: error.message || 'Verification failed' });
+      set({ error: safeError(error, 'OTP गलत है या समय समाप्त हो गया।') });
       return false;
     }
   },
@@ -151,7 +151,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     try {
       const { data, error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) {
-        set({ error: error.message });
+        set({ error: safeError(error, "कुछ गलत हो गया। फिर से कोशिश करें।") });
         return false;
       }
       if (data.session) {
@@ -161,7 +161,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       }
       return false;
     } catch (error: any) {
-      set({ error: error.message || 'Sign in failed' });
+      set({ error: safeError(error, 'लॉगिन नहीं हो सका। दोबारा कोशिश करें।') });
       return false;
     }
   },
@@ -171,7 +171,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     try {
       const { data, error } = await supabase.auth.signUp({ email, password });
       if (error) {
-        set({ error: error.message });
+        set({ error: safeError(error, "कुछ गलत हो गया। फिर से कोशिश करें।") });
         return false;
       }
       if (data.session) {
@@ -181,7 +181,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       }
       return false;
     } catch (error: any) {
-      set({ error: error.message || 'Sign up failed' });
+      set({ error: safeError(error, 'अकाउंट नहीं बन सका। दोबारा कोशिश करें।') });
       return false;
     }
   },
@@ -218,7 +218,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           await get().signOut();
           return;
         }
-        set({ error: error.message, isLoading: false });
+        set({ error: safeError(error, 'कुछ गलत हो गया।'), isLoading: false });
         return;
       }
 
@@ -230,7 +230,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
       set({ user: data, isNewUser, isLoading: false });
     } catch (error: any) {
-      set({ error: error.message, isLoading: false });
+      set({ error: safeError(error, 'कुछ गलत हो गया।'), isLoading: false });
     }
   },
 
@@ -245,7 +245,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         .eq('id', session.user.id);
 
       if (error) {
-        set({ error: error.message });
+        set({ error: safeError(error, "कुछ गलत हो गया। फिर से कोशिश करें।") });
         return false;
       }
 
@@ -253,7 +253,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       set({ isNewUser: false });
       return true;
     } catch (error: any) {
-      set({ error: error.message });
+      set({ error: safeError(error, "कुछ गलत हो गया। फिर से कोशिश करें।") });
       return false;
     }
   },

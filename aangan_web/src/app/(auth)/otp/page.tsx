@@ -1,16 +1,23 @@
 'use client';
 import { useState, useRef, useEffect, Suspense } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/stores/authStore';
 import GoldButton from '@/components/ui/GoldButton';
 import { VALIDATION } from '@/lib/constants';
 
 function OtpForm() {
   const router = useRouter();
-  const params = useSearchParams();
-  const phone = params.get('phone');
-  const email = params.get('email');
+  const [phone, setPhone] = useState<string | null>(null);
+  const [email, setEmail] = useState<string | null>(null);
   const isEmail = !!email;
+
+  useEffect(() => {
+    const storedPhone = sessionStorage.getItem('otp_phone');
+    const storedEmail = sessionStorage.getItem('otp_email');
+    if (storedPhone) setPhone(storedPhone);
+    else if (storedEmail) setEmail(storedEmail);
+    else router.replace('/login');
+  }, [router]);
 
   const { verifyOtp, verifyEmailOtp, sendOtp, sendEmailOtp, session, isNewUser, isLoading, error, setError } = useAuthStore();
   const [digits, setDigits] = useState<string[]>(Array(VALIDATION.otpLength).fill(''));
@@ -58,6 +65,10 @@ function OtpForm() {
     let ok = false;
     if (isEmail && email) ok = await verifyEmailOtp(email, otp);
     else if (phone) ok = await verifyOtp(phone, otp);
+    if (ok) {
+      sessionStorage.removeItem('otp_phone');
+      sessionStorage.removeItem('otp_email');
+    }
     setIsVerifying(false);
     if (!ok) setError('गलत OTP है। कृपया फिर से कोशिश करें।');
   };
@@ -121,7 +132,7 @@ function OtpForm() {
 
 export default function OtpPage() {
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={<div />}>
       <OtpForm />
     </Suspense>
   );

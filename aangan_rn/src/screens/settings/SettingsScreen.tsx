@@ -21,12 +21,11 @@ import { Spacing, BorderRadius, Shadow } from '../../theme/spacing';
 import { useAuthStore } from '../../stores/authStore';
 import { useLanguageStore } from '../../stores/languageStore';
 import { useStorageStore } from '../../stores/storageStore';
+import { useThemeStore, ThemeMode } from '../../stores/themeStore';
 
 type Props = NativeStackScreenProps<any, 'Settings'>;
 
-// App version
-const APP_VERSION = '1.0.0';
-const BUILD_NUMBER = '1';
+import { APP_VERSION, BUILD_NUMBER } from '../../config/constants';
 
 // Notification preference keys
 const NOTIFICATION_TYPES = [
@@ -106,6 +105,7 @@ export default function SettingsScreen({ navigation }: Props) {
   const { user, signOut } = useAuthStore();
   const { language, isHindi, toggleLanguage, loadLanguage } = useLanguageStore();
   const { userStorage, isLoading: storageLoading, fetchStorage, getUsageBreakdown } = useStorageStore();
+  const { theme, setTheme, loadTheme } = useThemeStore();
 
   // Local notification preferences state
   const [notifPrefs, setNotifPrefs] = useState<Record<string, boolean>>({
@@ -122,6 +122,7 @@ export default function SettingsScreen({ navigation }: Props) {
   useEffect(() => {
     loadLanguage();
     fetchStorage();
+    loadTheme();
   }, []);
 
   const usage = getUsageBreakdown();
@@ -233,7 +234,53 @@ export default function SettingsScreen({ navigation }: Props) {
           </View>
         </View>
 
-        {/* 2. Language Toggle */}
+        {/* 2. Kuldevi / Kuldevta */}
+        <SectionHeader title={isHindi ? 'कुलदेवी / कुलदेवता' : 'Kuldevi / Kuldevta'} />
+        <View style={[styles.card, Shadow.sm]}>
+          <TouchableOpacity
+            style={styles.helpRow}
+            activeOpacity={0.7}
+            onPress={() => navigation.navigate('Kuldevi')}
+            accessibilityRole="button"
+            accessibilityLabel="Kuldevi Kuldevta settings"
+          >
+            <Text style={styles.helpIcon}>{'🪔'}</Text>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.helpText}>
+                {isHindi ? 'कुलदेवी / कुलदेवता जानकारी' : 'Kuldevi / Kuldevta Info'}
+              </Text>
+              <Text style={[styles.helpText, { fontSize: 13, color: Colors.brownLight, fontWeight: '400', marginTop: 2 }]}>
+                {isHindi ? 'मंदिर, पूजा पद्धति व नियम' : 'Temple, puja method & rules'}
+              </Text>
+            </View>
+            <Text style={styles.helpChevron}>{'>'}</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* 2b. Important Dates & Reminders */}
+        <SectionHeader title={isHindi ? 'परिवार की खास तारीखें' : 'Family Important Dates'} />
+        <View style={[styles.card, Shadow.sm]}>
+          <TouchableOpacity
+            style={styles.helpRow}
+            activeOpacity={0.7}
+            onPress={() => navigation.navigate('ImportantDates')}
+            accessibilityRole="button"
+            accessibilityLabel="Family important dates and reminders"
+          >
+            <Text style={styles.helpIcon}>{'📅'}</Text>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.helpText}>
+                {isHindi ? 'जन्मदिन • सालगिरह • बरसी • पूजा' : 'Birthdays • Anniversaries • Barsi • Puja'}
+              </Text>
+              <Text style={[styles.helpText, { fontSize: 13, color: Colors.brownLight, fontWeight: '400', marginTop: 2 }]}>
+                {isHindi ? 'सभी परिवार को automatic notification' : 'Auto notification to all family members'}
+              </Text>
+            </View>
+            <Text style={styles.helpChevron}>{'>'}</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* 3. Language Toggle */}
         <SectionHeader title={isHindi ? '\u092D\u093E\u0937\u093E (Language)' : 'Language (\u092D\u093E\u0937\u093E)'} />
         <View style={[styles.card, Shadow.sm]}>
           <View style={styles.toggleRow}>
@@ -254,7 +301,31 @@ export default function SettingsScreen({ navigation }: Props) {
           </View>
         </View>
 
-        {/* 3. Notification Preferences */}
+        {/* 3. Theme Toggle */}
+        <SectionHeader title={isHindi ? 'थीम (Theme)' : 'Theme (थीम)'} />
+        <View style={{ flexDirection: 'row', paddingHorizontal: 16, paddingVertical: 8 }}>
+          {[
+            { key: 'light', hi: '☀️ लाइट', en: '☀️ Light' },
+            { key: 'dark', hi: '🌙 डार्क', en: '🌙 Dark' },
+            { key: 'system', hi: '📱 सिस्टम', en: '📱 System' },
+          ].map((option) => (
+            <TouchableOpacity
+              key={option.key}
+              onPress={() => setTheme(option.key as ThemeMode)}
+              style={[
+                styles.themeOption,
+                theme === option.key && styles.themeOptionActive,
+              ]}
+              accessibilityRole="button"
+            >
+              <Text style={[styles.themeOptionText, theme === option.key && styles.themeOptionActiveText]}>
+                {isHindi ? option.hi : option.en}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+
+        {/* 4. Notification Preferences */}
         <SectionHeader title={isHindi ? '\u0938\u0942\u091A\u0928\u093E \u092A\u094D\u0930\u093E\u0925\u092E\u093F\u0915\u0924\u093E\u090F\u0902 (Notifications)' : 'Notifications'} />
         <View style={[styles.card, Shadow.sm]}>
           {NOTIFICATION_TYPES.map((n, index) => (
@@ -282,7 +353,7 @@ export default function SettingsScreen({ navigation }: Props) {
           ))}
         </View>
 
-        {/* 4. Privacy */}
+        {/* 5. Privacy */}
         <SectionHeader title={isHindi ? '\u0917\u094B\u092A\u0928\u0940\u092F\u0924\u093E (Privacy)' : 'Privacy'} />
         <View style={[styles.card, Shadow.sm]}>
           <Text style={styles.privacyLabel}>
@@ -315,7 +386,7 @@ export default function SettingsScreen({ navigation }: Props) {
           </View>
         </View>
 
-        {/* 5. Storage */}
+        {/* 6. Storage */}
         <SectionHeader title={isHindi ? '\u0938\u094D\u091F\u094B\u0930\u0947\u091C (Storage)' : 'Storage'} />
         <View style={[styles.card, Shadow.sm]}>
           {storageLoading ? (
@@ -397,13 +468,73 @@ export default function SettingsScreen({ navigation }: Props) {
           <TouchableOpacity
             style={styles.helpRow}
             activeOpacity={0.7}
-            onPress={handleHelp}
+            onPress={() => navigation.navigate('Help')}
             accessibilityRole="button"
-            accessibilityLabel="Help and support"
+            accessibilityLabel="FAQ and help"
           >
             <Text style={styles.helpIcon}>{'❓'}</Text>
             <Text style={styles.helpText}>
-              {isHindi ? '\u0938\u0939\u093E\u092F\u0924\u093E \u090F\u0935\u0902 \u0938\u092E\u0930\u094D\u0925\u0928' : 'Help & Support'}
+              {isHindi ? 'FAQ और सहायता' : 'FAQ & Help'}
+            </Text>
+            <Text style={styles.helpChevron}>{'>'}</Text>
+          </TouchableOpacity>
+          <View style={styles.divider} />
+          <TouchableOpacity
+            style={styles.helpRow}
+            activeOpacity={0.7}
+            onPress={() => navigation.navigate('Feedback')}
+            accessibilityRole="button"
+            accessibilityLabel="Send feedback"
+          >
+            <Text style={styles.helpIcon}>{'💬'}</Text>
+            <Text style={styles.helpText}>
+              {isHindi ? 'प्रतिक्रिया भेजें (Feedback)' : 'Send Feedback'}
+            </Text>
+            <Text style={styles.helpChevron}>{'>'}</Text>
+          </TouchableOpacity>
+          <View style={styles.divider} />
+          <TouchableOpacity
+            style={styles.helpRow}
+            activeOpacity={0.7}
+            onPress={handleHelp}
+            accessibilityRole="button"
+            accessibilityLabel="Email support"
+          >
+            <Text style={styles.helpIcon}>{'📧'}</Text>
+            <Text style={styles.helpText}>
+              {isHindi ? 'ईमेल सहायता' : 'Email Support'}
+            </Text>
+            <Text style={styles.helpChevron}>{'>'}</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* 7b. Legal */}
+        <SectionHeader title={isHindi ? 'कानूनी (Legal)' : 'Legal'} />
+        <View style={[styles.card, Shadow.sm]}>
+          <TouchableOpacity
+            style={styles.helpRow}
+            activeOpacity={0.7}
+            onPress={() => navigation.navigate('Terms')}
+            accessibilityRole="button"
+            accessibilityLabel="Terms of Service"
+          >
+            <Text style={styles.helpIcon}>{'📄'}</Text>
+            <Text style={styles.helpText}>
+              {isHindi ? 'सेवा शर्तें (Terms)' : 'Terms of Service'}
+            </Text>
+            <Text style={styles.helpChevron}>{'>'}</Text>
+          </TouchableOpacity>
+          <View style={styles.divider} />
+          <TouchableOpacity
+            style={styles.helpRow}
+            activeOpacity={0.7}
+            onPress={() => navigation.navigate('Privacy')}
+            accessibilityRole="button"
+            accessibilityLabel="Privacy Policy"
+          >
+            <Text style={styles.helpIcon}>{'🔒'}</Text>
+            <Text style={styles.helpText}>
+              {isHindi ? 'गोपनीयता नीति (Privacy)' : 'Privacy Policy'}
             </Text>
             <Text style={styles.helpChevron}>{'>'}</Text>
           </TouchableOpacity>
@@ -687,6 +818,30 @@ const styles = StyleSheet.create({
   helpChevron: {
     fontSize: 22,
     color: Colors.gray400,
+  },
+
+  // Theme
+  themeOption: {
+    flex: 1,
+    paddingVertical: 10,
+    paddingHorizontal: 8,
+    borderRadius: 10,
+    backgroundColor: Colors.gray100,
+    alignItems: 'center',
+    marginHorizontal: 4,
+  },
+  themeOptionActive: {
+    backgroundColor: Colors.haldiGold,
+  },
+  themeOptionText: {
+    fontSize: 13,
+    color: Colors.brown,
+    fontWeight: '500',
+    textAlign: 'center',
+  },
+  themeOptionActiveText: {
+    color: Colors.white,
+    fontWeight: '600',
   },
 
   // Logout

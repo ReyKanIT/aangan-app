@@ -144,6 +144,10 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
           },
           (payload) => {
             const newNotification = payload.new as Notification;
+            // For 'new_message' type notifications, the Messages tab badge
+            // is driven by messageStore.totalUnread — we still store the
+            // notification here so the Notifications screen can display it,
+            // but the tab badge for Messages reads from messageStore directly.
             set((state) => ({
               notifications: [newNotification, ...state.notifications],
               unreadCount: state.unreadCount + 1,

@@ -12,26 +12,34 @@ import {
   ScrollView,
   Alert,
   Platform,
+  Linking,
+  useWindowDimensions,
 } from 'react-native';
+import Svg, { Line, Circle, Text as SvgText, G } from 'react-native-svg';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Colors } from '../../theme/colors';
 import { Typography, DADI_MIN_BUTTON_HEIGHT, DADI_MIN_TAP_TARGET } from '../../theme/typography';
 import { Spacing, BorderRadius, Shadow } from '../../theme/spacing';
 import { useFamilyStore } from '../../stores/familyStore';
+import { useLanguageStore } from '../../stores/languageStore';
 import { RELATIONSHIP_MAP } from '../../config/constants';
+import LifeEventsList from '../../components/family/LifeEventsList';
 import type { FamilyMember, User } from '../../types/database';
+import VoiceMicButton from '../../components/voice/VoiceMicButton';
 
 type Props = NativeStackScreenProps<any, 'FamilyTree'>;
 
 // -- Tab options --
-type TabKey = 'L1' | 'L2' | 'L3' | 'all';
+type TabKey = 'L1' | 'L2' | 'L3' | 'all' | 'tree' | 'events';
 
 const TABS: { key: TabKey; label: string; labelEn: string }[] = [
   { key: 'L1', label: 'स्तर 1', labelEn: 'Level 1' },
   { key: 'L2', label: 'स्तर 2', labelEn: 'Level 2' },
   { key: 'L3', label: 'स्तर 3', labelEn: 'Level 3' },
   { key: 'all', label: 'सभी', labelEn: 'All' },
+  { key: 'tree', label: 'पेड़', labelEn: 'Tree' },
+  { key: 'events', label: 'जीवन यात्रा', labelEn: 'Life Events' },
 ];
 
 // -- Relationship options for AddMemberModal --
@@ -55,6 +63,35 @@ const RELATIONSHIP_OPTIONS = [
   { key: 'बुआ', label: 'बुआ (Father\'s Sister)' },
   { key: 'फूफा', label: 'फूफा (Bua\'s Husband)' },
 ];
+
+// -- WhatsApp helpers --
+
+const WHATSAPP_MESSAGE_AFTER_ADD =
+  'नमस्ते! 🙏 मैंने आपको हमारे परिवार के Aangan ऐप में जोड़ा है।\n\n' +
+  'Aangan एक private family social network है जहाँ हम family photos, events और updates share करते हैं।\n\n' +
+  'अभी download करें: https://aangan.app\n\n' +
+  'आपका परिवार आपका इंतज़ार कर रहा है! 💛';
+
+const WHATSAPP_MESSAGE_INVITE_ONLY =
+  'नमस्ते! 🙏\n\n' +
+  'Aangan एक private family social network है जहाँ हम family photos, events और updates share करते हैं।\n\n' +
+  'अभी download करें: https://aangan.app\n\n' +
+  'आपका परिवार आपका इंतज़ार कर रहा है! 💛';
+
+function openWhatsApp(message: string) {
+  const url = `whatsapp://send?text=${encodeURIComponent(message)}`;
+  Linking.canOpenURL(url).then((supported) => {
+    if (supported) {
+      Linking.openURL(url);
+    } else {
+      Alert.alert(
+        'WhatsApp नहीं मिला',
+        'आपके फोन में WhatsApp इंस्टॉल नहीं है।',
+        [{ text: 'ठीक है' }],
+      );
+    }
+  });
+}
 
 // -- Sub-components --
 
@@ -99,7 +136,9 @@ function MemberCard({ member }: { member: FamilyMember }) {
   );
 }
 
-function EmptyLevel({ level }: { level: string }) {
+function EmptyLevel({ level, searchQuery }: { level: string; searchQuery: string }) {
+  const showInviteButton = searchQuery.trim().length > 0;
+
   return (
     <View style={emptyStyles.container}>
       <Text style={emptyStyles.icon}>{'👨‍👩‍👧‍👦'}</Text>
@@ -113,6 +152,20 @@ function EmptyLevel({ level }: { level: string }) {
           ? 'No family members yet'
           : `No members in ${level}`}
       </Text>
+
+      {showInviteButton && (
+        <TouchableOpacity
+          style={emptyStyles.whatsappButton}
+          onPress={() => openWhatsApp(WHATSAPP_MESSAGE_INVITE_ONLY)}
+          accessibilityRole="button"
+          accessibilityLabel="Invite via WhatsApp"
+        >
+          <Text style={emptyStyles.whatsappButtonIcon}>{'💬'}</Text>
+          <Text style={emptyStyles.whatsappButtonText}>
+            {'नए सदस्य को WhatsApp से आमंत्रित करें'}
+          </Text>
+        </TouchableOpacity>
+      )}
     </View>
   );
 }
@@ -291,11 +344,363 @@ function AddMemberModal({ visible, onClose, onSubmit, isSubmitting }: AddMemberM
   );
 }
 
+// -- Family Tree Visualization --
+
+const TREE_COLORS = {
+  haldiGold: '#C8A84B',
+  mehndiGreen: '#7A9A3A',
+  cream: '#FDFAF0',
+  brown: '#5C3D1E',
+  white: '#FFFFFF',
+  l1Line: '#C8A84B',
+  l2Line: '#7A9A3A',
+  l3Line: '#A0856C',
+};
+
+const NODE_RADIUS = 30;
+const USER_RADIUS = 38;
+const CANVAS_HEIGHT = 420;
+const ROW_Y = { l1: 80, user: 220, l2: 220, l3: 340 };
+const COL_SPACING = 110;
+
+function FamilyTreeVisualization({ members, isHindi }: { members: FamilyMember[]; isHindi: boolean }) {
+  const { width: screenWidth } = useWindowDimensions();
+
+  const l1 = useMemo(() => members.filter((m) => m.connection_level === 1), [members]);
+  const l2 = useMemo(() => members.filter((m) => m.connection_level === 2), [members]);
+  const l3 = useMemo(() => members.filter((m) => m.connection_level >= 3), [members]);
+
+  // Total columns needed: max of each row + 1 (user in center)
+  const totalCols = Math.max(l1.length, l2.length + 1, l3.length, 1);
+  const canvasWidth = Math.max(totalCols * COL_SPACING + COL_SPACING, screenWidth);
+
+  const centerX = canvasWidth / 2;
+
+  // Compute x positions spread evenly around centerX
+  function rowXPositions(count: number, y: number, excludeCenter = false): { x: number; y: number }[] {
+    if (count === 0) return [];
+    const totalWidth = (count - 1) * COL_SPACING;
+    const startX = centerX - totalWidth / 2;
+    // If this row shares y with user, offset slightly so nodes don't overlap center
+    return Array.from({ length: count }, (_, i) => {
+      let x = startX + i * COL_SPACING;
+      // Nudge L2 nodes away from center if they'd collide
+      if (excludeCenter) {
+        const halfTotal = totalWidth / 2;
+        const slot = startX + i * COL_SPACING;
+        // push nodes left of center further left, right of center further right
+        if (slot < centerX - USER_RADIUS - 10) {
+          x = Math.min(slot, centerX - USER_RADIUS - 20 - (count - 1 - i) * COL_SPACING);
+        } else if (slot > centerX + USER_RADIUS + 10) {
+          x = Math.max(slot, centerX + USER_RADIUS + 20 + i * COL_SPACING);
+        }
+      }
+      return { x, y };
+    });
+  }
+
+  const l1Positions = rowXPositions(l1.length, ROW_Y.l1);
+  const l3Positions = rowXPositions(l3.length, ROW_Y.l3);
+
+  // For L2: spread left and right of the user node at y=220
+  const l2Positions = useMemo(() => {
+    if (l2.length === 0) return [];
+    const half = Math.ceil(l2.length / 2);
+    const positions: { x: number; y: number }[] = [];
+    // Left side
+    for (let i = 0; i < half; i++) {
+      positions.push({ x: centerX - USER_RADIUS - 20 - (half - i) * COL_SPACING, y: ROW_Y.l2 });
+    }
+    // Right side
+    for (let i = half; i < l2.length; i++) {
+      positions.push({ x: centerX + USER_RADIUS + 20 + (i - half + 1) * COL_SPACING, y: ROW_Y.l2 });
+    }
+    return positions;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [l2.length, centerX]);
+
+  if (members.length === 0) {
+    return (
+      <View style={treeStyles.emptyContainer}>
+        <Text style={treeStyles.emptyIcon}>{'🌳'}</Text>
+        <Text style={treeStyles.emptyTitle}>
+          {isHindi ? 'परिवार के सदस्य जोड़ें' : 'Add family members'}
+        </Text>
+        <Text style={treeStyles.emptySubtitle}>
+          {'to see the family tree / पेड़ देखने के लिए'}
+        </Text>
+      </View>
+    );
+  }
+
+  function truncateName(name: string, max = 8): string {
+    if (!name) return '?';
+    return name.length > max ? name.slice(0, max) + '…' : name;
+  }
+
+  function memberInitial(m: FamilyMember): string {
+    const name = m.member?.display_name_hindi || m.member?.display_name || '?';
+    return name[0] || '?';
+  }
+
+  function memberShortName(m: FamilyMember): string {
+    const name = m.member?.display_name_hindi || m.member?.display_name || '?';
+    return truncateName(name, 8);
+  }
+
+  function memberRelLabel(m: FamilyMember): string {
+    return truncateName(m.relationship_label_hindi || m.relationship_type || '', 7);
+  }
+
+  return (
+    <View style={treeStyles.container}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+        <ScrollView showsVerticalScrollIndicator={false}>
+          <Svg width={canvasWidth} height={CANVAS_HEIGHT}>
+            {/* --- Connection lines (drawn first, behind nodes) --- */}
+
+            {/* L1 lines */}
+            {l1Positions.map((pos, i) => (
+              <Line
+                key={`l1-line-${i}`}
+                x1={centerX}
+                y1={ROW_Y.user - USER_RADIUS}
+                x2={pos.x}
+                y2={ROW_Y.l1 + NODE_RADIUS}
+                stroke={TREE_COLORS.l1Line}
+                strokeWidth={2}
+              />
+            ))}
+
+            {/* L2 lines */}
+            {l2Positions.map((pos, i) => (
+              <Line
+                key={`l2-line-${i}`}
+                x1={centerX}
+                y1={ROW_Y.user}
+                x2={pos.x}
+                y2={pos.y}
+                stroke={TREE_COLORS.l2Line}
+                strokeWidth={2}
+                strokeDasharray="6,4"
+              />
+            ))}
+
+            {/* L3 lines */}
+            {l3Positions.map((pos, i) => (
+              <Line
+                key={`l3-line-${i}`}
+                x1={centerX}
+                y1={ROW_Y.user + USER_RADIUS}
+                x2={pos.x}
+                y2={ROW_Y.l3 - NODE_RADIUS}
+                stroke={TREE_COLORS.l3Line}
+                strokeWidth={2}
+                strokeDasharray="4,4"
+              />
+            ))}
+
+            {/* --- Current user node --- */}
+            <G>
+              <Circle
+                cx={centerX}
+                cy={ROW_Y.user}
+                r={USER_RADIUS}
+                fill={TREE_COLORS.cream}
+                stroke={TREE_COLORS.mehndiGreen}
+                strokeWidth={4}
+              />
+              <SvgText
+                x={centerX}
+                y={ROW_Y.user - 6}
+                textAnchor="middle"
+                fontSize={16}
+                fontWeight="700"
+                fill={TREE_COLORS.mehndiGreen}
+              >
+                {'आप'}
+              </SvgText>
+              <SvgText
+                x={centerX}
+                y={ROW_Y.user + 14}
+                textAnchor="middle"
+                fontSize={11}
+                fill={TREE_COLORS.brown}
+              >
+                {'You'}
+              </SvgText>
+            </G>
+
+            {/* --- Level 1 nodes (top row) --- */}
+            {l1.map((member, i) => {
+              const pos = l1Positions[i];
+              return (
+                <G key={`l1-node-${member.id}`}>
+                  <Circle
+                    cx={pos.x}
+                    cy={pos.y}
+                    r={NODE_RADIUS}
+                    fill={TREE_COLORS.white}
+                    stroke={TREE_COLORS.haldiGold}
+                    strokeWidth={3}
+                  />
+                  <SvgText
+                    x={pos.x}
+                    y={pos.y + 6}
+                    textAnchor="middle"
+                    fontSize={18}
+                    fontWeight="700"
+                    fill={TREE_COLORS.brown}
+                  >
+                    {memberInitial(member)}
+                  </SvgText>
+                  <SvgText
+                    x={pos.x}
+                    y={pos.y + NODE_RADIUS + 16}
+                    textAnchor="middle"
+                    fontSize={11}
+                    fill={TREE_COLORS.brown}
+                  >
+                    {memberShortName(member)}
+                  </SvgText>
+                  <SvgText
+                    x={pos.x}
+                    y={pos.y + NODE_RADIUS + 30}
+                    textAnchor="middle"
+                    fontSize={10}
+                    fill={TREE_COLORS.haldiGold}
+                  >
+                    {memberRelLabel(member)}
+                  </SvgText>
+                </G>
+              );
+            })}
+
+            {/* --- Level 2 nodes (middle row, flanking user) --- */}
+            {l2.map((member, i) => {
+              const pos = l2Positions[i];
+              return (
+                <G key={`l2-node-${member.id}`}>
+                  <Circle
+                    cx={pos.x}
+                    cy={pos.y}
+                    r={NODE_RADIUS}
+                    fill={TREE_COLORS.white}
+                    stroke={TREE_COLORS.haldiGold}
+                    strokeWidth={3}
+                  />
+                  <SvgText
+                    x={pos.x}
+                    y={pos.y + 6}
+                    textAnchor="middle"
+                    fontSize={18}
+                    fontWeight="700"
+                    fill={TREE_COLORS.brown}
+                  >
+                    {memberInitial(member)}
+                  </SvgText>
+                  <SvgText
+                    x={pos.x}
+                    y={pos.y + NODE_RADIUS + 16}
+                    textAnchor="middle"
+                    fontSize={11}
+                    fill={TREE_COLORS.brown}
+                  >
+                    {memberShortName(member)}
+                  </SvgText>
+                  <SvgText
+                    x={pos.x}
+                    y={pos.y + NODE_RADIUS + 30}
+                    textAnchor="middle"
+                    fontSize={10}
+                    fill={TREE_COLORS.mehndiGreen}
+                  >
+                    {memberRelLabel(member)}
+                  </SvgText>
+                </G>
+              );
+            })}
+
+            {/* --- Level 3 nodes (bottom row) --- */}
+            {l3.map((member, i) => {
+              const pos = l3Positions[i];
+              return (
+                <G key={`l3-node-${member.id}`}>
+                  <Circle
+                    cx={pos.x}
+                    cy={pos.y}
+                    r={NODE_RADIUS}
+                    fill={TREE_COLORS.white}
+                    stroke={TREE_COLORS.haldiGold}
+                    strokeWidth={3}
+                  />
+                  <SvgText
+                    x={pos.x}
+                    y={pos.y + 6}
+                    textAnchor="middle"
+                    fontSize={18}
+                    fontWeight="700"
+                    fill={TREE_COLORS.brown}
+                  >
+                    {memberInitial(member)}
+                  </SvgText>
+                  <SvgText
+                    x={pos.x}
+                    y={pos.y + NODE_RADIUS + 16}
+                    textAnchor="middle"
+                    fontSize={11}
+                    fill={TREE_COLORS.brown}
+                  >
+                    {memberShortName(member)}
+                  </SvgText>
+                  <SvgText
+                    x={pos.x}
+                    y={pos.y + NODE_RADIUS + 30}
+                    textAnchor="middle"
+                    fontSize={10}
+                    fill={TREE_COLORS.brown}
+                    opacity={0.6}
+                  >
+                    {memberRelLabel(member)}
+                  </SvgText>
+                </G>
+              );
+            })}
+          </Svg>
+        </ScrollView>
+      </ScrollView>
+
+      {/* Legend */}
+      <View style={treeStyles.legend}>
+        <View style={treeStyles.legendRow}>
+          <View style={[treeStyles.legendDot, { backgroundColor: TREE_COLORS.haldiGold }]} />
+          <Text style={treeStyles.legendText}>
+            {'L1 — करीबी परिवार / Close Family'}
+          </Text>
+        </View>
+        <View style={treeStyles.legendRow}>
+          <View style={[treeStyles.legendDot, { backgroundColor: TREE_COLORS.mehndiGreen }]} />
+          <Text style={treeStyles.legendText}>
+            {'L2 — विस्तारित परिवार / Extended'}
+          </Text>
+        </View>
+        <View style={treeStyles.legendRow}>
+          <View style={[treeStyles.legendDot, { backgroundColor: '#A0856C' }]} />
+          <Text style={treeStyles.legendText}>
+            {'L3 — दूर के रिश्ते / Distant Relatives'}
+          </Text>
+        </View>
+      </View>
+    </View>
+  );
+}
+
 // -- Main Component --
 
 export default function FamilyTreeScreen({ navigation }: Props) {
   const insets = useSafeAreaInsets();
   const { members, isLoading, error, fetchMembers, addMember, searchMembers } = useFamilyStore();
+  const { isHindi } = useLanguageStore();
 
   const [activeTab, setActiveTab] = useState<TabKey>('all');
   const [searchQuery, setSearchQuery] = useState('');
@@ -361,7 +766,21 @@ export default function FamilyTreeScreen({ navigation }: Props) {
       const success = await addMember(targetUser.id, relationship, relationshipHindi, level);
       if (success) {
         setShowAddModal(false);
-        Alert.alert('सफल', 'परिवार सदस्य जोड़ दिया गया!');
+        // Show WhatsApp invite alert after successful member addition
+        Alert.alert(
+          'WhatsApp पर आमंत्रित करें?',
+          'सदस्य को Aangan ऐप के बारे में WhatsApp मेसेज भेजें।',
+          [
+            {
+              text: 'WhatsApp पर भेजें',
+              onPress: () => openWhatsApp(WHATSAPP_MESSAGE_AFTER_ADD),
+            },
+            {
+              text: 'नहीं, बाद में',
+              style: 'cancel',
+            },
+          ],
+        );
       }
     } catch {
       Alert.alert('त्रुटि', 'सदस्य जोड़ने में समस्या हुई');
@@ -396,38 +815,45 @@ export default function FamilyTreeScreen({ navigation }: Props) {
                 styles.tabText,
                 activeTab === tab.key && styles.tabTextActive,
               ]}>
-                {tab.label}
+                {isHindi ? tab.label : tab.labelEn}
               </Text>
             </TouchableOpacity>
           ))}
         </View>
       </View>
 
-      {/* Search */}
-      <View style={styles.searchContainer}>
-        <View style={styles.searchInputWrapper}>
-          <Text style={styles.searchIcon}>{'🔍'}</Text>
-          <TextInput
-            style={styles.searchInput}
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-            placeholder="नाम से खोजें / Search by name"
-            placeholderTextColor={Colors.gray400}
-            returnKeyType="search"
-            accessibilityLabel="Search family members"
-          />
-          {searchQuery.length > 0 && (
-            <TouchableOpacity
-              onPress={() => setSearchQuery('')}
-              style={styles.clearButton}
-              accessibilityRole="button"
-              accessibilityLabel="Clear search"
-            >
-              <Text style={styles.clearText}>{'✕'}</Text>
-            </TouchableOpacity>
-          )}
+      {/* Search — hidden on tree and events tabs */}
+      {activeTab !== 'tree' && activeTab !== 'events' && (
+        <View style={styles.searchContainer}>
+          <View style={styles.searchInputWrapper}>
+            <Text style={styles.searchIcon}>{'🔍'}</Text>
+            <TextInput
+              style={styles.searchInput}
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              placeholder="नाम से खोजें / Search by name"
+              placeholderTextColor={Colors.gray400}
+              returnKeyType="search"
+              accessibilityLabel="Search family members"
+            />
+            <VoiceMicButton
+              onTranscript={(text) => setSearchQuery(text)}
+              mode="replace"
+              size={22}
+            />
+            {searchQuery.length > 0 && (
+              <TouchableOpacity
+                onPress={() => setSearchQuery('')}
+                style={styles.clearButton}
+                accessibilityRole="button"
+                accessibilityLabel="Clear search"
+              >
+                <Text style={styles.clearText}>{'✕'}</Text>
+              </TouchableOpacity>
+            )}
+          </View>
         </View>
-      </View>
+      )}
 
       {/* Error */}
       {error ? (
@@ -436,42 +862,58 @@ export default function FamilyTreeScreen({ navigation }: Props) {
         </View>
       ) : null}
 
-      {/* Grid */}
-      <FlatList
-        data={filteredMembers}
-        keyExtractor={(item) => item.id}
-        renderItem={renderItem}
-        numColumns={2}
-        columnWrapperStyle={styles.row}
-        ListEmptyComponent={!isLoading ? <EmptyLevel level={tabLabel} /> : null}
-        refreshControl={
-          <RefreshControl
-            refreshing={isLoading}
-            onRefresh={handleRefresh}
-            colors={[Colors.haldiGold]}
-            tintColor={Colors.haldiGold}
-          />
-        }
-        contentContainerStyle={[
-          styles.listContent,
-          filteredMembers.length === 0 && styles.listContentEmpty,
-        ]}
-        showsVerticalScrollIndicator={false}
-      />
+      {/* Tree, Life Events, or Member Grid */}
+      {activeTab === 'events' ? (
+        <LifeEventsList
+          isHindi={isHindi}
+          onAddEvent={() => navigation.navigate('AddLifeEvent')}
+          onEditEvent={(eventId) => navigation.navigate('AddLifeEvent', { eventId })}
+        />
+      ) : activeTab === 'tree' ? (
+        <FamilyTreeVisualization members={members} isHindi={isHindi} />
+      ) : (
+        <FlatList
+          data={filteredMembers}
+          keyExtractor={(item) => item.id}
+          renderItem={renderItem}
+          numColumns={2}
+          columnWrapperStyle={styles.row}
+          ListEmptyComponent={
+            !isLoading ? (
+              <EmptyLevel level={tabLabel} searchQuery={searchQuery} />
+            ) : null
+          }
+          refreshControl={
+            <RefreshControl
+              refreshing={isLoading}
+              onRefresh={handleRefresh}
+              colors={[Colors.haldiGold]}
+              tintColor={Colors.haldiGold}
+            />
+          }
+          contentContainerStyle={[
+            styles.listContent,
+            filteredMembers.length === 0 && styles.listContentEmpty,
+          ]}
+          showsVerticalScrollIndicator={false}
+        />
+      )}
 
-      {/* Invite Banner */}
-      <View style={[styles.inviteBanner, { paddingBottom: insets.bottom + Spacing.md }]}>
-        <TouchableOpacity
-          style={styles.inviteButton}
-          onPress={() => setShowAddModal(true)}
-          activeOpacity={0.8}
-          accessibilityRole="button"
-          accessibilityLabel="Add family member"
-        >
-          <Text style={styles.inviteIcon}>{'👨‍👩‍👧‍👦'}</Text>
-          <Text style={styles.inviteText}>{'परिवार जोड़ें (Add Family)'}</Text>
-        </TouchableOpacity>
-      </View>
+      {/* Invite Banner — hidden on events tab (has its own FAB) */}
+      {activeTab !== 'events' && (
+        <View style={[styles.inviteBanner, { paddingBottom: insets.bottom + Spacing.md }]}>
+          <TouchableOpacity
+            style={styles.inviteButton}
+            onPress={() => setShowAddModal(true)}
+            activeOpacity={0.8}
+            accessibilityRole="button"
+            accessibilityLabel="Add family member"
+          >
+            <Text style={styles.inviteIcon}>{'👨‍👩‍👧‍👦'}</Text>
+            <Text style={styles.inviteText}>{isHindi ? 'परिवार जोड़ें' : 'Add Family'}</Text>
+          </TouchableOpacity>
+        </View>
+      )}
 
       {/* Add Member Modal */}
       <AddMemberModal
@@ -693,6 +1135,24 @@ const emptyStyles = StyleSheet.create({
     color: Colors.gray500,
     textAlign: 'center',
   },
+  whatsappButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#25D366',
+    borderRadius: BorderRadius.md,
+    paddingHorizontal: Spacing.xl,
+    paddingVertical: Spacing.md,
+    marginTop: Spacing.xl,
+    minHeight: DADI_MIN_BUTTON_HEIGHT,
+  },
+  whatsappButtonIcon: {
+    fontSize: 20,
+    marginRight: Spacing.sm,
+  },
+  whatsappButtonText: {
+    ...Typography.button,
+    color: Colors.white,
+  },
 });
 
 const modalStyles = StyleSheet.create({
@@ -852,5 +1312,57 @@ const modalStyles = StyleSheet.create({
   submitButtonText: {
     ...Typography.button,
     color: Colors.white,
+  },
+});
+
+const treeStyles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: Colors.cream,
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: Spacing.xxxl,
+    paddingVertical: Spacing.huge,
+  },
+  emptyIcon: {
+    fontSize: 64,
+    marginBottom: Spacing.xl,
+  },
+  emptyTitle: {
+    ...Typography.h3,
+    color: Colors.brown,
+    textAlign: 'center',
+    marginBottom: Spacing.sm,
+  },
+  emptySubtitle: {
+    ...Typography.body,
+    color: Colors.gray500,
+    textAlign: 'center',
+  },
+  legend: {
+    backgroundColor: Colors.white,
+    borderTopWidth: 1,
+    borderTopColor: Colors.gray100,
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.md,
+    paddingBottom: 120, // leave room for invite banner
+  },
+  legendRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: Spacing.sm,
+  },
+  legendDot: {
+    width: 14,
+    height: 14,
+    borderRadius: 7,
+    marginRight: Spacing.sm,
+  },
+  legendText: {
+    ...Typography.bodySmall,
+    color: Colors.brown,
   },
 });

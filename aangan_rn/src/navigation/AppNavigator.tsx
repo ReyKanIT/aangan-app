@@ -1,10 +1,12 @@
 import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { NavigationContainer } from '@react-navigation/native';
+import { NavigationContainer, useNavigationContainerRef } from '@react-navigation/native';
 import { Text, View, StyleSheet } from 'react-native';
 import { Colors } from '../theme/colors';
 import { DADI_MIN_TAP_TARGET } from '../theme/typography';
+import VoiceCommandOverlay from '../components/voice/VoiceCommandOverlay';
+import { useAuthStore } from '../stores/authStore';
 
 // Auth Screens
 import SplashScreen from '../screens/auth/SplashScreen';
@@ -15,10 +17,19 @@ import OnboardingScreen from '../screens/auth/OnboardingScreen';
 
 // Main Screens
 import HomeFeedScreen from '../screens/home/HomeFeedScreen';
+import DashboardScreen from '../screens/home/DashboardScreen';
 import FamilyTreeScreen from '../screens/family/FamilyTreeScreen';
 import PostComposerScreen from '../screens/home/PostComposerScreen';
 import NotificationsScreen from '../screens/home/NotificationsScreen';
 import SettingsScreen from '../screens/settings/SettingsScreen';
+
+// Feed / Profile Screens
+import PostDetailScreen from '../screens/feed/PostDetailScreen';
+import MemberProfileScreen from '../screens/family/MemberProfileScreen';
+
+// Message Screens
+import MessageListScreen from '../screens/messages/MessageListScreen';
+import ChatScreen from '../screens/messages/ChatScreen';
 
 // Event Screens
 import EventCreatorScreen from '../screens/events/EventCreatorScreen';
@@ -30,6 +41,25 @@ import EventPhotosScreen from '../screens/events/EventPhotosScreen';
 import StorageScreen from '../screens/storage/StorageScreen';
 import ReferralScreen from '../screens/storage/ReferralScreen';
 
+// Settings Screens
+import KuldeviScreen from '../screens/settings/KuldeviScreen';
+
+// Family sub-screens
+import AddLifeEventScreen from '../screens/family/AddLifeEventScreen';
+import ImportantDatesScreen from '../screens/family/ImportantDatesScreen';
+
+// Support Screens
+import SupportChatScreen from '../screens/support/SupportChatScreen';
+import MyTicketsScreen from '../screens/support/MyTicketsScreen';
+import TicketDetailScreen from '../screens/support/TicketDetailScreen';
+import HelpScreen from '../screens/support/HelpScreen';
+import FeedbackScreen from '../screens/support/FeedbackScreen';
+import ReportContentScreen from '../screens/support/ReportContentScreen';
+
+// Legal Screens
+import TermsScreen from '../screens/legal/TermsScreen';
+import PrivacyPolicyScreen from '../screens/legal/PrivacyPolicyScreen';
+
 // Types
 export type RootStackParamList = {
   Splash: undefined;
@@ -38,13 +68,29 @@ export type RootStackParamList = {
   ProfileSetup: { editMode?: boolean };
   Onboarding: undefined;
   Main: undefined;
-  PostComposer: undefined;
+  PostComposer: { editPostId?: string };
+  PostDetail: { postId: string; postAuthorId: string };
+  MemberProfile: { memberId: string; relationshipLabel?: string; connectionLevel?: number };
+  MessageList: undefined;
+  Chat: { otherUserId: string; otherUserName: string; otherUserNameHindi?: string; otherUserPhoto?: string };
   EventCreator: undefined;
   EventInvitation: { eventId: string };
   RsvpTracker: { eventId: string };
   EventPhotos: { eventId: string };
   Storage: undefined;
   Referral: undefined;
+  Kuldevi: undefined;
+  AddLifeEvent: { eventId?: string } | undefined;
+  ImportantDates: undefined;
+  SupportChat: undefined;
+  MyTickets: undefined;
+  TicketDetail: { ticketId: string };
+  Help: undefined;
+  Feedback: undefined;
+  Terms: undefined;
+  PrivacyPolicy: undefined;
+  ReportContent: undefined;
+  Dashboard: undefined;
 };
 
 export type MainTabParamList = {
@@ -104,12 +150,12 @@ function MainTabs() {
     >
       <Tab.Screen
         name="Home"
-        component={HomeFeedScreen}
+        component={HomeFeedScreen as React.ComponentType<any>}
         options={{ tabBarLabel: 'घर' }}
       />
       <Tab.Screen
         name="Family"
-        component={FamilyTreeScreen}
+        component={FamilyTreeScreen as React.ComponentType<any>}
         options={{ tabBarLabel: 'परिवार' }}
       />
       <Tab.Screen
@@ -119,7 +165,7 @@ function MainTabs() {
         listeners={({ navigation }) => ({
           tabPress: (e) => {
             e.preventDefault();
-            navigation.navigate('PostComposer');
+            (navigation as any).navigate('PostComposer');
           },
         })}
       />
@@ -138,8 +184,11 @@ function MainTabs() {
 }
 
 export default function AppNavigator() {
+  const navigationRef = useNavigationContainerRef();
+  const session = useAuthStore((s) => s.session);
+
   return (
-    <NavigationContainer>
+    <NavigationContainer ref={navigationRef}>
       <Stack.Navigator
         initialRouteName="Splash"
         screenOptions={{
@@ -165,6 +214,14 @@ export default function AppNavigator() {
           options={{ presentation: 'modal', animation: 'slide_from_bottom' }}
         />
 
+        {/* Feed & Profile */}
+        <Stack.Screen name="PostDetail" component={PostDetailScreen} />
+        <Stack.Screen name="MemberProfile" component={MemberProfileScreen} />
+
+        {/* Messages */}
+        <Stack.Screen name="MessageList" component={MessageListScreen} />
+        <Stack.Screen name="Chat" component={ChatScreen} />
+
         {/* Events */}
         <Stack.Screen
           name="EventCreator"
@@ -178,7 +235,36 @@ export default function AppNavigator() {
         {/* Storage */}
         <Stack.Screen name="Storage" component={StorageScreen} />
         <Stack.Screen name="Referral" component={ReferralScreen} />
+
+        {/* Settings sub-screens */}
+        <Stack.Screen name="Kuldevi" component={KuldeviScreen} />
+
+        {/* Life Events */}
+        <Stack.Screen
+          name="AddLifeEvent"
+          component={AddLifeEventScreen}
+          options={{ presentation: 'modal', animation: 'slide_from_bottom' }}
+        />
+        <Stack.Screen name="ImportantDates" component={ImportantDatesScreen} />
+
+        {/* Support */}
+        <Stack.Screen name="SupportChat" component={SupportChatScreen} />
+        <Stack.Screen name="MyTickets" component={MyTicketsScreen} />
+        <Stack.Screen name="TicketDetail" component={TicketDetailScreen} />
+
+        {/* Help & Feedback */}
+        <Stack.Screen name="Help" component={HelpScreen} />
+        <Stack.Screen name="Feedback" component={FeedbackScreen} />
+        <Stack.Screen name="ReportContent" component={ReportContentScreen} />
+
+        {/* Dashboard */}
+        <Stack.Screen name="Dashboard" component={DashboardScreen} />
+
+        {/* Legal */}
+        <Stack.Screen name="Terms" component={TermsScreen} />
+        <Stack.Screen name="PrivacyPolicy" component={PrivacyPolicyScreen} />
       </Stack.Navigator>
+      {session?.user && <VoiceCommandOverlay navigationRef={navigationRef} />}
     </NavigationContainer>
   );
 }

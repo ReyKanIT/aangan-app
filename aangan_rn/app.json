@@ -2,7 +2,7 @@
   "expo": {
     "name": "Aangan आँगन",
     "slug": "aangan",
-    "version": "0.1.0",
+    "version": "0.5.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -16,12 +16,15 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "app.aangan.family",
-      "buildNumber": "1",
+      "buildNumber": "6",
       "infoPlist": {
         "NSCameraUsageDescription": "Aangan needs camera access to take profile photos and event pictures.",
         "NSPhotoLibraryUsageDescription": "Aangan needs photo library access to share photos with your family.",
         "NSLocationWhenInUseUsageDescription": "Aangan uses your location for event check-in.",
-        "NSContactsUsageDescription": "Aangan can help you invite family members from your contacts."
+        "NSContactsUsageDescription": "Aangan can help you invite family members from your contacts.",
+        "NSMicrophoneUsageDescription": "Aangan needs microphone access to record voice messages and use voice input.",
+        "NSSpeechRecognitionUsageDescription": "Aangan uses speech recognition to convert your voice to text in Hindi and English.",
+        "ITSAppUsesNonExemptEncryption": false
       },
       "config": {
         "googleMapsApiKey": ""
@@ -29,7 +32,7 @@
     },
     "android": {
       "package": "app.aangan.family",
-      "versionCode": 1,
+      "versionCode": 6,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#FDFAF0"
@@ -41,8 +44,6 @@
         "android.permission.WRITE_EXTERNAL_STORAGE",
         "android.permission.ACCESS_FINE_LOCATION",
         "android.permission.ACCESS_COARSE_LOCATION",
-        "android.permission.RECEIVE_SMS",
-        "android.permission.READ_SMS",
         "android.permission.RECORD_AUDIO"
       ]
     },
@@ -81,7 +82,20 @@
         }
       ],
       "@react-native-community/datetimepicker",
-      "expo-localization"
+      "expo-localization",
+      [
+        "expo-av",
+        {
+          "microphonePermission": "Aangan needs microphone to record voice messages."
+        }
+      ],
+      [
+        "expo-speech-recognition",
+        {
+          "microphonePermission": "Aangan needs microphone for voice input.",
+          "speechRecognitionPermission": "Aangan uses speech recognition for voice-to-text in Hindi and English."
+        }
+      ]
     ],
     "extra": {
       "eas": {

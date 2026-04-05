@@ -32,6 +32,10 @@ export default function ProfileSetupScreen({ navigation }: Props) {
   const [village, setVillage] = useState('');
   const [state, setState] = useState('');
   const [bio, setBio] = useState('');
+  const [familyRole, setFamilyRole] = useState('');
+  const [dob, setDob] = useState('');
+  const [gotra, setGotra] = useState('');
+  const [weddingAnniversary, setWeddingAnniversary] = useState('');
   const [showStatePicker, setShowStatePicker] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -49,9 +53,13 @@ export default function ProfileSetupScreen({ navigation }: Props) {
       newErrors.displayName = '\u0928\u093E\u092E 50 \u0905\u0915\u094D\u0937\u0930 \u0938\u0947 \u0905\u0927\u093F\u0915 \u0928\u0939\u0940\u0902 \u0939\u094B \u0938\u0915\u0924\u093E';
     }
 
+    if (dob.trim() && !/^\d{2}\/\d{2}\/\d{4}$/.test(dob.trim())) {
+      newErrors.dob = 'तारीख DD/MM/YYYY प्रारूप में डालें';
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
-  }, [displayName]);
+  }, [displayName, dob]);
 
   const pickImage = useCallback(async () => {
     try {
@@ -141,6 +149,21 @@ export default function ProfileSetupScreen({ navigation }: Props) {
       if (bio.trim()) {
         profileData.bio = bio.trim();
       }
+      if (familyRole) {
+        profileData.family_role = familyRole;
+      }
+      if (dob.trim()) {
+        // Convert DD/MM/YYYY -> YYYY-MM-DD
+        const [dd, mm, yyyy] = dob.trim().split('/');
+        profileData.date_of_birth = `${yyyy}-${mm}-${dd}`;
+      }
+      if (gotra.trim()) {
+        profileData.gotra = gotra.trim();
+      }
+      if (weddingAnniversary.trim()) {
+        const [dd, mm, yyyy] = weddingAnniversary.trim().split('/');
+        if (dd && mm && yyyy) profileData.wedding_anniversary = `${yyyy}-${mm}-${dd}`;
+      }
       if (photoUrl) {
         profileData.profile_photo_url = photoUrl;
       }
@@ -162,7 +185,7 @@ export default function ProfileSetupScreen({ navigation }: Props) {
     } finally {
       setIsSaving(false);
     }
-  }, [validate, isSaving, photoUri, displayName, hindiName, village, state, bio, uploadPhoto, updateProfile, navigation]);
+  }, [validate, isSaving, photoUri, displayName, hindiName, village, state, bio, familyRole, dob, gotra, uploadPhoto, updateProfile, navigation]);
 
   return (
     <KeyboardAvoidingView
@@ -337,6 +360,99 @@ export default function ProfileSetupScreen({ navigation }: Props) {
             </Text>
           </View>
 
+          {/* Family Role - Horizontal Picker */}
+          <View style={styles.fieldGroup}>
+            <Text style={styles.fieldLabel}>परिवार में आप कौन हैं?</Text>
+            <Text style={styles.fieldLabelEn}>Your role in family</Text>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.rolePickerRow}
+            >
+              {[
+                { hi: 'पिता', en: 'Father' },
+                { hi: 'माता', en: 'Mother' },
+                { hi: 'बेटा', en: 'Son' },
+                { hi: 'बेटी', en: 'Daughter' },
+                { hi: 'दादा', en: 'Grandfather' },
+                { hi: 'दादी', en: 'Grandmother' },
+                { hi: 'भाई', en: 'Brother' },
+                { hi: 'बहन', en: 'Sister' },
+                { hi: 'पति', en: 'Husband' },
+                { hi: 'पत्नी', en: 'Wife' },
+              ].map((role) => {
+                const isSelected = familyRole === role.en;
+                return (
+                  <TouchableOpacity
+                    key={role.en}
+                    style={[styles.roleChip, isSelected && styles.roleChipActive]}
+                    onPress={() => setFamilyRole(isSelected ? '' : role.en)}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={[styles.roleChipHindi, isSelected && styles.roleChipTextActive]}>
+                      {role.hi}
+                    </Text>
+                    <Text style={[styles.roleChipEn, isSelected && styles.roleChipTextActive]}>
+                      {role.en}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
+          </View>
+
+          {/* Date of Birth */}
+          <View style={styles.fieldGroup}>
+            <Text style={styles.fieldLabel}>जन्म तिथि</Text>
+            <Text style={styles.fieldLabelEn}>Date of Birth (Optional)</Text>
+            <TextInput
+              style={[styles.input, errors.dob ? styles.inputError : null]}
+              value={dob}
+              onChangeText={(text) => {
+                setDob(text);
+                if (errors.dob) {
+                  setErrors((prev) => ({ ...prev, dob: '' }));
+                }
+              }}
+              placeholder="DD/MM/YYYY"
+              placeholderTextColor={Colors.gray400}
+              keyboardType="numbers-and-punctuation"
+              maxLength={10}
+            />
+            {errors.dob ? (
+              <Text style={styles.errorText}>{errors.dob}</Text>
+            ) : null}
+          </View>
+
+          {/* Gotra */}
+          <View style={styles.fieldGroup}>
+            <Text style={styles.fieldLabel}>गोत्र</Text>
+            <Text style={styles.fieldLabelEn}>Gotra (Optional)</Text>
+            <TextInput
+              style={styles.input}
+              value={gotra}
+              onChangeText={setGotra}
+              placeholder="गोत्र / Gotra (optional)"
+              placeholderTextColor={Colors.gray400}
+              maxLength={50}
+            />
+          </View>
+
+          {/* Wedding Anniversary */}
+          <View style={styles.fieldGroup}>
+            <Text style={styles.fieldLabel}>शादी की सालगिरह</Text>
+            <Text style={styles.fieldLabelEn}>Wedding Anniversary (DD/MM/YYYY, Optional)</Text>
+            <TextInput
+              style={styles.input}
+              value={weddingAnniversary}
+              onChangeText={setWeddingAnniversary}
+              placeholder="जैसे: 15/02/2005"
+              placeholderTextColor={Colors.gray400}
+              keyboardType="numeric"
+              maxLength={10}
+            />
+          </View>
+
           {/* Save Button */}
           <TouchableOpacity
             style={[styles.saveButton, isSaving && styles.saveButtonDisabled]}
@@ -346,7 +462,7 @@ export default function ProfileSetupScreen({ navigation }: Props) {
           >
             {isSaving || isUploadingPhoto ? (
               <View style={styles.savingRow}>
-                <ActivityIndicator size="small" color={Colors.white} />
+                <ActivityIndicator size="large" color={Colors.white} />
                 <Text style={styles.saveButtonText}>
                   {isUploadingPhoto
                     ? '\u092B\u093C\u094B\u091F\u094B \u0905\u092A\u0932\u094B\u0921 \u0939\u094B \u0930\u0939\u093E \u0939\u0948...'
@@ -552,6 +668,42 @@ const styles = StyleSheet.create({
   stateItemTextActive: {
     color: Colors.haldiGoldDark,
     fontWeight: '600',
+  },
+
+  // Family role picker
+  rolePickerRow: {
+    flexDirection: 'row',
+    gap: Spacing.sm,
+    paddingVertical: Spacing.xs,
+  },
+  roleChip: {
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    borderRadius: BorderRadius.round,
+    backgroundColor: Colors.cream,
+    borderWidth: 1.5,
+    borderColor: Colors.gray300,
+    alignItems: 'center',
+    minWidth: 64,
+  },
+  roleChipActive: {
+    backgroundColor: Colors.haldiGold,
+    borderColor: Colors.haldiGold,
+  },
+  roleChipHindi: {
+    ...Typography.label,
+    fontSize: 15,
+    color: Colors.brown,
+    fontWeight: '600',
+  },
+  roleChipEn: {
+    ...Typography.caption,
+    fontSize: 11,
+    color: Colors.gray500,
+    marginTop: 1,
+  },
+  roleChipTextActive: {
+    color: Colors.white,
   },
 
   // Save button

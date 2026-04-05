@@ -31,6 +31,12 @@ export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const isAuthRoute = pathname.startsWith('/login') || pathname.startsWith('/otp') || pathname.startsWith('/profile-setup');
   const isAppRoute = pathname.startsWith('/feed') || pathname.startsWith('/family') || pathname.startsWith('/events') || pathname.startsWith('/notifications') || pathname.startsWith('/settings');
+  const isAdminRoute = pathname.startsWith('/admin');
+
+  // Admin routes require authentication (admin check done in layout)
+  if (isAdminRoute && !user) {
+    return NextResponse.redirect(new URL('/login', request.url));
+  }
 
   if (isAppRoute && !user) {
     return NextResponse.redirect(new URL('/login', request.url));

@@ -1,7 +1,13 @@
+import { safeError } from '../utils/security';
 import { create } from 'zustand';
 import { supabase } from '../config/supabase';
 import { RELATIONSHIP_MAP } from '../config/constants';
+import { sendPushToUser } from '../services/pushNotifications';
 import type { FamilyMember, User } from '../types/database';
+
+// Relationship types that map to parent/sibling for onboarding tracking
+const PARENT_TYPES = new Set(['पिता', 'माता']);
+const SIBLING_TYPES = new Set(['भाई', 'बहन']);
 
 // Sanitize PostgREST filter metacharacters to prevent query injection
 function sanitizeSearchQuery(q: string): string {
@@ -43,18 +49,19 @@ export const useFamilyStore = create<FamilyState>((set, get) => ({
 
       const { data, error } = await supabase
         .from('family_members')
-        .select('*, member:users!family_members_family_member_id_fkey(*)')
+        .select('*, member:users!family_members_family_member_id_fkey(id, display_name, display_name_hindi, profile_photo_url, village, state, family_level)')
         .eq('user_id', session.user.id)
-        .order('connection_level', { ascending: true });
+        .order('connection_level', { ascending: true })
+        .limit(200);
 
       if (error) {
-        set({ error: error.message, isLoading: false });
+        set({ error: safeError(error, 'कुछ गलत हो गया।'), isLoading: false });
         return;
       }
 
       set({ members: data ?? [], isLoading: false });
     } catch (error: any) {
-      set({ error: error.message || 'Failed to fetch family members', isLoading: false });
+      set({ error: safeError(error, 'Failed to fetch family members'), isLoading: false });
     }
   },
 
@@ -79,14 +86,50 @@ export const useFamilyStore = create<FamilyState>((set, get) => ({
       });
 
       if (error) {
-        set({ error: error.message });
+        set({ error: safeError(error, 'कुछ गलत हो गया।') });
         return false;
       }
 
       await get().fetchMembers();
+
+      // Send push notification to the added member
+      const { data: { session: currentSession } } = await supabase.auth.getSession();
+      if (currentSession?.user) {
+        const { data: me } = await supabase
+          .from('users')
+          .select('display_name, display_name_hindi')
+          .eq('id', currentSession.user.id)
+          .single();
+        if (me) {
+          const senderName = me.display_name_hindi || me.display_name;
+          sendPushToUser(
+            familyMemberId,
+            'परिवार में जुड़े! 🏠',
+            `${senderName} ने आपको परिवार में जोड़ा`,
+            { type: 'new_family_member', actorId: currentSession.user.id },
+          );
+        }
+      }
+
+      // Update onboarding progress
+      if (currentSession?.user) {
+        const isParent = PARENT_TYPES.has(relationshipType);
+        const isSibling = SIBLING_TYPES.has(relationshipType);
+        if (isParent || isSibling) {
+          const updateData: Record<string, boolean> = {};
+          if (isParent) updateData.added_parent = true;
+          if (isSibling) updateData.added_sibling = true;
+          supabase
+            .from('onboarding_progress')
+            .update(updateData)
+            .eq('user_id', currentSession.user.id)
+            .then(() => {}); // fire-and-forget
+        }
+      }
+
       return true;
     } catch (error: any) {
-      set({ error: error.message || 'Failed to add family member' });
+      set({ error: safeError(error, 'Failed to add family member') });
       return false;
     }
   },
@@ -106,7 +149,7 @@ export const useFamilyStore = create<FamilyState>((set, get) => ({
       });
 
       if (error) {
-        set({ error: error.message });
+        set({ error: safeError(error, 'कुछ गलत हो गया।') });
         return false;
       }
 
@@ -115,7 +158,7 @@ export const useFamilyStore = create<FamilyState>((set, get) => ({
       }));
       return true;
     } catch (error: any) {
-      set({ error: error.message || 'Failed to remove family member' });
+      set({ error: safeError(error, 'Failed to remove family member') });
       return false;
     }
   },
@@ -136,7 +179,7 @@ export const useFamilyStore = create<FamilyState>((set, get) => ({
         .eq('family_member_id', memberId);
 
       if (error) {
-        set({ error: error.message });
+        set({ error: safeError(error, 'कुछ गलत हो गया।') });
         return false;
       }
 
@@ -147,7 +190,7 @@ export const useFamilyStore = create<FamilyState>((set, get) => ({
       }));
       return true;
     } catch (error: any) {
-      set({ error: error.message || 'Failed to update member level' });
+      set({ error: safeError(error, 'Failed to update member level') });
       return false;
     }
   },
@@ -163,13 +206,13 @@ export const useFamilyStore = create<FamilyState>((set, get) => ({
         .limit(20);
 
       if (error) {
-        set({ error: error.message });
+        set({ error: safeError(error, 'कुछ गलत हो गया।') });
         return [];
       }
 
       return data ?? [];
     } catch (error: any) {
-      set({ error: error.message || 'Search failed' });
+      set({ error: safeError(error, 'Search failed') });
       return [];
     }
   },

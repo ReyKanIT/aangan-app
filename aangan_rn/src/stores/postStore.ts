@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { supabase } from '../config/supabase';
-import { secureLog } from '../utils/security';
+import { secureLog, safeError } from '../utils/security';
+import { sendPushToUser } from '../services/pushNotifications';
 import type { Post, PostType, AudienceType } from '../types/database';
 
 const PAGE_SIZE = 20;
@@ -52,7 +53,7 @@ export const usePostStore = create<PostState>((set, get) => ({
 
       let query = supabase
         .from('posts')
-        .select('*, author:users!posts_author_id_fkey(*)')
+        .select('*, author:users!posts_author_id_fkey(id, display_name, display_name_hindi, profile_photo_url, village, state)')
         .order('created_at', { ascending: false })
         .limit(PAGE_SIZE);
 
@@ -63,7 +64,7 @@ export const usePostStore = create<PostState>((set, get) => ({
       const { data, error } = await query;
 
       if (error) {
-        set({ error: error.message, isLoading: false });
+        set({ error: safeError(error, 'कुछ गलत हो गया।'), isLoading: false });
         return;
       }
 
@@ -77,7 +78,7 @@ export const usePostStore = create<PostState>((set, get) => ({
         isLoading: false,
       }));
     } catch (error: any) {
-      set({ error: error.message || 'Failed to fetch posts', isLoading: false });
+      set({ error: safeError(error, 'Failed to fetch posts'), isLoading: false });
     }
   },
 
@@ -163,11 +164,46 @@ export const usePostStore = create<PostState>((set, get) => ({
         }
       }
 
+      // Update onboarding progress — made_first_post
+      supabase
+        .from('onboarding_progress')
+        .update({ made_first_post: true })
+        .eq('user_id', session.user.id)
+        .then(() => {}); // fire-and-forget
+
+      // Notify Level-1 family members about the new post
+      const { data: me } = await supabase
+        .from('users')
+        .select('display_name, display_name_hindi')
+        .eq('id', session.user.id)
+        .single();
+
+      if (me) {
+        const senderName = me.display_name_hindi || me.display_name;
+        const { data: l1Members } = await supabase
+          .from('family_members')
+          .select('family_member_id')
+          .eq('user_id', session.user.id)
+          .eq('connection_level', 1)
+          .limit(50);
+
+        if (l1Members?.length) {
+          for (const m of l1Members) {
+            sendPushToUser(
+              m.family_member_id,
+              'नई पोस्ट 📸',
+              `${senderName} ने नई पोस्ट डाली`,
+              { type: 'new_post', postId: post?.id, actorId: session.user.id },
+            );
+          }
+        }
+      }
+
       // Refresh to get the post with joined author
       await get().refreshPosts();
       return true;
     } catch (error: any) {
-      set({ error: error.message || 'Failed to create post' });
+      set({ error: safeError(error, 'Failed to create post') });
       return false;
     }
   },
@@ -202,7 +238,7 @@ export const usePostStore = create<PostState>((set, get) => ({
               p.id === postId ? { ...p, like_count: p.like_count - 1, is_liked: false } : p
             ),
           }));
-          set({ error: error.message });
+          set({ error: safeError(error, 'कुछ गलत हो गया।') });
           return false;
         }
       } else {
@@ -214,14 +250,14 @@ export const usePostStore = create<PostState>((set, get) => ({
               p.id === postId ? { ...p, like_count: p.like_count + 1, is_liked: true } : p
             ),
           }));
-          set({ error: error.message });
+          set({ error: safeError(error, 'कुछ गलत हो गया।') });
           return false;
         }
       }
 
       return true;
     } catch (error: any) {
-      set({ error: error.message || 'Failed to like post' });
+      set({ error: safeError(error, 'Failed to like post') });
       return false;
     }
   },
@@ -242,7 +278,7 @@ export const usePostStore = create<PostState>((set, get) => ({
         .eq('author_id', session.user.id);
 
       if (error) {
-        set({ error: error.message });
+        set({ error: safeError(error, 'कुछ गलत हो गया।') });
         return false;
       }
 
@@ -251,7 +287,7 @@ export const usePostStore = create<PostState>((set, get) => ({
       }));
       return true;
     } catch (error: any) {
-      set({ error: error.message || 'Failed to delete post' });
+      set({ error: safeError(error, 'Failed to delete post') });
       return false;
     }
   },

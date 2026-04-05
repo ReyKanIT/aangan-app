@@ -23,8 +23,11 @@ import { Spacing, BorderRadius, Shadow } from '../../theme/spacing';
 import { usePostStore } from '../../stores/postStore';
 import { useAuthStore } from '../../stores/authStore';
 import { useFamilyStore } from '../../stores/familyStore';
+import { useLanguageStore } from '../../stores/languageStore';
 import type { AudienceType, PostType, User } from '../../types/database';
+import VoiceMicButton from '../../components/voice/VoiceMicButton';
 
+// TODO: update RootStackParamList to add editPostId param
 type Props = NativeStackScreenProps<any, 'PostComposer'>;
 
 // -- Audience Modal Tabs --
@@ -270,11 +273,16 @@ function AudienceModal({ visible, onClose, audienceType, onSelectAudience, membe
 
 // -- Main Component --
 
-export default function PostComposerScreen({ navigation }: Props) {
+export default function PostComposerScreen({ navigation, route }: Props) {
   const insets = useSafeAreaInsets();
   const { user } = useAuthStore();
   const { createPost, error: postError } = usePostStore();
   const { members, fetchMembers } = useFamilyStore();
+  const { isHindi } = useLanguageStore();
+
+  // Edit mode: presence of editPostId param switches the screen into edit mode
+  const editPostId: string | undefined = route?.params?.editPostId;
+  const isEditMode = Boolean(editPostId);
 
   const [content, setContent] = useState('');
   const [mediaFiles, setMediaFiles] = useState<MediaFile[]>([]);
@@ -285,9 +293,53 @@ export default function PostComposerScreen({ navigation }: Props) {
   const [showAudienceModal, setShowAudienceModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Poll state
+  const [showPoll, setShowPoll] = useState(false);
+  const [pollQuestion, setPollQuestion] = useState('');
+  const [pollOptions, setPollOptions] = useState(['', '']);
+
+  // Edit mode specific state
+  const [isLoadingPost, setIsLoadingPost] = useState(isEditMode);
+  const [existingMediaUrls, setExistingMediaUrls] = useState<string[]>([]);
+
   useEffect(() => {
     fetchMembers();
+    if (isEditMode && editPostId) {
+      loadPostForEdit(editPostId);
+    }
   }, []);
+
+  const loadPostForEdit = useCallback(async (postId: string) => {
+    setIsLoadingPost(true);
+    try {
+      const { supabase } = await import('../../config/supabase');
+      const { data, error } = await supabase
+        .from('posts')
+        .select('content, media_urls, audience_type, audience_level')
+        .eq('id', postId)
+        .single();
+
+      if (error || !data) {
+        Alert.alert('त्रुटि', 'पोस्ट लोड नहीं हो सका', [
+          { text: 'ठीक है', onPress: () => navigation.goBack() },
+        ]);
+        return;
+      }
+
+      setContent(data.content || '');
+      setExistingMediaUrls(data.media_urls || []);
+      setAudienceType((data.audience_type as AudienceType) || 'all');
+      if (data.audience_level != null) {
+        setAudienceLevelMin(data.audience_level);
+      }
+    } catch {
+      Alert.alert('त्रुटि', 'पोस्ट लोड नहीं हो सका', [
+        { text: 'ठीक है', onPress: () => navigation.goBack() },
+      ]);
+    } finally {
+      setIsLoadingPost(false);
+    }
+  }, [navigation]);
 
   const audienceLabel = useMemo(() => {
     if (audienceType === 'all') return 'सभी परिवार';
@@ -296,8 +348,16 @@ export default function PostComposerScreen({ navigation }: Props) {
   }, [audienceType, audienceLevelMin, audienceLevelMax, audienceUserIds]);
 
   const canPost = useMemo(() => {
+    if (isEditMode) {
+      return content.trim().length > 0 && !isSubmitting;
+    }
+    if (showPoll) {
+      const validOptions = pollOptions.filter(o => o.trim());
+      const pollValid = pollQuestion.trim().length > 0 && validOptions.length >= 2;
+      return (content.trim().length > 0 || mediaFiles.length > 0 || pollValid) && pollValid && !isSubmitting;
+    }
     return (content.trim().length > 0 || mediaFiles.length > 0) && !isSubmitting;
-  }, [content, mediaFiles, isSubmitting]);
+  }, [isEditMode, content, mediaFiles, isSubmitting, showPoll, pollQuestion, pollOptions]);
 
   const handleSelectAudience = useCallback((
     type: AudienceType,
@@ -309,6 +369,19 @@ export default function PostComposerScreen({ navigation }: Props) {
     setAudienceLevelMin(levelMin ?? null);
     setAudienceLevelMax(levelMax ?? null);
     setAudienceUserIds(userIds ?? []);
+  }, []);
+
+  // Poll helpers
+  const addPollOption = useCallback(() => {
+    setPollOptions(prev => prev.length < 5 ? [...prev, ''] : prev);
+  }, []);
+
+  const removePollOption = useCallback((index: number) => {
+    setPollOptions(prev => prev.length > 2 ? prev.filter((_, i) => i !== index) : prev);
+  }, []);
+
+  const updatePollOption = useCallback((index: number, text: string) => {
+    setPollOptions(prev => prev.map((o, i) => i === index ? text : o));
   }, []);
 
   const handlePickImages = useCallback(async () => {
@@ -371,7 +444,38 @@ export default function PostComposerScreen({ navigation }: Props) {
     setMediaFiles((prev) => prev.filter((_, i) => i !== index));
   }, []);
 
-  const handleSubmit = useCallback(async () => {
+  // Edit mode submit — updates via Supabase directly
+  const handleSubmitEdit = useCallback(async () => {
+    if (!canPost || !editPostId) return;
+
+    setIsSubmitting(true);
+    try {
+      const { supabase } = await import('../../config/supabase');
+      const { error } = await supabase
+        .from('posts')
+        .update({
+          content: content.trim() || null,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', editPostId);
+
+      if (error) {
+        Alert.alert('त्रुटि', 'पोस्ट अपडेट नहीं हो सका');
+      } else {
+        Alert.alert(
+          'सफल',
+          'पोस्ट अपडेट हो गया!',
+          [{ text: 'ठीक है', onPress: () => navigation.goBack() }],
+        );
+      }
+    } catch {
+      Alert.alert('त्रुटि', 'पोस्ट अपडेट नहीं हो सका');
+    }
+    setIsSubmitting(false);
+  }, [canPost, editPostId, content, navigation]);
+
+  // Create mode submit — existing flow unchanged
+  const handleSubmitCreate = useCallback(async () => {
     if (!canPost) return;
 
     setIsSubmitting(true);
@@ -390,6 +494,35 @@ export default function PostComposerScreen({ navigation }: Props) {
       });
 
       if (success) {
+        if (showPoll) {
+          try {
+            const { supabase } = await import('../../config/supabase');
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session?.user) {
+              const { data: latestPost } = await supabase
+                .from('posts')
+                .select('id')
+                .eq('author_id', session.user.id)
+                .order('created_at', { ascending: false })
+                .limit(1)
+                .single();
+              if (latestPost) {
+                const validOptions = pollOptions.filter(o => o.trim()).map((text, idx) => ({
+                  id: String(idx + 1),
+                  text: text.trim(),
+                  vote_count: 0,
+                }));
+                await supabase.from('post_polls').insert({
+                  post_id: latestPost.id,
+                  question: pollQuestion.trim(),
+                  options: validOptions,
+                });
+              }
+            }
+          } catch {
+            // Poll insert failed — post was created, continue
+          }
+        }
         navigation.goBack();
       } else {
         Alert.alert('त्रुटि', postError || 'पोस्ट बनाने में समस्या हुई');
@@ -398,13 +531,21 @@ export default function PostComposerScreen({ navigation }: Props) {
       Alert.alert('त्रुटि', 'पोस्ट बनाने में समस्या हुई');
     }
     setIsSubmitting(false);
-  }, [canPost, content, mediaFiles, audienceType, audienceLevelMin, audienceLevelMax, audienceUserIds, createPost, postError, navigation]);
+  }, [canPost, content, mediaFiles, audienceType, audienceLevelMin, audienceLevelMax, audienceUserIds, createPost, postError, navigation, showPoll, pollQuestion, pollOptions]);
+
+  const handleSubmit = useCallback(() => {
+    if (isEditMode) {
+      handleSubmitEdit();
+    } else {
+      handleSubmitCreate();
+    }
+  }, [isEditMode, handleSubmitEdit, handleSubmitCreate]);
 
   const handleCancel = useCallback(() => {
     if (content.trim() || mediaFiles.length > 0) {
       Alert.alert(
-        'पोस्ट छोड़ें?',
-        'आपका पोस्ट सेव नहीं होगा',
+        isEditMode ? 'बदलाव छोड़ें?' : 'पोस्ट छोड़ें?',
+        isEditMode ? 'आपके बदलाव सेव नहीं होंगे' : 'आपका पोस्ट सेव नहीं होगा',
         [
           { text: 'रहने दें', style: 'cancel' },
           { text: 'छोड़ें', style: 'destructive', onPress: () => navigation.goBack() },
@@ -413,7 +554,17 @@ export default function PostComposerScreen({ navigation }: Props) {
     } else {
       navigation.goBack();
     }
-  }, [content, mediaFiles, navigation]);
+  }, [content, mediaFiles, isEditMode, navigation]);
+
+  // Loading state for edit mode
+  if (isLoadingPost) {
+    return (
+      <View style={styles.loadingScreen}>
+        <ActivityIndicator size="large" color={Colors.haldiGold} />
+        <Text style={styles.loadingText}>{'पोस्ट लोड हो रहा है...'}</Text>
+      </View>
+    );
+  }
 
   return (
     <KeyboardAvoidingView
@@ -432,19 +583,27 @@ export default function PostComposerScreen({ navigation }: Props) {
             <Text style={styles.cancelText}>{'✕'}</Text>
           </TouchableOpacity>
 
-          <Text style={styles.headerTitle}>{'नया पोस्ट'}</Text>
+          <Text style={styles.headerTitle}>
+            {isEditMode
+              ? (isHindi ? 'पोस्ट संपादित करें' : 'Edit Post')
+              : (isHindi ? 'नया पोस्ट' : 'New Post')}
+          </Text>
 
           <TouchableOpacity
             style={[styles.shareButton, !canPost && styles.shareButtonDisabled]}
             onPress={handleSubmit}
             disabled={!canPost}
             accessibilityRole="button"
-            accessibilityLabel="Share post"
+            accessibilityLabel={isEditMode ? 'Update post' : 'Share post'}
           >
             {isSubmitting ? (
               <ActivityIndicator color={Colors.white} size="small" />
             ) : (
-              <Text style={styles.shareButtonText}>{'शेयर करें'}</Text>
+              <Text style={styles.shareButtonText}>
+                {isEditMode
+                  ? (isHindi ? 'अपडेट करें' : 'Update')
+                  : (isHindi ? 'पोस्ट करें' : 'Post')}
+              </Text>
             )}
           </TouchableOpacity>
         </View>
@@ -466,33 +625,112 @@ export default function PostComposerScreen({ navigation }: Props) {
             <Text style={styles.authorName}>
               {user?.display_name_hindi || user?.display_name || ''}
             </Text>
-            <TouchableOpacity
-              style={styles.audienceChip}
-              onPress={() => setShowAudienceModal(true)}
-              accessibilityRole="button"
-              accessibilityLabel="Select audience"
-            >
-              <Text style={styles.audienceChipText}>{audienceLabel}</Text>
-              <Text style={styles.audienceChipArrow}>{'▼'}</Text>
-            </TouchableOpacity>
+            {!isEditMode && (
+              <TouchableOpacity
+                style={styles.audienceChip}
+                onPress={() => setShowAudienceModal(true)}
+                accessibilityRole="button"
+                accessibilityLabel="Select audience"
+              >
+                <Text style={styles.audienceChipText}>{audienceLabel}</Text>
+                <Text style={styles.audienceChipArrow}>{'▼'}</Text>
+              </TouchableOpacity>
+            )}
+            {isEditMode && (
+              <View style={styles.editModeBadge}>
+                <Text style={styles.editModeBadgeText}>{'✏️ संपादन मोड'}</Text>
+              </View>
+            )}
           </View>
         </View>
 
         {/* Text Input */}
-        <TextInput
-          style={styles.textInput}
-          value={content}
-          onChangeText={setContent}
-          placeholder="क्या चल रहा है?"
-          placeholderTextColor={Colors.gray400}
-          multiline
-          textAlignVertical="top"
-          autoFocus
-          accessibilityLabel="Post content"
-        />
+        <View style={{ flexDirection: 'row', alignItems: 'flex-start' }}>
+          <TextInput
+            style={[styles.textInput, { flex: 1 }]}
+            value={content}
+            onChangeText={setContent}
+            placeholder={isHindi ? 'क्या चल रहा है?' : "What's happening?"}
+            placeholderTextColor={Colors.gray400}
+            multiline
+            textAlignVertical="top"
+            autoFocus={!isEditMode}
+            accessibilityLabel="Post content"
+          />
+          <VoiceMicButton
+            onTranscript={(text) => setContent(prev => prev + ' ' + text)}
+            mode="append"
+            size={28}
+          />
+        </View>
 
-        {/* Media Preview */}
-        {mediaFiles.length > 0 && (
+        {/* Poll Section */}
+        {!isEditMode && showPoll && (
+          <View style={styles.pollSection}>
+            <Text style={styles.pollTitle}>{'📊 पोल बनाएं / Create Poll'}</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <TextInput
+                style={[styles.pollInput, { flex: 1 }]}
+                value={pollQuestion}
+                onChangeText={setPollQuestion}
+                placeholder="सवाल लिखें / Write question"
+                placeholderTextColor={Colors.gray400}
+                accessibilityLabel="Poll question"
+              />
+              <VoiceMicButton
+                onTranscript={(text) => setPollQuestion(prev => prev + ' ' + text)}
+                mode="append"
+                size={24}
+              />
+            </View>
+            <Text style={styles.pollTitle}>{'विकल्प / Options:'}</Text>
+            {pollOptions.map((option, index) => (
+              <View key={index} style={styles.optionRow}>
+                <View style={styles.optionDot} />
+                <TextInput
+                  style={styles.optionInput}
+                  value={option}
+                  onChangeText={(text) => updatePollOption(index, text)}
+                  placeholder={`विकल्प ${index + 1} / Option ${index + 1}`}
+                  placeholderTextColor={Colors.gray400}
+                  accessibilityLabel={`Poll option ${index + 1}`}
+                />
+                <TouchableOpacity
+                  style={styles.removeOptionBtn}
+                  onPress={() => removePollOption(index)}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Remove option ${index + 1}`}
+                >
+                  <Text style={{ fontSize: 14, color: Colors.error, fontWeight: '700' }}>{'✕'}</Text>
+                </TouchableOpacity>
+              </View>
+            ))}
+            {pollOptions.length < 5 && (
+              <TouchableOpacity
+                style={styles.addOptionBtn}
+                onPress={addPollOption}
+                accessibilityRole="button"
+                accessibilityLabel="Add poll option"
+              >
+                <Text style={{ fontSize: 18, color: Colors.haldiGold }}>{'+'}</Text>
+                <Text style={{ ...Typography.labelSmall, color: Colors.haldiGold }}>{'विकल्प जोड़ें / Add option'}</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        )}
+
+        {/* Edit mode: existing media note */}
+        {isEditMode && existingMediaUrls.length > 0 && (
+          <View style={styles.editMediaNote}>
+            <Text style={styles.editMediaNoteIcon}>{'📷'}</Text>
+            <Text style={styles.editMediaNoteText}>
+              {'मीडिया बदलना संभव नहीं है (v0.3 में उपलब्ध नहीं)'}
+            </Text>
+          </View>
+        )}
+
+        {/* Media Preview — create mode only */}
+        {!isEditMode && mediaFiles.length > 0 && (
           <View style={styles.mediaPreview}>
             <ScrollView horizontal showsHorizontalScrollIndicator={false}>
               {mediaFiles.map((file, index) => (
@@ -516,47 +754,61 @@ export default function PostComposerScreen({ navigation }: Props) {
         )}
       </ScrollView>
 
-      {/* Media Bar */}
-      <View style={[styles.mediaBar, { paddingBottom: insets.bottom + Spacing.sm }]}>
-        <TouchableOpacity
-          style={styles.mediaButton}
-          onPress={handleTakePhoto}
-          accessibilityRole="button"
-          accessibilityLabel="Take photo"
-        >
-          <Text style={styles.mediaButtonIcon}>{'📷'}</Text>
-          <Text style={styles.mediaButtonLabel}>{'कैमरा'}</Text>
-        </TouchableOpacity>
+      {/* Media Bar — create mode only */}
+      {!isEditMode && (
+        <View style={[styles.mediaBar, { paddingBottom: insets.bottom + Spacing.sm }]}>
+          <TouchableOpacity
+            style={styles.mediaButton}
+            onPress={handleTakePhoto}
+            accessibilityRole="button"
+            accessibilityLabel="Take photo"
+          >
+            <Text style={styles.mediaButtonIcon}>{'📷'}</Text>
+            <Text style={styles.mediaButtonLabel}>{'कैमरा'}</Text>
+          </TouchableOpacity>
 
-        <TouchableOpacity
-          style={styles.mediaButton}
-          onPress={handlePickImages}
-          accessibilityRole="button"
-          accessibilityLabel="Pick from gallery"
-        >
-          <Text style={styles.mediaButtonIcon}>{'🖼️'}</Text>
-          <Text style={styles.mediaButtonLabel}>{'गैलरी'}</Text>
-        </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.mediaButton}
+            onPress={handlePickImages}
+            accessibilityRole="button"
+            accessibilityLabel="Pick from gallery"
+          >
+            <Text style={styles.mediaButtonIcon}>{'🖼️'}</Text>
+            <Text style={styles.mediaButtonLabel}>{'गैलरी'}</Text>
+          </TouchableOpacity>
 
-        <TouchableOpacity
-          style={styles.mediaButton}
-          onPress={() => Alert.alert('जल्द आ रहा है', 'डॉक्यूमेंट अपलोड जल्द उपलब्ध होगा')}
-          accessibilityRole="button"
-          accessibilityLabel="Attach document"
-        >
-          <Text style={styles.mediaButtonIcon}>{'📄'}</Text>
-          <Text style={styles.mediaButtonLabel}>{'डॉक्यूमेंट'}</Text>
-        </TouchableOpacity>
-      </View>
+          <TouchableOpacity
+            style={styles.mediaButton}
+            onPress={() => Alert.alert('जल्द आ रहा है', 'डॉक्यूमेंट अपलोड जल्द उपलब्ध होगा')}
+            accessibilityRole="button"
+            accessibilityLabel="Attach document"
+          >
+            <Text style={styles.mediaButtonIcon}>{'📄'}</Text>
+            <Text style={styles.mediaButtonLabel}>{'डॉक्यूमेंट'}</Text>
+          </TouchableOpacity>
 
-      {/* Audience Modal */}
-      <AudienceModal
-        visible={showAudienceModal}
-        onClose={() => setShowAudienceModal(false)}
-        audienceType={audienceType}
-        onSelectAudience={handleSelectAudience}
-        members={members}
-      />
+          <TouchableOpacity
+            style={[styles.mediaButton, showPoll && styles.mediaButtonActive]}
+            onPress={() => setShowPoll(prev => !prev)}
+            accessibilityRole="button"
+            accessibilityLabel="Toggle poll creation"
+          >
+            <Text style={styles.mediaButtonIcon}>{'📊'}</Text>
+            <Text style={[styles.mediaButtonLabel, showPoll && styles.mediaButtonLabelActive]}>{'पोल / Poll'}</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+
+      {/* Audience Modal — create mode only */}
+      {!isEditMode && (
+        <AudienceModal
+          visible={showAudienceModal}
+          onClose={() => setShowAudienceModal(false)}
+          audienceType={audienceType}
+          onSelectAudience={handleSelectAudience}
+          members={members}
+        />
+      )}
     </KeyboardAvoidingView>
   );
 }
@@ -567,6 +819,17 @@ const styles = StyleSheet.create({
   screen: {
     flex: 1,
     backgroundColor: Colors.cream,
+  },
+  loadingScreen: {
+    flex: 1,
+    backgroundColor: Colors.cream,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    ...Typography.body,
+    color: Colors.brownLight,
+    marginTop: Spacing.md,
   },
   header: {
     backgroundColor: Colors.white,
@@ -593,6 +856,9 @@ const styles = StyleSheet.create({
   headerTitle: {
     ...Typography.h3,
     color: Colors.brown,
+    flex: 1,
+    textAlign: 'center',
+    marginHorizontal: Spacing.sm,
   },
   shareButton: {
     backgroundColor: Colors.haldiGold,
@@ -660,11 +926,39 @@ const styles = StyleSheet.create({
     color: Colors.mehndiGreen,
     marginLeft: Spacing.xs,
   },
+  editModeBadge: {
+    backgroundColor: Colors.haldiGold + '20',
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.xs,
+    borderRadius: BorderRadius.round,
+    alignSelf: 'flex-start',
+  },
+  editModeBadgeText: {
+    ...Typography.labelSmall,
+    color: Colors.haldiGoldDark,
+  },
   textInput: {
     ...Typography.bodyLarge,
     color: Colors.brown,
     minHeight: 120,
     textAlignVertical: 'top',
+  },
+  editMediaNote: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.gray100,
+    borderRadius: BorderRadius.md,
+    padding: Spacing.md,
+    marginTop: Spacing.lg,
+  },
+  editMediaNoteIcon: {
+    fontSize: 18,
+    marginRight: Spacing.sm,
+  },
+  editMediaNoteText: {
+    ...Typography.bodySmall,
+    color: Colors.gray500,
+    flex: 1,
   },
   mediaPreview: {
     marginTop: Spacing.lg,
@@ -723,6 +1017,78 @@ const styles = StyleSheet.create({
   mediaButtonLabel: {
     ...Typography.caption,
     color: Colors.brownLight,
+  },
+  mediaButtonActive: {
+    backgroundColor: Colors.haldiGold + '18',
+    borderRadius: BorderRadius.md,
+    paddingHorizontal: Spacing.xs,
+  },
+  mediaButtonLabelActive: {
+    color: Colors.haldiGoldDark,
+    fontWeight: '600',
+  },
+
+  // Poll
+  pollSection: {
+    backgroundColor: Colors.cream,
+    borderRadius: 12,
+    padding: 16,
+    marginTop: 8,
+    borderWidth: 1,
+    borderColor: Colors.haldiGold + '40',
+  },
+  pollTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: Colors.brown,
+    marginBottom: 12,
+  },
+  pollInput: {
+    borderWidth: 1,
+    borderColor: Colors.gray300,
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 15,
+    color: Colors.brown,
+    backgroundColor: Colors.white,
+    marginBottom: 8,
+  },
+  optionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 8,
+  },
+  optionDot: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    borderWidth: 2,
+    borderColor: Colors.haldiGold,
+  },
+  optionInput: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: Colors.gray300,
+    borderRadius: 8,
+    padding: 10,
+    fontSize: 14,
+    color: Colors.brown,
+    backgroundColor: Colors.white,
+  },
+  removeOptionBtn: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: Colors.error + '20',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  addOptionBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingVertical: 8,
   },
 });
 

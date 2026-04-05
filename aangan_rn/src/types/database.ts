@@ -18,6 +18,18 @@ export interface User {
   last_seen_at: string | null;
   created_at: string;
   updated_at: string;
+  date_of_birth?: string | null;
+  gotra?: string | null;
+  family_role?: string | null;
+  theme_preference?: 'light' | 'dark' | 'system' | null;
+  wedding_anniversary?: string | null; // ISO date YYYY-MM-DD
+  // Kuldevi / Kuldevta
+  kuldevi_name?: string | null;
+  kuldevi_temple_location?: string | null;
+  kuldevta_name?: string | null;
+  kuldevta_temple_location?: string | null;
+  puja_paddhati?: string | null;
+  puja_niyam?: string | null;
 }
 
 export interface FamilyMember {
@@ -62,6 +74,7 @@ export interface Post {
   delivery_status: string;
   like_count: number;
   comment_count: number;
+  namaste_count: number;
   created_at: string;
   updated_at: string;
   // Joined
@@ -152,7 +165,9 @@ export type PrivacyType = 'all' | 'level' | 'individual';
 export interface EventPhoto {
   id: string;
   event_id: string;
-  uploader_id: string;
+  uploader_id: string | null;      // null for guest (QR) uploads
+  guest_name: string | null;       // set for QR guest uploads
+  is_video: boolean;
   photo_url: string;
   thumbnail_url: string | null;
   caption: string | null;
@@ -207,6 +222,8 @@ export interface PhysicalCard {
 export type NotificationType =
   | 'new_post'
   | 'new_comment'
+  | 'comment_reply'
+  | 'new_message'
   | 'event_invite'
   | 'rsvp_update'
   | 'new_family_member'
@@ -302,4 +319,247 @@ export interface EventBundle {
   used_storage_bytes: number;
   photo_count: number;
   created_at: string;
+}
+
+// ─── v0.2 Security Types ────────────────────────────────────
+
+export type ReportReason = 'inappropriate' | 'spam' | 'harassment' | 'fake_account' | 'privacy_violation' | 'other';
+export type ReportStatus = 'pending' | 'reviewing' | 'resolved' | 'dismissed';
+export type ContentReportType = 'post' | 'photo' | 'event' | 'user' | 'comment';
+
+export interface ContentReport {
+  id: string;
+  reporter_id: string;
+  content_type: ContentReportType;
+  content_id: string;
+  reason: ReportReason;
+  description: string | null;
+  status: ReportStatus;
+  resolved_by: string | null;
+  resolution_note: string | null;
+  created_at: string;
+  updated_at: string;
+  // Joined
+  reporter?: User;
+}
+
+export type AuditAction =
+  | 'user_login'
+  | 'user_logout'
+  | 'profile_update'
+  | 'post_create'
+  | 'post_delete'
+  | 'event_create'
+  | 'event_delete'
+  | 'family_add'
+  | 'family_remove'
+  | 'photo_moderate'
+  | 'report_resolve'
+  | 'admin_action'
+  | 'account_deactivate'
+  | 'content_report';
+
+export interface AuditLog {
+  id: string;
+  actor_id: string;
+  action: AuditAction;
+  target_type: string | null;
+  target_id: string | null;
+  metadata: Record<string, any>;
+  ip_address: string | null;
+  user_agent: string | null;
+  created_at: string;
+  // Joined
+  actor?: User;
+}
+
+export interface UserBlock {
+  id: string;
+  blocker_id: string;
+  blocked_id: string;
+  reason: string | null;
+  created_at: string;
+  // Joined
+  blocked_user?: User;
+}
+
+export interface AppSetting {
+  key: string;
+  value: any;
+  description: string | null;
+  updated_by: string | null;
+  updated_at: string;
+}
+
+// ─── v0.3 Types ─────────────────────────────────────────────────────────────
+
+export interface PostComment {
+  id: string;
+  post_id: string;
+  author_id: string;
+  content: string;
+  created_at: string;
+  updated_at: string;
+  author?: Pick<User, 'id' | 'display_name' | 'display_name_hindi' | 'profile_photo_url'>;
+}
+
+export interface DirectMessage {
+  id: string;
+  sender_id: string;
+  receiver_id: string;
+  content: string;
+  message_type?: 'text' | 'voice';
+  audio_url?: string | null;
+  audio_duration_seconds?: number | null;
+  is_read: boolean;
+  read_at: string | null;
+  created_at: string;
+  sender?: Pick<User, 'id' | 'display_name' | 'display_name_hindi' | 'profile_photo_url'>;
+}
+
+export interface ConversationSummary {
+  userId: string;
+  displayName: string;
+  displayNameHindi: string | null;
+  profilePhotoUrl: string | null;
+  lastMessage: string;
+  lastMessageAt: string;
+  unreadCount: number;
+}
+
+export interface OnboardingProgress {
+  user_id: string;
+  added_parent: boolean;
+  added_sibling: boolean;
+  made_first_post: boolean;
+  completed_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export type ReactionType = 'like' | 'namaste';
+
+// ─── v0.4 Types ─────────────────────────────────────────────────────────────
+
+export interface Story {
+  id: string;
+  author_id: string;
+  media_url: string;
+  media_type: 'image' | 'video';
+  caption: string | null;
+  expires_at: string;
+  view_count: number;
+  created_at: string;
+  author?: Pick<User, 'id' | 'display_name' | 'display_name_hindi' | 'profile_photo_url'>;
+  is_viewed?: boolean;
+}
+
+export interface PollOption {
+  id: string;
+  text: string;
+  text_hindi?: string;
+  vote_count: number;
+}
+
+export interface PostPoll {
+  id: string;
+  post_id: string;
+  question: string;
+  options: PollOption[];
+  expires_at: string | null;
+  created_at: string;
+  my_vote?: string | null;
+}
+
+// ─── v0.5 Support Tickets ───────────────────────────────────────────────────
+
+export type SupportTicketCategory =
+  | 'billing' | 'account' | 'bug_report' | 'feature_request' | 'complaint' | 'general';
+
+export type SupportTicketStatus =
+  | 'open' | 'assigned' | 'in_progress' | 'waiting_for_user' | 'resolved' | 'closed';
+
+export type SupportTicketPriority = 'low' | 'medium' | 'high' | 'urgent';
+
+export type AdminRole = 'super_admin' | 'admin' | 'manager';
+
+export interface SupportTicket {
+  id: string;
+  ticket_number: string;
+  user_id: string;
+  category: SupportTicketCategory;
+  subject: string;
+  status: SupportTicketStatus;
+  priority: SupportTicketPriority;
+  assigned_to: string | null;
+  resolution_notes: string | null;
+  resolved_at: string | null;
+  first_response_at: string | null;
+  created_at: string;
+  updated_at: string;
+  // Joined
+  user?: Pick<User, 'id' | 'display_name' | 'display_name_hindi' | 'phone_number' | 'profile_photo_url'>;
+  assigned_agent?: Pick<User, 'id' | 'display_name'> | null;
+  message_count?: number;
+  last_message?: string | null;
+}
+
+export interface SupportMessage {
+  id: string;
+  ticket_id: string;
+  sender_id: string;
+  message: string;
+  is_from_support: boolean;
+  is_internal_note: boolean;
+  attachment_url: string | null;
+  created_at: string;
+  // Joined
+  sender?: Pick<User, 'id' | 'display_name' | 'display_name_hindi' | 'profile_photo_url'>;
+}
+
+// ─── v0.4.3 Life Events & Sutak ─────────────────────────────────────────────
+
+export type LifeEventType = 'birth' | 'death';
+export type BabyGender = 'boy' | 'girl' | 'not_disclosed';
+
+export interface SutakRules {
+  noTempleVisit: boolean;          // मंदिर न जाएं
+  noReligiousCeremonies: boolean;  // हवन / यज्ञ आदि न करें
+  noPujaAtHome: boolean;           // घर में पूजा न करें
+  noAuspiciousWork: boolean;       // मांगलिक कार्य न करें
+  noFoodSharing: boolean;          // दूसरों को भोजन न परोसें
+  noNewVentures: boolean;          // नया कार्य शुरू न करें
+  customNotes: string;             // परिवार की विशेष बातें
+}
+
+export interface LifeEvent {
+  id: string;
+  created_by: string;
+  event_type: LifeEventType;
+  person_name: string;
+  person_name_hindi: string | null;
+  event_date: string;              // ISO date string
+  relationship: string | null;
+
+  // Birth-specific
+  baby_gender: BabyGender | null;
+  birth_place: string | null;
+
+  // Death-specific
+  age_at_death: number | null;
+
+  // Sutak
+  sutak_enabled: boolean;
+  sutak_days: number;
+  sutak_start_date: string | null;
+  sutak_end_date: string | null;
+  sutak_rules: SutakRules;
+
+  notes: string | null;
+  is_visible_to_family: boolean;
+  created_at: string;
+  updated_at: string;
+
+  // Joined
+  creator?: Pick<User, 'id' | 'display_name' | 'display_name_hindi' | 'profile_photo_url'>;
 }

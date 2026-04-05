@@ -115,3 +115,62 @@ export interface Notification {
   data: Record<string, string> | null;
   created_at: string;
 }
+
+// ─── v0.2 Security Types ────────────────────────────────────
+
+export type ReportReason = 'inappropriate' | 'spam' | 'harassment' | 'fake_account' | 'privacy_violation' | 'other';
+export type ReportStatus = 'pending' | 'reviewing' | 'resolved' | 'dismissed';
+export type ContentReportType = 'post' | 'photo' | 'event' | 'user' | 'comment';
+
+export interface ContentReport {
+  id: string;
+  reporter_id: string;
+  content_type: ContentReportType;
+  content_id: string;
+  reason: ReportReason;
+  description: string | null;
+  status: ReportStatus;
+  resolved_by: string | null;
+  resolution_note: string | null;
+  created_at: string;
+  updated_at: string;
+  reporter?: User;
+}
+
+export type AuditAction =
+  | 'user_login' | 'user_logout' | 'profile_update'
+  | 'post_create' | 'post_delete'
+  | 'event_create' | 'event_delete'
+  | 'family_add' | 'family_remove'
+  | 'photo_moderate' | 'report_resolve'
+  | 'admin_action' | 'account_deactivate' | 'content_report';
+
+export interface AuditLog {
+  id: string;
+  actor_id: string;
+  action: AuditAction;
+  target_type: string | null;
+  target_id: string | null;
+  metadata: Record<string, any>;
+  ip_address: string | null;
+  user_agent: string | null;
+  created_at: string;
+  actor?: User;
+}
+
+export interface UserBlock {
+  id: string;
+  blocker_id: string;
+  blocked_id: string;
+  reason: string | null;
+  created_at: string;
+  blocked_user?: User;
+}
+
+export interface AppSetting {
+  key: string;
+  value: any;
+  description: string | null;
+  updated_by: string | null;
+  updated_at: string;
+}

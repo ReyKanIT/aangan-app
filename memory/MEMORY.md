@@ -1,0 +1,2 @@
+- [Aangan v0.1 Status](project_v0.1_status.md) — Full React Native codebase completed 2026-03-30, needs EAS build for APK/IPA
+- [Always update PRD, Pitch Deck & Business Plan](feedback_docs.md) — After every feature, update all 3 living docs + version history
