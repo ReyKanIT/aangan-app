@@ -39,39 +39,39 @@ function FadeIn({ children, className = '', delay = 0 }: {
 
 const FEATURES = [
   {
-    emoji: '\uD83C\uDFA4',
+    emoji: '🎤',
     title: 'Voice Control',
-    hindi: '\u092C\u094B\u0932\u0915\u0930 \u0932\u093F\u0916\u0947\u0902',
+    hindi: 'बोलकर लिखें',
     desc: 'Voice-to-text in Hindi & English. Just speak and Aangan writes.',
   },
   {
-    emoji: '\uD83D\uDC68\u200D\uD83D\uDC69\u200D\uD83D\uDC67\u200D\uD83D\uDC66',
+    emoji: '👨‍👩‍👧‍👦',
     title: 'Family Tree',
-    hindi: '\u092A\u0930\u093F\u0935\u093E\u0930 \u0915\u093E \u092A\u0947\u0921\u093C',
+    hindi: 'परिवार का पेड़',
     desc: '3 levels of relationships — from grandparents to grandchildren.',
   },
   {
-    emoji: '\uD83D\uDCC5',
+    emoji: '📅',
     title: 'Panchang & Festivals',
-    hindi: '\u092A\u0902\u091A\u093E\u0902\u0917 \u0914\u0930 \u0924\u094D\u092F\u094B\u0939\u093E\u0930',
+    hindi: 'पंचांग और त्योहार',
     desc: 'Hindu calendar with tithi, nakshatra & upcoming festivals.',
   },
   {
-    emoji: '\uD83D\uDCAC',
+    emoji: '💬',
     title: 'Voice Messages',
-    hindi: '\u0906\u0935\u093E\u091C\u093C \u092D\u0947\u091C\u0947\u0902',
+    hindi: 'आवाज़ भेजें',
     desc: 'WhatsApp-style voice notes for the whole family.',
   },
   {
-    emoji: '\uD83C\uDF89',
+    emoji: '🎉',
     title: 'Events & RSVP',
-    hindi: '\u0915\u093E\u0930\u094D\u092F\u0915\u094D\u0930\u092E',
+    hindi: 'कार्यक्रम',
     desc: 'Plan family events with RSVP tracking & photo sharing.',
   },
   {
-    emoji: '\uD83D\uDED5',
+    emoji: '🛕',
     title: 'Kuldevi',
-    hindi: '\u0915\u0941\u0932\u0926\u0947\u0935\u0940/\u0915\u0941\u0932\u0926\u0947\u0935\u0924\u093E',
+    hindi: 'कुलदेवी/कुलदेवता',
     desc: 'Preserve family traditions, kuldevi info & spiritual roots.',
   },
 ];
@@ -106,7 +106,7 @@ export default function LandingPage() {
       <nav className="sticky top-0 z-50 bg-cream/90 backdrop-blur-md border-b border-haldi-gold/20">
         <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
           <span className="font-heading text-2xl text-haldi-gold tracking-wide">
-            Aangan <span className="text-haldi-gold-dark">\u0906\u0901\u0917\u0928</span>
+            Aangan <span className="text-haldi-gold-dark">आँगन</span>
           </span>
           <a
             href="/login"
@@ -123,7 +123,7 @@ export default function LandingPage() {
         <div className="relative max-w-3xl mx-auto">
           <FadeIn>
             <h1 className="font-heading text-5xl md:text-7xl text-haldi-gold leading-tight">
-              Aangan <span className="block text-haldi-gold-dark">\u0906\u0901\u0917\u0928</span>
+              Aangan <span className="block text-haldi-gold-dark">आँगन</span>
             </h1>
           </FadeIn>
 
@@ -135,7 +135,7 @@ export default function LandingPage() {
 
           <FadeIn delay={300}>
             <p className="mt-3 text-lg md:text-xl text-brown-light font-heading">
-              \u092A\u0930\u093F\u0935\u093E\u0930 \u0938\u0947 \u091C\u0941\u0921\u093C\u0947\u0902, \u092A\u0932 \u0938\u093E\u091D\u093E \u0915\u0930\u0947\u0902
+              परिवार से जुड़ें, पल साझा करें
             </p>
           </FadeIn>
 
@@ -175,7 +175,7 @@ export default function LandingPage() {
               Everything Your Family Needs
             </h2>
             <p className="text-center text-brown-light mb-12 text-lg">
-              \u092A\u0930\u093F\u0935\u093E\u0930 \u0915\u0947 \u0932\u093F\u090F \u0938\u092C \u0915\u0941\u091B \u090F\u0915 \u091C\u0917\u0939
+              परिवार के लिए सब कुछ एक जगह
             </p>
           </FadeIn>
 
@@ -199,9 +199,9 @@ export default function LandingPage() {
         <div className="max-w-4xl mx-auto text-center">
           <FadeIn>
             <div className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-mehndi-green/10 border-2 border-mehndi-green mb-8">
-              <span className="text-2xl">\u2714\uFE0F</span>
+              <span className="text-2xl">{"✔️"}</span>
               <span className="font-heading text-2xl text-mehndi-green">
-                \u0926\u093E\u0926\u0940 \u091F\u0947\u0938\u094D\u091F \u092A\u093E\u0938
+                दादी टेस्ट पास
               </span>
             </div>
           </FadeIn>
@@ -219,9 +219,9 @@ export default function LandingPage() {
           <FadeIn delay={300}>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
               {[
-                { icon: '\uD83D\uDC46', label: 'Big Buttons', detail: '52px+ tap targets', hindi: '\u092C\u0921\u093C\u0947 \u092C\u091F\u0928' },
-                { icon: '\uD83D\uDD24', label: 'Large Text', detail: '16px+ body text', hindi: '\u092C\u0921\u093C\u0947 \u0905\u0915\u094D\u0937\u0930' },
-                { icon: '\uD83C\uDDEE\uD83C\uDDF3', label: 'Hindi First', detail: 'Native language UI', hindi: '\u0939\u093F\u0902\u0926\u0940 \u092A\u0939\u0932\u0947' },
+                { icon: '👆', label: 'Big Buttons', detail: '52px+ tap targets', hindi: 'बड़े बटन' },
+                { icon: '🔤', label: 'Large Text', detail: '16px+ body text', hindi: 'बड़े अक्षर' },
+                { icon: '🇮🇳', label: 'Hindi First', detail: 'Native language UI', hindi: 'हिंदी पहले' },
               ].map((item) => (
                 <div key={item.label} className="bg-white rounded-2xl p-6 border border-haldi-gold/10">
                   <div className="text-4xl mb-2">{item.icon}</div>
@@ -243,7 +243,7 @@ export default function LandingPage() {
               Download Aangan
             </h2>
             <p className="text-brown-light text-lg mb-10">
-              \u0905\u092D\u0940 \u0921\u093E\u0909\u0928\u0932\u094B\u0921 \u0915\u0930\u0947\u0902
+              अभी डाउनलोड करें
             </p>
           </FadeIn>
 
@@ -292,7 +292,7 @@ export default function LandingPage() {
         <div className="max-w-6xl mx-auto">
           <div className="flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="text-center md:text-left">
-              <span className="font-heading text-2xl text-haldi-gold">Aangan \u0906\u0901\u0917\u0928</span>
+              <span className="font-heading text-2xl text-haldi-gold">Aangan आँगन</span>
               <p className="text-cream-dark text-sm mt-1">Your Family&rsquo;s Digital Home</p>
             </div>
 
@@ -307,7 +307,7 @@ export default function LandingPage() {
           </div>
 
           <div className="mt-8 pt-6 border-t border-cream/10 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-cream-dark">
-            <p>Made with \u2764\uFE0F in India</p>
+            <p>{"Made with ❤️ in India"}</p>
             <p>&copy; 2026 ReyKan IT &middot; v0.5.0</p>
           </div>
         </div>
