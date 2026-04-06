@@ -76,7 +76,7 @@ const FEATURES = [
   },
 ];
 
-const APK_URL = 'https://expo.dev/artifacts/eas/build-placeholder';
+const APK_URL = '/Aangan-v0.4.5.apk';
 
 export default function LandingPage() {
   const router = useRouter();

@@ -11,10 +11,8 @@
  *   MSG91_SENDER_ID     — 6-char sender ID (e.g. AANGAN) — optional for transactional
  */
 
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-
-const MSG91_AUTH_KEY   = Deno.env.get('MSG91_AUTH_KEY')!;
-const MSG91_TEMPLATE_ID = Deno.env.get('MSG91_TEMPLATE_ID')!;
+const MSG91_AUTH_KEY   = Deno.env.get('MSG91_AUTH_KEY') ?? '';
+const MSG91_TEMPLATE_ID = Deno.env.get('MSG91_TEMPLATE_ID') ?? '';
 const MSG91_SENDER_ID  = Deno.env.get('MSG91_SENDER_ID') ?? 'AANGAN';
 
 interface AuthHookPayload {
@@ -44,6 +42,14 @@ Deno.serve(async (req: Request) => {
   if (!user?.phone || !otp) {
     return new Response(JSON.stringify({ error: 'Missing phone or otp' }), {
       status: 400,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+
+  if (!MSG91_AUTH_KEY || !MSG91_TEMPLATE_ID) {
+    console.error('MSG91 secrets not configured:', { hasAuthKey: !!MSG91_AUTH_KEY, hasTemplateId: !!MSG91_TEMPLATE_ID });
+    return new Response(JSON.stringify({ error: 'SMS provider not configured' }), {
+      status: 503,
       headers: { 'Content-Type': 'application/json' },
     });
   }
