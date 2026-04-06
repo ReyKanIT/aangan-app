@@ -6,6 +6,7 @@ import PostComposer from '@/components/feed/PostComposer';
 import GoldButton from '@/components/ui/GoldButton';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import EmptyState from '@/components/ui/EmptyState';
+import PanchangWidget from '@/components/feed/PanchangWidget';
 
 export default function FeedPage() {
   const { posts, fetchPosts, isLoading, isFetching, hasMore } = usePostStore();
@@ -35,6 +36,9 @@ export default function FeedPage() {
           + पोस्ट करें
         </GoldButton>
       </div>
+
+      {/* Panchang Widget */}
+      <PanchangWidget />
 
       {isLoading && posts.length === 0 ? (
         <div className="flex justify-center py-20"><LoadingSpinner /></div>
