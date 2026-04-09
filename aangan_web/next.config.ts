@@ -7,6 +7,8 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       { hostname: '*.supabase.co' },
       { hostname: 's.gravatar.com' },
+      { hostname: 'media.aangan.app' },
+      { hostname: '*.backblazeb2.com' },
     ],
   },
   async headers() {
@@ -30,8 +32,8 @@ const nextConfig: NextConfig = {
               "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
               "font-src 'self' https://fonts.gstatic.com",
-              "img-src 'self' data: https://*.supabase.co https://s.gravatar.com",
-              "connect-src 'self' https://*.supabase.co wss://*.supabase.co",
+              "img-src 'self' data: https://*.supabase.co https://s.gravatar.com https://media.aangan.app https://*.backblazeb2.com",
+              "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://media.aangan.app",
               "frame-ancestors 'none'",
             ].join('; '),
           },

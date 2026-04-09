@@ -17,6 +17,8 @@ interface AuthState {
   verifyEmailOtp: (email: string, token: string) => Promise<boolean>;
   signInWithEmail: (email: string, password: string) => Promise<boolean>;
   signUpWithEmail: (email: string, password: string) => Promise<boolean>;
+  signInWithGoogle: () => Promise<void>;
+  signInWithApple: () => Promise<void>;
   signOut: () => Promise<void>;
   fetchProfile: () => Promise<void>;
   updateProfile: (data: Partial<User>) => Promise<boolean>;
@@ -128,6 +130,24 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       set({ error: e instanceof Error ? e.message : 'Sign up failed' });
       return false;
     }
+  },
+
+  signInWithGoogle: async () => {
+    set({ error: null });
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: window.location.origin + '/auth/callback' },
+    });
+    if (error) set({ error: error.message });
+  },
+
+  signInWithApple: async () => {
+    set({ error: null });
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'apple',
+      options: { redirectTo: window.location.origin + '/auth/callback' },
+    });
+    if (error) set({ error: error.message });
   },
 
   signOut: async () => {

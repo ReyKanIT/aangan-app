@@ -48,7 +48,23 @@ export const usePostStore = create<PostState>((set, get) => ({
       const { data, error } = await query;
       if (error) { set({ error: error.message, isFetching: false }); return; }
 
-      const newPosts = data as unknown as Post[];
+      // Check which posts the current user has liked
+      const { data: { user } } = await supabase.auth.getUser();
+      let likedPostIds = new Set<string>();
+      if (user && data && data.length > 0) {
+        const postIds = data.map((p: { id: string }) => p.id);
+        const { data: likes } = await supabase
+          .from('post_likes')
+          .select('post_id')
+          .eq('user_id', user.id)
+          .in('post_id', postIds);
+        if (likes) likedPostIds = new Set(likes.map((l: { post_id: string }) => l.post_id));
+      }
+
+      const newPosts = (data as unknown as Post[]).map((p) => ({
+        ...p,
+        is_liked: likedPostIds.has(p.id),
+      }));
       set((state) => ({
         posts: reset ? newPosts : [...state.posts, ...newPosts],
         cursor: newPosts.length > 0 ? newPosts[newPosts.length - 1].created_at : state.cursor,
@@ -94,15 +110,38 @@ export const usePostStore = create<PostState>((set, get) => ({
   },
 
   likePost: async (postId) => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    const post = get().posts.find((p) => p.id === postId);
+    if (!post) return;
+    const wasLiked = post.is_liked;
+
     // Optimistic update
     set((state) => ({
       posts: state.posts.map((p) =>
         p.id === postId
-          ? { ...p, like_count: p.is_liked ? p.like_count - 1 : p.like_count + 1, is_liked: !p.is_liked }
+          ? { ...p, like_count: wasLiked ? p.like_count - 1 : p.like_count + 1, is_liked: !wasLiked }
           : p
       ),
     }));
-    // TODO: upsert post_likes table when schema includes it
+
+    try {
+      if (wasLiked) {
+        await supabase.from('post_likes').delete().eq('post_id', postId).eq('user_id', user.id);
+      } else {
+        await supabase.from('post_likes').insert({ post_id: postId, user_id: user.id });
+      }
+    } catch {
+      // Rollback on error
+      set((state) => ({
+        posts: state.posts.map((p) =>
+          p.id === postId
+            ? { ...p, like_count: wasLiked ? p.like_count + 1 : p.like_count - 1, is_liked: wasLiked }
+            : p
+        ),
+      }));
+    }
   },
 
   deletePost: async (postId) => {

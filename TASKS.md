@@ -1,5 +1,5 @@
 # ReyKan IT — CEO Action Tracker
-> Last updated: 2026-04-08
+> Last updated: 2026-04-09
 
 ---
 
@@ -83,6 +83,12 @@
 | C11 | VilPower DLT registration submitted | Apr 8 | Reg# VI-1100093984, Rs.5900 paid |
 | C12 | All DLT docs uploaded | Apr 8 | PAN, CoI, LOA, DL |
 | C13 | MSG91 linked as Telemarketer on DLT | Apr 8 | Walkover Web Solutions |
+| C14 | B2 Cloud Storage integration (media uploads) | Apr 9 | Backblaze B2 + uploadB2.ts + upload API route |
+| C15 | Cloudflare CDN setup (media.aangan.app) | Apr 9 | CNAME proxy + B2 friendly URLs |
+| C16 | Vercel environment variables for B2 | Apr 9 | 6 env vars added (Production + Preview) |
+| C17 | Post likes persistence | Apr 9 | post_likes table + RLS + auto-count trigger |
+| C18 | Client-side image compression | Apr 9 | browser-image-compression (1MB, 1920px, WebP) |
+| C19 | Version bump to v0.6.0 | Apr 9 | Web + mobile (buildNumber 7, versionCode 7) |
 
 ---
 
