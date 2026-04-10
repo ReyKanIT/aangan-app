@@ -18,17 +18,17 @@ function PasswordStrength({ password }: { password: string }) {
     /[0-9]/.test(password),
   ];
   const score = checks.filter(Boolean).length;
-  const labels = ['कमज़ोर Weak', 'ठीक Fair', 'अच्छा Good', 'मज़बूत Strong'];
-  const colors = ['bg-red-400', 'bg-yellow-400', 'bg-blue-400', 'bg-mehndi-green'];
+  const labels = ['बहुत कमज़ोर Very Weak', 'कमज़ोर Weak', 'ठीक Fair', 'अच्छा Good', 'मज़बूत Strong'];
+  const colors = ['bg-red-500', 'bg-red-400', 'bg-yellow-400', 'bg-blue-400', 'bg-mehndi-green'];
   return (
     <div className="space-y-1">
       <div className="flex gap-1">
         {[0, 1, 2, 3].map((i) => (
-          <div key={i} className={`h-1 flex-1 rounded-full ${i < score ? colors[score - 1] : 'bg-gray-200'}`} />
+          <div key={i} className={`h-1 flex-1 rounded-full ${i < score ? colors[score] : 'bg-gray-200'}`} />
         ))}
       </div>
       <p className={`font-body text-xs ${score <= 1 ? 'text-red-500' : score === 2 ? 'text-yellow-600' : 'text-mehndi-green'}`}>
-        {labels[score - 1]}
+        {labels[score]}
       </p>
     </div>
   );

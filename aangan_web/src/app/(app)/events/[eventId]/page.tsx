@@ -4,7 +4,6 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { useEventStore } from '@/stores/eventStore';
 import { useAuthStore } from '@/stores/authStore';
-import GoldButton from '@/components/ui/GoldButton';
 import AvatarCircle from '@/components/ui/AvatarCircle';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import { formatEventDate, formatEventTime } from '@/lib/utils/formatters';
@@ -39,7 +38,7 @@ export default function EventDetailPage() {
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-6">
-      <Link href="/events" className="font-body text-sm text-brown-light flex items-center gap-1 mb-4">
+      <Link href="/events" className="font-body text-base text-brown-light flex items-center gap-1 mb-4 min-h-[44px]">
         ← वापस / Back
       </Link>
 
@@ -52,25 +51,23 @@ export default function EventDetailPage() {
             {currentEvent.title_hindi && <p className="font-body text-sm text-brown-light">{currentEvent.title}</p>}
           </div>
         </div>
-        <div className="space-y-2 font-body text-sm text-brown">
+        <div className="space-y-2 font-body text-base text-brown">
           <p>📅 {formatEventDate(currentEvent.start_datetime)}</p>
           <p>🕐 {formatEventTime(currentEvent.start_datetime)}</p>
           {currentEvent.location && <p>📍 {currentEvent.location}</p>}
         </div>
         {currentEvent.description && (
-          <p className="font-body text-sm text-brown-light mt-4 leading-relaxed">{currentEvent.description}</p>
+          <p className="font-body text-base text-brown-light mt-4 leading-relaxed">{currentEvent.description}</p>
         )}
-        {isCreator && (
-          <Link href={`/events/${eventId}/rsvps`}>
-            <GoldButton variant="outline" size="sm" className="mt-4">📋 RSVP देखें — View RSVPs</GoldButton>
-          </Link>
+        {isCreator && rsvps.length > 0 && (
+          <p className="font-body text-base text-brown-light mt-4">📋 कुल {rsvps.length} RSVP — Total {rsvps.length} RSVPs</p>
         )}
       </div>
 
       {/* RSVP Section */}
       <div className="bg-white rounded-2xl p-6 shadow-sm mb-4">
         <h3 className="font-heading text-lg text-brown mb-2">आप आएंगे?</h3>
-        <p className="font-body text-sm text-brown-light mb-4">Will you attend?</p>
+        <p className="font-body text-base text-brown-light mb-4">Will you attend?</p>
         <div className="flex gap-2">
           {RSVP_OPTIONS.map((opt) => {
             const isActive = currentEvent.my_rsvp === opt.status;
@@ -78,7 +75,7 @@ export default function EventDetailPage() {
               <button
                 key={opt.status}
                 onClick={() => submitRsvp(currentEvent.id, opt.status)}
-                className={`flex-1 min-h-dadi rounded-xl font-body font-semibold text-sm border-2 transition-all ${isActive ? opt.bg + ' border-transparent' : opt.outline + ' bg-white'}`}
+                className={`flex-1 min-h-dadi rounded-xl font-body font-semibold text-base border-2 transition-all ${isActive ? opt.bg + ' border-transparent' : opt.outline + ' bg-white'}`}
               >
                 {opt.label}
               </button>
@@ -89,9 +86,9 @@ export default function EventDetailPage() {
         {/* RSVP Summary */}
         {(rsvpCounts.going || rsvpCounts.maybe || rsvpCounts.not_going) ? (
           <div className="flex gap-3 mt-4">
-            {rsvpCounts.going > 0 && <span className="font-body text-sm text-green-600">✓ {rsvpCounts.going} जाएंगे</span>}
-            {rsvpCounts.maybe > 0 && <span className="font-body text-sm text-orange-500">? {rsvpCounts.maybe} शायद</span>}
-            {rsvpCounts.not_going > 0 && <span className="font-body text-sm text-red-500">✗ {rsvpCounts.not_going} नहीं</span>}
+            {rsvpCounts.going > 0 && <span className="font-body text-base text-green-600">✓ {rsvpCounts.going} जाएंगे</span>}
+            {rsvpCounts.maybe > 0 && <span className="font-body text-base text-orange-500">? {rsvpCounts.maybe} शायद</span>}
+            {rsvpCounts.not_going > 0 && <span className="font-body text-base text-red-500">✗ {rsvpCounts.not_going} नहीं</span>}
           </div>
         ) : null}
       </div>
@@ -105,7 +102,7 @@ export default function EventDetailPage() {
               <div key={r.id} className="flex items-center gap-3">
                 <AvatarCircle src={r.user?.avatar_url} name={r.user?.display_name_hindi ?? r.user?.display_name} size={40} />
                 <div>
-                  <p className="font-body text-sm font-semibold text-brown">{r.user?.display_name_hindi ?? r.user?.display_name}</p>
+                  <p className="font-body text-base font-semibold text-brown">{r.user?.display_name_hindi ?? r.user?.display_name}</p>
                   {r.user?.village_city && <p className="font-body text-xs text-brown-light">📍 {r.user.village_city}</p>}
                 </div>
               </div>

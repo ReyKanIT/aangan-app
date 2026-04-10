@@ -47,7 +47,7 @@ export default function EventCreatorModal({ onClose }: Props) {
           <h3 className="font-heading text-xl text-brown">
             {step === 1 ? 'उत्सव का प्रकार' : 'विवरण भरें'}
           </h3>
-          <button onClick={onClose} className="text-brown-light text-xl p-1">✕</button>
+          <button onClick={onClose} className="text-brown-light text-xl min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg hover:bg-cream-dark transition-colors">✕</button>
         </div>
 
         {error && <div className="bg-red-50 border border-error rounded-lg px-4 py-2 mb-4"><p className="font-body text-sm text-error">{error}</p></div>}
@@ -60,7 +60,7 @@ export default function EventCreatorModal({ onClose }: Props) {
                 <button
                   key={t.value}
                   onClick={() => setEventType(t.value)}
-                  className={`p-4 rounded-2xl border-2 flex flex-col items-center gap-1 transition-all ${eventType === t.value ? 'border-haldi-gold bg-unread-bg' : 'border-gray-200 hover:border-haldi-gold-light'}`}
+                  className={`p-4 rounded-2xl border-2 flex flex-col items-center gap-1 transition-all min-h-[80px] ${eventType === t.value ? 'border-haldi-gold bg-unread-bg' : 'border-gray-200 hover:border-haldi-gold-light'}`}
                 >
                   <span className="text-3xl">{t.emoji}</span>
                   <span className="font-body text-xs text-brown font-semibold">{t.label}</span>

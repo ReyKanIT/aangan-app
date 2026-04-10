@@ -117,7 +117,7 @@ export default function MessagesPage() {
         <div className="px-4 py-4 border-b border-cream-dark flex items-center justify-between">
           <div>
             <h2 className="font-heading text-2xl text-brown">संदेश</h2>
-            <p className="font-body text-sm text-brown-light">Messages</p>
+            <p className="font-body text-base text-brown-light">Messages</p>
           </div>
           <GoldButton size="sm" onClick={handleNewChat}>
             + नया संदेश

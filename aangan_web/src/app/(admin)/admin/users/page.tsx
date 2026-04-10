@@ -3,6 +3,8 @@
 import { useEffect, useState, useCallback } from 'react';
 import { createBrowserClient } from '@supabase/ssr';
 
+type AdminRole = 'super_admin' | 'admin' | 'manager' | null;
+
 interface AdminUser {
   id: string;
   display_name: string;
@@ -11,9 +13,16 @@ interface AdminUser {
   village_city: string | null;
   is_active: boolean;
   is_app_admin: boolean;
+  admin_role: AdminRole;
   last_seen_at: string | null;
   created_at: string;
 }
+
+const ROLE_LABELS: Record<string, { label: string; color: string }> = {
+  super_admin: { label: 'Super Admin', color: 'bg-red-100 text-red-800' },
+  admin: { label: 'Admin', color: 'bg-amber-100 text-amber-800' },
+  manager: { label: 'Manager', color: 'bg-green-100 text-green-800' },
+};
 
 const PAGE_SIZE = 20;
 
@@ -25,11 +34,23 @@ export default function AdminUsersPage() {
   const [totalCount, setTotalCount] = useState(0);
   const [updating, setUpdating] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [myRole, setMyRole] = useState<AdminRole>(null);
 
   const supabase = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   );
+
+  // Fetch current user's role
+  useEffect(() => {
+    (async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data } = await supabase.from('users').select('admin_role').eq('id', user.id).single();
+        setMyRole(data?.admin_role ?? null);
+      }
+    })();
+  }, [supabase]);
 
   const fetchUsers = useCallback(async () => {
     try {
@@ -38,7 +59,7 @@ export default function AdminUsersPage() {
 
       let query = supabase
         .from('users')
-        .select('id, display_name, phone_number, email, village_city, is_active, is_app_admin, last_seen_at, created_at', { count: 'exact' })
+        .select('id, display_name, phone_number, email, village_city, is_active, is_app_admin, admin_role, last_seen_at, created_at', { count: 'exact' })
         .order('created_at', { ascending: false })
         .range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1);
 
@@ -64,20 +85,44 @@ export default function AdminUsersPage() {
     fetchUsers();
   }, [fetchUsers]);
 
-  async function toggleField(userId: string, field: 'is_active' | 'is_app_admin', currentValue: boolean) {
+  async function toggleActive(userId: string, currentValue: boolean) {
     try {
       setUpdating(userId);
       const { error: updateError } = await supabase
         .from('users')
-        .update({ [field]: !currentValue })
+        .update({ is_active: !currentValue })
         .eq('id', userId);
 
       if (updateError) throw updateError;
       setUsers((prev) =>
-        prev.map((u) => (u.id === userId ? { ...u, [field]: !currentValue } : u))
+        prev.map((u) => (u.id === userId ? { ...u, is_active: !currentValue } : u))
       );
     } catch (err) {
       alert(err instanceof Error ? err.message : 'Update failed');
+    } finally {
+      setUpdating(null);
+    }
+  }
+
+  async function changeRole(userId: string, newRole: AdminRole) {
+    try {
+      setUpdating(userId);
+      const { error: updateError } = await supabase
+        .from('users')
+        .update({
+          admin_role: newRole,
+          is_app_admin: newRole !== null,
+        })
+        .eq('id', userId);
+
+      if (updateError) throw updateError;
+      setUsers((prev) =>
+        prev.map((u) =>
+          u.id === userId ? { ...u, admin_role: newRole, is_app_admin: newRole !== null } : u
+        )
+      );
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Role update failed');
     } finally {
       setUpdating(null);
     }
@@ -123,7 +168,7 @@ export default function AdminUsersPage() {
               <th className="text-left px-4 py-3 font-medium text-brown hidden md:table-cell">Email</th>
               <th className="text-left px-4 py-3 font-medium text-brown hidden lg:table-cell">Village</th>
               <th className="text-center px-4 py-3 font-medium text-brown">Active</th>
-              <th className="text-center px-4 py-3 font-medium text-brown">Admin</th>
+              <th className="text-center px-4 py-3 font-medium text-brown">Role</th>
               <th className="text-left px-4 py-3 font-medium text-brown hidden md:table-cell">Last Seen</th>
               <th className="text-left px-4 py-3 font-medium text-brown hidden lg:table-cell">Joined</th>
             </tr>
@@ -155,7 +200,7 @@ export default function AdminUsersPage() {
                   <td className="px-4 py-3 text-center">
                     <button
                       disabled={updating === user.id}
-                      onClick={() => toggleField(user.id, 'is_active', user.is_active)}
+                      onClick={() => toggleActive(user.id, user.is_active)}
                       className={`inline-flex items-center justify-center w-10 h-6 rounded-full transition-colors ${
                         user.is_active ? 'bg-mehndi-green' : 'bg-cream-dark'
                       } ${updating === user.id ? 'opacity-50' : ''}`}
@@ -168,19 +213,27 @@ export default function AdminUsersPage() {
                     </button>
                   </td>
                   <td className="px-4 py-3 text-center">
-                    <button
-                      disabled={updating === user.id}
-                      onClick={() => toggleField(user.id, 'is_app_admin', user.is_app_admin)}
-                      className={`inline-flex items-center justify-center w-10 h-6 rounded-full transition-colors ${
-                        user.is_app_admin ? 'bg-haldi-gold' : 'bg-cream-dark'
-                      } ${updating === user.id ? 'opacity-50' : ''}`}
-                    >
-                      <span
-                        className={`w-4 h-4 rounded-full bg-white shadow transition-transform ${
-                          user.is_app_admin ? 'translate-x-2' : '-translate-x-2'
+                    {user.admin_role === 'super_admin' ? (
+                      <span className="inline-block px-2 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-800">
+                        Super Admin
+                      </span>
+                    ) : (
+                      <select
+                        disabled={updating === user.id}
+                        value={user.admin_role ?? 'user'}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          changeRole(user.id, val === 'user' ? null : val as AdminRole);
+                        }}
+                        className={`text-xs px-2 py-1.5 rounded-lg border border-cream-dark bg-white text-brown focus:ring-2 focus:ring-haldi-gold/40 focus:outline-none ${
+                          updating === user.id ? 'opacity-50' : ''
                         }`}
-                      />
-                    </button>
+                      >
+                        <option value="user">User</option>
+                        <option value="manager">Manager</option>
+                        {myRole === 'super_admin' && <option value="admin">Admin</option>}
+                      </select>
+                    )}
                   </td>
                   <td className="px-4 py-3 text-brown-light text-xs hidden md:table-cell">
                     {user.last_seen_at ? new Date(user.last_seen_at).toLocaleDateString() : 'Never'}

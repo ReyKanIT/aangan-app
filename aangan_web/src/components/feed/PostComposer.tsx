@@ -90,8 +90,8 @@ export default function PostComposer({ onClose }: PostComposerProps) {
 
         <div className="flex items-center justify-between pt-3 border-t border-cream-dark">
           <div className="flex items-center gap-1">
-            <button onClick={() => fileRef.current?.click()} className="text-2xl p-2 text-brown-light hover:text-haldi-gold">
-              📷
+            <button onClick={() => fileRef.current?.click()} className="text-2xl min-w-[52px] min-h-[52px] flex items-center justify-center rounded-full text-brown-light hover:text-haldi-gold hover:bg-cream-dark transition-colors">
+              📷 <span className="sr-only">फ़ोटो जोड़ें</span>
             </button>
             <VoiceButton
               onResult={(text) => setContent((prev) => (prev + ' ' + text).trim())}

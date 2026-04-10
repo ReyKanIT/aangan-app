@@ -140,7 +140,7 @@ export default function ChatbotPage() {
           </div>
           <div>
             <h1 className="font-heading text-lg text-brown font-bold">आँगन बॉट</h1>
-            <p className="font-body text-sm text-mehndi-green">
+            <p className="font-body text-base text-mehndi-green">
               {isTyping ? 'टाइप कर रहा है...' : 'ऑनलाइन — Online'}
             </p>
           </div>
@@ -194,7 +194,7 @@ export default function ChatbotPage() {
                   className="flex-shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-full border border-haldi-gold/30 bg-cream hover:bg-haldi-gold/10 transition-colors min-h-dadi"
                 >
                   <span className="text-lg">{qr.emoji}</span>
-                  <span className="font-body text-sm text-brown whitespace-nowrap">{qr.text}</span>
+                  <span className="font-body text-base text-brown whitespace-nowrap">{qr.text}</span>
                 </button>
               ))}
             </div>

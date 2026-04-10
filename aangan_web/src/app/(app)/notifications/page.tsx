@@ -1,4 +1,5 @@
 'use client';
+import { useEffect } from 'react';
 import { useNotificationStore } from '@/stores/notificationStore';
 import GoldButton from '@/components/ui/GoldButton';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
@@ -12,14 +13,17 @@ const TYPE_ICONS: Record<string, string> = {
 };
 
 export default function NotificationsPage() {
-  const { notifications, isLoading, markAsRead, markAllAsRead, unreadCount } = useNotificationStore();
+  const { notifications, isLoading, markAsRead, markAllAsRead, unreadCount, fetchNotifications } = useNotificationStore();
+
+  // Refresh notifications when the page is visited
+  useEffect(() => { fetchNotifications(); }, [fetchNotifications]);
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-6">
       <div className="flex items-center justify-between mb-6">
         <div>
           <h2 className="font-heading text-2xl text-brown">सूचनाएं</h2>
-          <p className="font-body text-sm text-brown-light">Notifications</p>
+          <p className="font-body text-base text-brown-light">Notifications</p>
         </div>
         {unreadCount > 0 && (
           <GoldButton variant="ghost" size="sm" onClick={markAllAsRead}>
@@ -49,7 +53,7 @@ export default function NotificationsPage() {
                   {notif.title_hindi ?? notif.title}
                 </p>
                 {(notif.body_hindi ?? notif.body) && (
-                  <p className="font-body text-sm text-brown-light mt-0.5 leading-snug">
+                  <p className="font-body text-base text-brown-light mt-0.5 leading-snug">
                     {notif.body_hindi ?? notif.body}
                   </p>
                 )}

@@ -30,7 +30,7 @@ export default function FeedPage() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h2 className="font-heading text-2xl text-brown">परिवार का आँगन</h2>
-          <p className="font-body text-sm text-brown-light">Family Feed</p>
+          <p className="font-body text-base text-brown-light">Family Feed</p>
         </div>
         <GoldButton size="sm" onClick={() => setComposerOpen(true)}>
           + पोस्ट करें
@@ -69,6 +69,7 @@ export default function FeedPage() {
       <button
         onClick={() => setComposerOpen(true)}
         className="fixed bottom-24 right-6 lg:hidden w-14 h-14 bg-haldi-gold rounded-full shadow-lg flex items-center justify-center text-white text-2xl z-40"
+        aria-label="नई पोस्ट लिखें — New Post"
       >
         ✏️
       </button>

@@ -22,7 +22,7 @@ export default function EventsPage() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h2 className="font-heading text-2xl text-brown">उत्सव</h2>
-          <p className="font-body text-sm text-brown-light">Family Events</p>
+          <p className="font-body text-base text-brown-light">Family Events</p>
         </div>
         <GoldButton size="sm" onClick={() => setModalOpen(true)}>+ उत्सव बनाएं</GoldButton>
       </div>
@@ -51,7 +51,7 @@ export default function EventsPage() {
                       <h3 className="font-heading text-lg text-brown truncate">
                         {event.title_hindi ?? event.title}
                       </h3>
-                      <p className="font-body text-sm text-haldi-gold font-semibold mt-0.5">
+                      <p className="font-body text-base text-haldi-gold font-semibold mt-0.5">
                         {formatEventDate(event.start_datetime)}
                       </p>
                       <p className="font-body text-xs text-brown-light mt-0.5">

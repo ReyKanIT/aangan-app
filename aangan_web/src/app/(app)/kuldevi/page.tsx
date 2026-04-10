@@ -89,7 +89,7 @@ export default function KuldeviPage() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h2 className="font-heading text-2xl text-brown">कुलदेवी / कुलदेवता</h2>
-          <p className="font-body text-sm text-brown-light">Family Deity</p>
+          <p className="font-body text-base text-brown-light">Family Deity</p>
         </div>
         {!isEditing && (
           <GoldButton variant="outline" size="sm" onClick={() => setIsEditing(true)}>

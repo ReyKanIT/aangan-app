@@ -52,7 +52,7 @@ export default function AddMemberDrawer({ onClose }: Props) {
       <div className="w-full max-w-md bg-white rounded-t-3xl lg:rounded-2xl p-6 max-h-[85vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
         <div className="flex justify-between items-center mb-4">
           <h3 className="font-heading text-xl text-brown">परिवार जोड़ें</h3>
-          <button onClick={onClose} className="text-brown-light text-xl p-1">✕</button>
+          <button onClick={onClose} className="text-brown-light text-xl min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg hover:bg-cream-dark transition-colors">✕</button>
         </div>
 
         {!selected ? (
@@ -69,7 +69,7 @@ export default function AddMemberDrawer({ onClose }: Props) {
               <button
                 key={user.id}
                 onClick={() => { setSelected(user); clearSearch(); }}
-                className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-cream-dark transition-colors mb-1 text-left"
+                className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-cream-dark transition-colors mb-1 text-left min-h-dadi"
               >
                 <AvatarCircle src={user.avatar_url} name={user.display_name_hindi ?? user.display_name} size={44} />
                 <div>
@@ -86,7 +86,7 @@ export default function AddMemberDrawer({ onClose }: Props) {
               <div>
                 <p className="font-body font-semibold text-brown">{selected.display_name_hindi ?? selected.display_name}</p>
               </div>
-              <button onClick={() => setSelected(null)} className="ml-auto text-brown-light">✕</button>
+              <button onClick={() => setSelected(null)} className="ml-auto text-brown-light min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg hover:bg-cream transition-colors">✕</button>
             </div>
 
             <label className="block font-body font-semibold text-brown mb-2">रिश्ता — Relationship</label>

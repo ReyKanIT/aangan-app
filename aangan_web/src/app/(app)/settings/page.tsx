@@ -60,7 +60,7 @@ export default function SettingsPage() {
   return (
     <div className="max-w-lg mx-auto px-4 py-6">
       <h2 className="font-heading text-2xl text-brown mb-1">सेटिंग्स</h2>
-      <p className="font-body text-sm text-brown-light mb-6">Settings & Profile</p>
+      <p className="font-body text-base text-brown-light mb-6">Settings & Profile</p>
 
       {/* Avatar */}
       <div className="flex flex-col items-center mb-8">

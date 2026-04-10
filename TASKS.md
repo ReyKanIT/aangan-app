@@ -22,7 +22,7 @@
 
 | # | Task | Owner | Status | ETA | Notes |
 |---|------|-------|--------|-----|-------|
-| 9 | Register Google Play Console ($25) | Kumar | ✅ DONE | Apr 10 | Registered, identity verification pending |
+| 9 | Register Google Play Console ($25) | Kumar | ✅ DONE | Apr 10 | Registered, identity verified ✓ |
 | 10 | Build signed release APK for Play Store | Claude | ✅ DONE | Apr 9 | APK + AAB built via EAS, APK hosted at aangan.app |
 | 11 | Record 60-sec demo video | Kumar | PENDING | Apr 10 | Screen record: Login -> Feed -> Family Tree -> Panchang |
 | 12 | Add SEO meta tags + OG images to aangan.app | Claude | ✅ DONE | Apr 8 | Meta tags, OG image, JSON-LD, favicon |
@@ -46,12 +46,12 @@
 
 | # | Task | Owner | Status | ETA | Notes |
 |---|------|-------|--------|-----|-------|
-| 21 | Submit to Google Play Store | Kumar | PENDING | Apr 15 | After signed APK ready |
+| 21 | Submit to Google Play Store | Kumar | READY | Apr 15 | Identity verified ✓, signed APK ready, need screenshots + listing |
 | 22 | Get 50 real users (family + friends network) | Kumar | PENDING | Apr 20 | Target: Choudhary/extended family |
 | 23 | Add Hindi blog content for SEO | Claude | PENDING | Apr 20 | "आज का पंचांग" daily pages |
 | 24 | Implement premium features (family tree PDF export) | Claude | PENDING | Apr 25 | First monetization feature |
 | 25 | Add WhatsApp sharing for posts/events | Claude | PENDING | Apr 25 | Viral growth mechanism |
-| 26 | iOS build via EAS | Claude | PENDING | Apr 30 | Needs Apple Developer ($99/yr) |
+| 26 | iOS build via EAS | Claude | UNBLOCKED | Apr 30 | Apple Developer $99 paid, awaiting account activation |
 
 ---
 
@@ -102,8 +102,21 @@
 | C30 | Production deploy v0.6.0 (all pages) | Apr 9 | Vercel prod deploy with all new pages live |
 | C31 | MSG91 Email domain verified | Apr 10 | mail.aangan.app — SPF, DKIM, MX, CNAME all verified |
 | C32 | Custom SMTP in Supabase | Apr 10 | MSG91 SMTP (smtp.mailer91.com:587), 5000 emails/month free |
-| C33 | Google Play Console registered | Apr 10 | ReyKan, identity verification pending |
-| C34 | Apple Developer enrollment submitted | Apr 10 | Individual account, waiting for payment email ($99) |
+| C33 | Google Play Console registered + verified | Apr 10 | ReyKan, identity verification DONE |
+| C34 | Apple Developer enrollment paid | Apr 10 | $99 paid, account activation in progress |
+| C35 | CEO Mode configured in CLAUDE.md | Apr 10 | Multi-agent parallel execution, priority framework |
+| C36 | v0.7.0 — login redesign + signup enhancements | Apr 10 | Name field, phone signup, password UX, ShareButton, PWA |
+| C37 | CEO audit: 15 Dadi Test fixes + 5 bug fixes + 6 SEO fixes | Apr 10 | 3 parallel agents, deployed |
+| C38 | Admin bugs fixed (support + analytics) | Apr 10 | is_from_support, totalFamilies/Photos queries |
+| C39 | APK link fixed to v0.6.0 | Apr 10 | v0.7.0 APK not yet built |
+| C40 | Comments feature (store + UI + PostCard) | Apr 10 | commentStore, CommentSection, optimistic delete |
+| C41 | Direct Messages / Chat feature | Apr 10 | messageStore, messages page, conversation list + chat |
+| C42 | Kuldevi page (कुलदेवी/कुलदेवता) | Apr 10 | 6 fields, edit/save, Hindi-first, VoiceButton |
+| C43 | Voice Control (Web Speech API) | Apr 10 | VoiceButton (hi-IN), PostComposer + Chatbot integration |
+| C44 | Chatbot (आँगन बॉट) | Apr 10 | Local knowledge base, Hindi-first, quick replies |
+| C45 | SideNav updated (Kuldevi, Messages, Chatbot) | Apr 10 | Unread badges for messages |
+| C46 | QA tester agent — all 6 features verified | Apr 10 | 3 bugs fixed (double AppShell, VoiceButton 52px, delete btn) |
+| C47 | Version bump to v0.8.0 + deploy | Apr 10 | 18 files, 1600+ lines, all routes compile |
 
 ---
 

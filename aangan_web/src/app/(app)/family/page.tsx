@@ -35,7 +35,7 @@ export default function FamilyPage() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h2 className="font-heading text-2xl text-brown">मेरा परिवार</h2>
-          <p className="font-body text-sm text-brown-light">My Family Tree</p>
+          <p className="font-body text-base text-brown-light">My Family Tree</p>
         </div>
         <GoldButton size="sm" onClick={() => setDrawerOpen(true)}>+ जोड़ें</GoldButton>
       </div>
@@ -97,7 +97,8 @@ function MemberCard({ member, onRemove }: { member: FamilyMember; onRemove: () =
       )}
       <button
         onClick={onRemove}
-        className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 text-gray-400 hover:text-error transition-all p-2 text-base"
+        className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 text-gray-400 hover:text-error transition-all min-w-[44px] min-h-[44px] flex items-center justify-center text-base rounded-lg"
+        aria-label="सदस्य हटाएं — Remove member"
       >✕</button>
     </div>
   );
