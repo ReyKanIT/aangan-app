@@ -169,8 +169,8 @@ export default function AdminUsersPage() {
               <th className="text-left px-4 py-3 font-medium text-brown hidden lg:table-cell">Village</th>
               <th className="text-center px-4 py-3 font-medium text-brown">Active</th>
               <th className="text-center px-4 py-3 font-medium text-brown">Role</th>
-              <th className="text-left px-4 py-3 font-medium text-brown hidden md:table-cell">Last Seen</th>
-              <th className="text-left px-4 py-3 font-medium text-brown hidden lg:table-cell">Joined</th>
+              <th className="text-left px-4 py-3 font-medium text-brown hidden sm:table-cell">Last Seen</th>
+              <th className="text-left px-4 py-3 font-medium text-brown hidden md:table-cell">Joined</th>
             </tr>
           </thead>
           <tbody>
@@ -235,10 +235,10 @@ export default function AdminUsersPage() {
                       </select>
                     )}
                   </td>
-                  <td className="px-4 py-3 text-brown-light text-xs hidden md:table-cell">
+                  <td className="px-4 py-3 text-brown-light text-xs hidden sm:table-cell">
                     {user.last_seen_at ? new Date(user.last_seen_at).toLocaleDateString() : 'Never'}
                   </td>
-                  <td className="px-4 py-3 text-brown-light text-xs hidden lg:table-cell">
+                  <td className="px-4 py-3 text-brown-light text-xs hidden md:table-cell">
                     {new Date(user.created_at).toLocaleDateString()}
                   </td>
                 </tr>
