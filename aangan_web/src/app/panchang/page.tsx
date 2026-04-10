@@ -152,7 +152,7 @@ export default function PanchangPage() {
             <a href="/privacy" className="hover:text-haldi-gold transition-colors">Privacy</a>
             <a href="/terms" className="hover:text-haldi-gold transition-colors">Terms</a>
           </div>
-          <p>&copy; 2026 ReyKan IT &middot; v0.7.0</p>
+          <p>&copy; 2026 ReyKan IT &middot; v0.8.0</p>
         </div>
       </footer>
 

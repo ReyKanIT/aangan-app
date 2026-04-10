@@ -18,6 +18,12 @@ export interface User {
   last_seen_at: string | null;
   is_verified: boolean;
   push_token: string | null;
+  kuldevi_name: string | null;
+  kuldevi_temple_location: string | null;
+  kuldevta_name: string | null;
+  kuldevta_temple_location: string | null;
+  puja_paddhati: string | null;
+  puja_niyam: string | null;
 }
 
 export interface FamilyMember {
@@ -173,4 +179,44 @@ export interface AppSetting {
   description: string | null;
   updated_by: string | null;
   updated_at: string;
+}
+
+// ─── Comments ──────────────────────────────────────────────
+
+export interface PostComment {
+  id: string;
+  post_id: string;
+  author_id: string;
+  content: string;
+  created_at: string;
+  updated_at: string;
+  author?: { display_name: string; display_name_hindi: string | null; avatar_url: string | null };
+}
+
+// ─── Direct Messages ───────────────────────────────────────
+
+export type MessageType = 'text' | 'voice';
+
+export interface DirectMessage {
+  id: string;
+  sender_id: string;
+  receiver_id: string;
+  content: string;
+  message_type: MessageType;
+  audio_url: string | null;
+  audio_duration_seconds: number | null;
+  is_read: boolean;
+  read_at: string | null;
+  created_at: string;
+  sender?: { display_name: string; display_name_hindi: string | null; avatar_url: string | null };
+}
+
+export interface ConversationSummary {
+  userId: string;
+  displayName: string;
+  displayNameHindi: string | null;
+  avatarUrl: string | null;
+  lastMessage: string;
+  lastMessageAt: string;
+  unreadCount: number;
 }

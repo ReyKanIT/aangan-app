@@ -8,6 +8,8 @@ export const VALIDATION = {
   maxBioLength: 200,
   maxPostLength: 2000,
   maxPhotosPerUpload: 20,
+  maxCommentLength: 500,
+  maxMessageLength: 1000,
 };
 
 export const RELATIONSHIP_MAP: Record<string, string> = {

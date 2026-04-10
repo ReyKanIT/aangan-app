@@ -331,7 +331,7 @@ export default function LandingPage() {
 
           <div className="mt-8 pt-6 border-t border-cream/10 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-cream-dark">
             <p>{"Made with ❤️ in India"}</p>
-            <p>&copy; 2026 ReyKan IT &middot; v0.7.0</p>
+            <p>&copy; 2026 ReyKan IT &middot; v0.8.0</p>
           </div>
         </div>
       </footer>

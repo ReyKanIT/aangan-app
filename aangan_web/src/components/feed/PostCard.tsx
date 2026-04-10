@@ -7,6 +7,7 @@ import type { Post } from '@/types/database';
 import { timeAgo } from '@/lib/utils/formatters';
 import { useState } from 'react';
 import ShareButton from '@/components/ui/ShareButton';
+import CommentSection from '@/components/feed/CommentSection';
 
 const AUDIENCE_LABELS: Record<string, string> = {
   all: 'सभी',
@@ -18,6 +19,7 @@ export default function PostCard({ post }: { post: Post }) {
   const { likePost, deletePost } = usePostStore();
   const [expanded, setExpanded] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [showComments, setShowComments] = useState(false);
 
   const isOwn = user?.id === post.author_id;
   const content = post.content ?? '';
@@ -102,16 +104,22 @@ export default function PostCard({ post }: { post: Post }) {
           <span>{post.is_liked ? '❤️' : '🤍'}</span>
           <span>{post.like_count}</span>
         </button>
-        <span className="flex items-center gap-1.5 py-2 px-1 font-body text-base text-brown-light">
+        <button
+          onClick={() => setShowComments(!showComments)}
+          className="flex items-center gap-1.5 py-2 px-1 font-body text-base text-brown-light hover:text-haldi-gold transition-colors"
+        >
           <span>💬</span>
           <span>{post.comment_count}</span>
-        </span>
+        </button>
         <ShareButton
           title="Aangan आँगन"
           text={content.length > 100 ? `${content.slice(0, 100)}...` : content}
           className="py-2 px-1 text-base"
         />
       </div>
+
+      {/* Comments */}
+      {showComments && <CommentSection postId={post.id} />}
     </article>
   );
 }

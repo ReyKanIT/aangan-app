@@ -4,7 +4,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
       <div className="w-full max-w-md flex-1">
         {children}
       </div>
-      <p className="font-body text-xs text-brown-light mt-8">Aangan v0.7.0</p>
+      <p className="font-body text-xs text-brown-light mt-8">Aangan v0.8.0</p>
     </div>
   );
 }

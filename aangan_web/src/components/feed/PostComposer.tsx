@@ -4,6 +4,7 @@ import { usePostStore } from '@/stores/postStore';
 import { useAuthStore } from '@/stores/authStore';
 import GoldButton from '@/components/ui/GoldButton';
 import AvatarCircle from '@/components/ui/AvatarCircle';
+import VoiceButton from '@/components/ui/VoiceButton';
 import { AUDIENCE_OPTIONS, VALIDATION } from '@/lib/constants';
 
 interface PostComposerProps {
@@ -88,9 +89,15 @@ export default function PostComposer({ onClose }: PostComposerProps) {
         )}
 
         <div className="flex items-center justify-between pt-3 border-t border-cream-dark">
-          <button onClick={() => fileRef.current?.click()} className="text-2xl p-2 text-brown-light hover:text-haldi-gold">
-            📷
-          </button>
+          <div className="flex items-center gap-1">
+            <button onClick={() => fileRef.current?.click()} className="text-2xl p-2 text-brown-light hover:text-haldi-gold">
+              📷
+            </button>
+            <VoiceButton
+              onResult={(text) => setContent((prev) => (prev + ' ' + text).trim())}
+              className="w-[52px] h-[52px] min-w-[52px] min-h-[52px]"
+            />
+          </div>
           <input ref={fileRef} type="file" accept="image/*" multiple onChange={handleFiles} className="hidden" />
           <div className="flex gap-2">
             <GoldButton variant="ghost" size="sm" onClick={onClose}>रद्द करें</GoldButton>
