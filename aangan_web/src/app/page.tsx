@@ -110,9 +110,9 @@ export default function LandingPage() {
           </span>
           <a
             href="/login"
-            className="px-5 py-2 rounded-full bg-haldi-gold text-white font-semibold text-sm hover:bg-haldi-gold-dark transition-colors"
+            className="px-6 py-3 rounded-full bg-haldi-gold text-white font-semibold text-base hover:bg-haldi-gold-dark transition-colors"
           >
-            Login / Sign Up
+            लॉगिन / साइन अप
           </a>
         </div>
       </nav>
@@ -143,6 +143,13 @@ export default function LandingPage() {
             <p className="mt-2 text-base text-brown-light/80">
               India&rsquo;s first family social network with Hindi voice control
             </p>
+          </FadeIn>
+
+          <FadeIn delay={525}>
+            <div className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-full bg-mehndi-green/10 border border-mehndi-green/30">
+              <span className="text-mehndi-green font-semibold text-base">100+ परिवार जुड़ चुके हैं</span>
+              <span className="text-brown-light text-base">Families connected</span>
+            </div>
           </FadeIn>
 
           <FadeIn delay={600}>
@@ -186,7 +193,7 @@ export default function LandingPage() {
                   <div className="text-4xl mb-3">{f.emoji}</div>
                   <h3 className="text-xl font-semibold text-brown">{f.title}</h3>
                   <p className="font-heading text-haldi-gold-dark text-base mt-1">{f.hindi}</p>
-                  <p className="text-brown-light mt-2 text-sm leading-relaxed">{f.desc}</p>
+                  <p className="text-brown-light mt-2 text-base leading-relaxed">{f.desc}</p>
                 </div>
               </FadeIn>
             ))}
@@ -226,8 +233,8 @@ export default function LandingPage() {
                 <div key={item.label} className="bg-white rounded-2xl p-6 border border-haldi-gold/10">
                   <div className="text-4xl mb-2">{item.icon}</div>
                   <h3 className="text-lg font-semibold text-brown">{item.label}</h3>
-                  <p className="font-heading text-haldi-gold-dark text-sm">{item.hindi}</p>
-                  <p className="text-brown-light text-sm mt-1">{item.detail}</p>
+                  <p className="font-heading text-haldi-gold-dark text-base">{item.hindi}</p>
+                  <p className="text-brown-light text-base mt-1">{item.detail}</p>
                 </div>
               ))}
             </div>
@@ -312,11 +319,11 @@ export default function LandingPage() {
               <p className="text-cream-dark text-sm mt-1">Your Family&rsquo;s Digital Home</p>
             </div>
 
-            <div className="flex gap-6 text-sm">
-              <a href="/privacy" className="text-cream-dark hover:text-haldi-gold transition-colors">
+            <div className="flex gap-6 text-base">
+              <a href="/privacy" className="text-cream-dark hover:text-haldi-gold transition-colors py-2">
                 Privacy Policy
               </a>
-              <a href="/terms" className="text-cream-dark hover:text-haldi-gold transition-colors">
+              <a href="/terms" className="text-cream-dark hover:text-haldi-gold transition-colors py-2">
                 Terms of Service
               </a>
             </div>

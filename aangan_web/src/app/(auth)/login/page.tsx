@@ -88,7 +88,7 @@ export default function LoginPage() {
     setIsSending(true);
     const ok = await signInWithEmail(email, password);
     setIsSending(false);
-    if (!ok) setError('ईमेल या पासवर्ड गलत है — Email or password incorrect');
+    // error already set by signInWithEmail in the store
   };
 
   const handleEmailSignUp = async () => {
@@ -197,7 +197,7 @@ export default function LoginPage() {
               <button
                 key={m}
                 onClick={() => { setMode(m); setError(null); }}
-                className={`flex-1 py-2 rounded-md font-body text-sm font-medium transition-all ${
+                className={`flex-1 py-3 rounded-md font-body text-base font-medium transition-all ${
                   mode === m ? 'bg-white shadow-sm text-haldi-gold' : 'text-brown-light hover:text-brown'
                 }`}
               >
@@ -250,7 +250,7 @@ export default function LoginPage() {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-9 text-brown-light hover:text-brown text-sm font-body"
+                  className="absolute right-3 top-9 text-brown-light hover:text-brown text-base font-body py-1 px-2"
                   tabIndex={-1}
                 >
                   {showPassword ? 'छुपाएं' : 'दिखाएं'}
@@ -286,7 +286,7 @@ export default function LoginPage() {
               <button
                 key={m}
                 onClick={() => { setMode(m); setError(null); }}
-                className={`flex-1 py-2 rounded-md font-body text-sm font-medium transition-all ${
+                className={`flex-1 py-3 rounded-md font-body text-base font-medium transition-all ${
                   mode === m ? 'bg-white shadow-sm text-haldi-gold' : 'text-brown-light hover:text-brown'
                 }`}
               >
@@ -358,7 +358,7 @@ export default function LoginPage() {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-9 text-brown-light hover:text-brown text-sm font-body"
+                  className="absolute right-3 top-9 text-brown-light hover:text-brown text-base font-body py-1 px-2"
                   tabIndex={-1}
                 >
                   {showPassword ? 'छुपाएं' : 'दिखाएं'}
@@ -379,7 +379,7 @@ export default function LoginPage() {
                 <button
                   type="button"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-3 top-9 text-brown-light hover:text-brown text-sm font-body"
+                  className="absolute right-3 top-9 text-brown-light hover:text-brown text-base font-body py-1 px-2"
                   tabIndex={-1}
                 >
                   {showConfirmPassword ? 'छुपाएं' : 'दिखाएं'}

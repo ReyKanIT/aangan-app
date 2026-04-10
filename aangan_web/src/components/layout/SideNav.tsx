@@ -34,7 +34,7 @@ export default function SideNav() {
               <Link
                 href={item.href}
                 className={cn(
-                  'flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-150 group min-h-tap',
+                  'flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-150 group min-h-dadi',
                   isActive
                     ? 'bg-unread-bg border-l-4 border-haldi-gold text-haldi-gold'
                     : 'text-brown-light hover:bg-cream-dark hover:text-brown'

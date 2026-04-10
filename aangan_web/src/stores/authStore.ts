@@ -37,7 +37,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   initialize: async () => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      set({ session, isLoading: false });
+      set({ session });
       if (session?.user) await get().fetchProfile();
       else set({ isLoading: false });
 
@@ -140,20 +140,28 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   signInWithGoogle: async () => {
     set({ error: null });
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: { redirectTo: window.location.origin + '/auth/callback' },
-    });
-    if (error) set({ error: error.message });
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: { redirectTo: window.location.origin + '/auth/callback' },
+      });
+      if (error) set({ error: error.message });
+    } catch (e: unknown) {
+      set({ error: e instanceof Error ? e.message : 'Google sign-in failed' });
+    }
   },
 
   signInWithApple: async () => {
     set({ error: null });
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'apple',
-      options: { redirectTo: window.location.origin + '/auth/callback' },
-    });
-    if (error) set({ error: error.message });
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'apple',
+        options: { redirectTo: window.location.origin + '/auth/callback' },
+      });
+      if (error) set({ error: error.message });
+    } catch (e: unknown) {
+      set({ error: e instanceof Error ? e.message : 'Apple sign-in failed' });
+    }
   },
 
   signOut: async () => {
@@ -168,7 +176,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     try {
       const { data, error } = await supabase.from('users').select('*').eq('id', session.user.id).single();
       if (error) {
-        if (error.code === 'PGRST116') { await get().signOut(); return; }
+        if (error.code === 'PGRST116') { set({ user: null, isNewUser: true, isLoading: false }); return; }
         set({ error: error.message, isLoading: false }); return;
       }
       const isNewUser = !data.display_name ||

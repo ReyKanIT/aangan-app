@@ -59,8 +59,12 @@ export default function ProfileSetupPage() {
 
   return (
     <div className="bg-white rounded-2xl shadow-sm p-8">
+      <div className="bg-mehndi-green/10 border border-mehndi-green/30 rounded-xl px-4 py-3 mb-6 text-center">
+        <p className="font-heading text-lg text-mehndi-green">स्वागत है! Welcome to Aangan!</p>
+        <p className="font-body text-base text-brown-light">अपनी प्रोफाइल बनाएं और परिवार से जुड़ें</p>
+      </div>
       <h2 className="font-heading text-2xl text-brown mb-1">प्रोफाइल बनाएं</h2>
-      <p className="font-body text-sm text-brown-light mb-8">Set up your profile</p>
+      <p className="font-body text-base text-brown-light mb-8">Set up your profile</p>
 
       {/* Avatar */}
       <div className="flex flex-col items-center mb-8">

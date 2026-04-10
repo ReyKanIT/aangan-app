@@ -28,7 +28,7 @@ export default function GoldButton({
   };
 
   const sizes = {
-    sm: 'min-h-[40px] px-4 text-sm',
+    sm: 'min-h-dadi px-4 text-base',
     md: 'min-h-dadi px-6 text-base',
     lg: 'min-h-[56px] px-8 text-lg',
   };

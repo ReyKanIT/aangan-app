@@ -46,7 +46,7 @@ export default function FamilyPage() {
           <button
             key={level.value}
             onClick={() => setActiveLevel(level.value)}
-            className={`flex-1 py-2.5 rounded-lg font-body text-sm font-semibold transition-all ${activeLevel === level.value ? 'bg-white shadow text-haldi-gold' : 'text-brown-light'}`}
+            className={`flex-1 py-3 rounded-lg font-body text-base font-semibold transition-all ${activeLevel === level.value ? 'bg-white shadow text-haldi-gold' : 'text-brown-light'}`}
           >
             {level.label}
             <span className="block text-xs font-normal opacity-70">{level.sub}</span>
@@ -85,7 +85,7 @@ function MemberCard({ member, onRemove }: { member: FamilyMember; onRemove: () =
         size={64}
         className="mx-auto mb-3"
       />
-      <p className="font-body font-semibold text-brown text-sm truncate">
+      <p className="font-body font-semibold text-brown text-base truncate">
         {member.member?.display_name_hindi ?? member.member?.display_name}
       </p>
       <p className="font-body text-xs text-brown-light">{member.relationship_hindi || RELATIONSHIP_MAP[member.relationship_type] || member.relationship_type}</p>
@@ -97,7 +97,7 @@ function MemberCard({ member, onRemove }: { member: FamilyMember; onRemove: () =
       )}
       <button
         onClick={onRemove}
-        className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 text-gray-400 hover:text-error transition-all p-1 text-sm"
+        className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 text-gray-400 hover:text-error transition-all p-2 text-base"
       >✕</button>
     </div>
   );

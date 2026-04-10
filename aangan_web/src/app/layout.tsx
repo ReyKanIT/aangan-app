@@ -5,7 +5,7 @@ const APP_URL = 'https://aangan.app';
 const APP_NAME = 'Aangan आँगन';
 const APP_TAGLINE = 'Your Family\'s Digital Home';
 const APP_DESCRIPTION =
-  'India\'s first Hindi-first family social network. Connect with your family, share moments, track Hindu Panchang, manage family events with RSVP, and build your family tree. Designed so even grandmothers can use it.';
+  'Aangan आँगन — भारत का पहला हिंदी-फर्स्ट परिवार सोशल नेटवर्क। परिवार से जुड़ें, पल साझा करें, पंचांग देखें, त्योहार मनाएं। India\'s first Hindi-first family social network — connect with family, share moments, track Panchang, manage events. Designed so even grandmothers can use it.';
 
 export const viewport: Viewport = {
   width: 'device-width',
@@ -105,7 +105,7 @@ const jsonLd = {
     name: 'ReyKan IT',
     url: APP_URL,
   },
-  aggregateRating: undefined, // add when ratings are available
+  // aggregateRating: add when ratings are available
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

@@ -20,7 +20,7 @@ export default function PostCard({ post }: { post: Post }) {
   const [deleting, setDeleting] = useState(false);
 
   const isOwn = user?.id === post.author_id;
-  const content = post.content;
+  const content = post.content ?? '';
   const shouldTruncate = content.length > 300 && !expanded;
 
   const handleDelete = async () => {
@@ -66,7 +66,7 @@ export default function PostCard({ post }: { post: Post }) {
         </p>
         {content.length > 300 && (
           <button
-            className="font-body text-sm text-haldi-gold mt-1"
+            className="font-body text-base text-haldi-gold mt-1 py-1"
             onClick={() => setExpanded(!expanded)}
           >
             {expanded ? 'कम दिखाएं' : 'और पढ़ें'}
@@ -97,18 +97,19 @@ export default function PostCard({ post }: { post: Post }) {
       <div className="flex items-center gap-4 pt-2 border-t border-cream-dark">
         <button
           onClick={() => likePost(post.id)}
-          className={`flex items-center gap-1.5 font-body text-sm ${post.is_liked ? 'text-red-500' : 'text-brown-light'} hover:text-red-500 transition-colors`}
+          className={`flex items-center gap-1.5 py-2 px-1 font-body text-base ${post.is_liked ? 'text-red-500' : 'text-brown-light'} hover:text-red-500 transition-colors`}
         >
           <span>{post.is_liked ? '❤️' : '🤍'}</span>
           <span>{post.like_count}</span>
         </button>
-        <span className="flex items-center gap-1.5 font-body text-sm text-brown-light">
+        <span className="flex items-center gap-1.5 py-2 px-1 font-body text-base text-brown-light">
           <span>💬</span>
           <span>{post.comment_count}</span>
         </span>
         <ShareButton
           title="Aangan आँगन"
           text={content.length > 100 ? `${content.slice(0, 100)}...` : content}
+          className="py-2 px-1 text-base"
         />
       </div>
     </article>

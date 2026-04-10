@@ -82,15 +82,24 @@ function OtpForm() {
 
   return (
     <div className="bg-white rounded-2xl shadow-sm p-8">
-      <button onClick={() => router.back()} className="text-brown-light font-body text-sm mb-6 flex items-center gap-1">
-        ← वापस जाएं
+      <button onClick={() => router.back()} className="text-brown-light font-body text-base mb-6 flex items-center gap-1 py-2">
+        ← वापस जाएं — Go Back
       </button>
       <h2 className="font-heading text-2xl text-brown mb-2">OTP दर्ज करें</h2>
-      <p className="font-body text-sm text-brown-light mb-1">Enter OTP</p>
-      <p className="font-body text-sm text-brown-light mb-8">
+      <p className="font-body text-base text-brown-light mb-1">Enter OTP</p>
+      <p className="font-body text-base text-brown-light mb-2">
         {isEmail
           ? `${email} पर भेजा गया`
           : `+91 ${phone} पर भेजा गया`}
+      </p>
+      <p className="font-body text-base text-brown-light/70 mb-6">
+        {isEmail
+          ? 'ईमेल में 6 अंकों का कोड आया है — वो यहाँ डालें'
+          : 'SMS में 6 अंकों का कोड आया है — वो यहाँ डालें'}
+        <br />
+        <span className="text-sm">
+          {isEmail ? 'Check your email for a 6-digit code' : 'Check your SMS for a 6-digit code'}
+        </span>
       </p>
 
       {error && (
@@ -120,7 +129,7 @@ function OtpForm() {
       </GoldButton>
 
       <button
-        className={`w-full mt-4 font-body text-sm py-2 ${resendTimer > 0 ? 'text-brown-light' : 'text-haldi-gold underline'}`}
+        className={`w-full mt-4 font-body text-base py-3 ${resendTimer > 0 ? 'text-brown-light' : 'text-haldi-gold underline'}`}
         disabled={resendTimer > 0}
         onClick={handleResend}
       >
