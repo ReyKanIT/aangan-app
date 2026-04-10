@@ -139,7 +139,7 @@ export default function SettingsPage() {
       </GoldButton>
 
       {/* Version */}
-      <p className="font-body text-xs text-brown-light text-center mt-6">Aangan v0.5.0</p>
+      <p className="font-body text-xs text-brown-light text-center mt-6">Aangan v0.6.0</p>
     </div>
   );
 }

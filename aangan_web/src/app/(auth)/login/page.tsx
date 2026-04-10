@@ -77,11 +77,11 @@ export default function LoginPage() {
         <p className="font-body text-sm text-brown-light">Connect with Family</p>
       </div>
 
-      {/* Social Sign-In Buttons */}
+      {/* Google Sign-In — Primary auth method */}
       <div className="space-y-3">
         <button
           onClick={signInWithGoogle}
-          className="w-full flex items-center justify-center gap-3 min-h-dadi py-3.5 px-4 bg-white border-2 border-gray-300 rounded-xl font-body font-semibold text-base text-brown hover:bg-gray-50 hover:border-gray-400 hover:shadow-sm focus:outline-none focus:ring-2 focus:ring-haldi-gold focus:ring-offset-2 transition-all"
+          className="w-full flex items-center justify-center gap-3 min-h-dadi py-4 px-4 bg-haldi-gold text-white border-2 border-haldi-gold rounded-xl font-body font-bold text-lg hover:bg-haldi-gold-dark hover:border-haldi-gold-dark hover:shadow-md focus:outline-none focus:ring-2 focus:ring-haldi-gold focus:ring-offset-2 transition-all shadow-sm"
         >
           <svg width="22" height="22" viewBox="0 0 48 48">
             <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
@@ -155,6 +155,9 @@ export default function LoginPage() {
           <GoldButton className="w-full" loading={isSending} disabled={!isValidPhone} onClick={handlePhoneOtp}>
             OTP भेजें — Send OTP
           </GoldButton>
+          <p className="font-body text-xs text-brown-light/60 text-center">
+            SMS OTP सीमित है — Google से साइन इन करें (सबसे तेज़)
+          </p>
         </div>
       ) : (
         <div className="space-y-4">

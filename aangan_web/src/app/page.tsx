@@ -76,7 +76,7 @@ const FEATURES = [
   },
 ];
 
-const APK_URL = '/Aangan-v0.4.5.apk';
+const APK_URL = '/Aangan-v0.6.0.apk';
 
 export default function LandingPage() {
   const router = useRouter();
@@ -308,7 +308,7 @@ export default function LandingPage() {
 
           <div className="mt-8 pt-6 border-t border-cream/10 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-cream-dark">
             <p>{"Made with ❤️ in India"}</p>
-            <p>&copy; 2026 ReyKan IT &middot; v0.5.0</p>
+            <p>&copy; 2026 ReyKan IT &middot; v0.6.0</p>
           </div>
         </div>
       </footer>

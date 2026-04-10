@@ -1,4 +1,5 @@
 import type { NextConfig } from 'next';
+import { withSentryConfig } from '@sentry/nextjs';
 
 const nextConfig: NextConfig = {
   // Note: Remove 'output: standalone' for Vercel deployment (Vercel handles this natively).
@@ -33,7 +34,7 @@ const nextConfig: NextConfig = {
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
               "font-src 'self' https://fonts.gstatic.com",
               "img-src 'self' data: https://*.supabase.co https://s.gravatar.com https://media.aangan.app https://*.backblazeb2.com",
-              "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://media.aangan.app",
+              "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://media.aangan.app https://*.sentry.io",
               "frame-ancestors 'none'",
             ].join('; '),
           },
@@ -43,4 +44,7 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+export default withSentryConfig(nextConfig, {
+  silent: true,
+  disableLogger: true,
+});

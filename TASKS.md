@@ -9,7 +9,7 @@
 
 | # | Task | Owner | Status | ETA | Notes |
 |---|------|-------|--------|-----|-------|
-| 1 | Add Google Sign-In to web + mobile app | Claude | IN PROGRESS | Apr 9 | Removes SMS OTP dependency |
+| 1 | Add Google Sign-In to web + mobile app | Claude | ✅ DONE | Apr 9 | Web + mobile, removes SMS OTP dependency |
 | 2 | Fix Indus App Store screenshots (replace dashboard with real screens) | Claude + Kumar | PENDING | Apr 9 | Need real app screenshots |
 | 3 | Complete VilPower DLT approval | VilPower | WAITING | Apr 10 | Reg# VI-1100093984, ~48 hrs |
 | 4 | Register Header "AANGAN" on DLT | Claude | BLOCKED | Apr 10 | Needs VilPower approval first |
@@ -23,9 +23,9 @@
 | # | Task | Owner | Status | ETA | Notes |
 |---|------|-------|--------|-----|-------|
 | 9 | Register Google Play Console ($25) | Kumar | PENDING | Apr 9 | play.google.com/console |
-| 10 | Build signed release APK for Play Store | Claude | PENDING | Apr 10 | Needs EAS login |
+| 10 | Build signed release APK for Play Store | Claude | ✅ DONE | Apr 9 | APK + AAB built via EAS, APK hosted at aangan.app |
 | 11 | Record 60-sec demo video | Kumar | PENDING | Apr 10 | Screen record: Login -> Feed -> Family Tree -> Panchang |
-| 12 | Add SEO meta tags + OG images to aangan.app | Claude | PENDING | Apr 9 | Title, description, social sharing |
+| 12 | Add SEO meta tags + OG images to aangan.app | Claude | ✅ DONE | Apr 8 | Meta tags, OG image, JSON-LD, favicon |
 | 13 | Create WhatsApp broadcast with download link | Kumar | PENDING | Apr 9 | Message ready below |
 | 14 | Fix email OTP (custom SMTP) | Claude | PENDING | Apr 10 | Supabase free tier limit = 4/hr |
 
@@ -38,7 +38,7 @@
 | 17 | Add profile photo upload | Claude | PENDING | Apr 14 | Currently missing |
 | 18 | Set up custom email domain (info@aangan.app) | Claude | PENDING | Apr 14 | For OTP emails + professional comms |
 | 19 | Create Instagram/YouTube page for Aangan | Kumar | PENDING | Apr 14 | Short demo reels |
-| 20 | Write 2 blog posts on aangan.app | Claude | PENDING | Apr 14 | Panchang daily + festival guide |
+| 20 | Write 2 blog posts on aangan.app | Claude | ✅ DONE | Apr 9 | Panchang + Festivals pages live |
 
 ---
 
@@ -89,6 +89,17 @@
 | C17 | Post likes persistence | Apr 9 | post_likes table + RLS + auto-count trigger |
 | C18 | Client-side image compression | Apr 9 | browser-image-compression (1MB, 1920px, WebP) |
 | C19 | Version bump to v0.6.0 | Apr 9 | Web + mobile (buildNumber 7, versionCode 7) |
+| C20 | Google Sign-In (web + mobile) | Apr 9 | Supabase Google OAuth + web login flow |
+| C21 | EAS builds v0.6.0 (APK + AAB) | Apr 9 | production-apk + production profiles, both finished |
+| C22 | APK hosted at aangan.app | Apr 9 | Aangan-v0.6.0.apk (106MB) in public/ |
+| C23 | Sentry error monitoring integration | Apr 9 | @sentry/nextjs, global-error.tsx, env-var gated |
+| C24 | Panchang daily blog page for SEO | Apr 9 | aangan.app/panchang, SSR, Hindi+English, JSON-LD |
+| C25 | Version strings updated to v0.6.0 | Apr 9 | Landing page, auth, settings, sidenav |
+| C26 | APK download link updated to v0.6.0 | Apr 9 | Landing page pointed to new APK |
+| C27 | Festival calendar 2026 page | Apr 9 | aangan.app/festivals, 24 festivals, Hindi+English, SEO |
+| C28 | Marketing demo slideshow | Apr 9 | aangan.app/demo, 8 slides, auto-play for screen recording |
+| C29 | Login flow fix (new user redirect) | Apr 9 | Both auth callbacks now detect new users → profile-setup |
+| C30 | Production deploy v0.6.0 (all pages) | Apr 9 | Vercel prod deploy with all new pages live |
 
 ---
 
