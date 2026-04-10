@@ -125,6 +125,12 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       const { data, error } = await supabase.auth.signUp({ email, password });
       if (error) { set({ error: error.message }); return false; }
       if (data.session) { set({ session: data.session }); await get().fetchProfile(); return true; }
+      if (data.user) {
+        // Account created, now send email OTP for verification
+        const { error: otpError } = await supabase.auth.signInWithOtp({ email });
+        if (otpError) { set({ error: otpError.message }); return false; }
+        return true;
+      }
       return false;
     } catch (e: unknown) {
       set({ error: e instanceof Error ? e.message : 'Sign up failed' });

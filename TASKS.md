@@ -1,5 +1,5 @@
 # ReyKan IT — CEO Action Tracker
-> Last updated: 2026-04-09
+> Last updated: 2026-04-10
 
 ---
 
@@ -22,12 +22,12 @@
 
 | # | Task | Owner | Status | ETA | Notes |
 |---|------|-------|--------|-----|-------|
-| 9 | Register Google Play Console ($25) | Kumar | PENDING | Apr 9 | play.google.com/console |
+| 9 | Register Google Play Console ($25) | Kumar | ✅ DONE | Apr 10 | Registered, identity verification pending |
 | 10 | Build signed release APK for Play Store | Claude | ✅ DONE | Apr 9 | APK + AAB built via EAS, APK hosted at aangan.app |
 | 11 | Record 60-sec demo video | Kumar | PENDING | Apr 10 | Screen record: Login -> Feed -> Family Tree -> Panchang |
 | 12 | Add SEO meta tags + OG images to aangan.app | Claude | ✅ DONE | Apr 8 | Meta tags, OG image, JSON-LD, favicon |
 | 13 | Create WhatsApp broadcast with download link | Kumar | PENDING | Apr 9 | Message ready below |
-| 14 | Fix email OTP (custom SMTP) | Claude | PENDING | Apr 10 | Supabase free tier limit = 4/hr |
+| 14 | Fix email OTP (custom SMTP) | Claude | ✅ DONE | Apr 10 | MSG91 SMTP, 5000 emails/month free |
 
 ### P2 — Important (Next Week)
 
@@ -100,6 +100,10 @@
 | C28 | Marketing demo slideshow | Apr 9 | aangan.app/demo, 8 slides, auto-play for screen recording |
 | C29 | Login flow fix (new user redirect) | Apr 9 | Both auth callbacks now detect new users → profile-setup |
 | C30 | Production deploy v0.6.0 (all pages) | Apr 9 | Vercel prod deploy with all new pages live |
+| C31 | MSG91 Email domain verified | Apr 10 | mail.aangan.app — SPF, DKIM, MX, CNAME all verified |
+| C32 | Custom SMTP in Supabase | Apr 10 | MSG91 SMTP (smtp.mailer91.com:587), 5000 emails/month free |
+| C33 | Google Play Console registered | Apr 10 | ReyKan, identity verification pending |
+| C34 | Apple Developer enrollment submitted | Apr 10 | Individual account, waiting for payment email ($99) |
 
 ---
 

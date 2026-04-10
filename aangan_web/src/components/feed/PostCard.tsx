@@ -6,6 +6,7 @@ import { usePostStore } from '@/stores/postStore';
 import type { Post } from '@/types/database';
 import { timeAgo } from '@/lib/utils/formatters';
 import { useState } from 'react';
+import ShareButton from '@/components/ui/ShareButton';
 
 const AUDIENCE_LABELS: Record<string, string> = {
   all: 'सभी',
@@ -105,6 +106,10 @@ export default function PostCard({ post }: { post: Post }) {
           <span>💬</span>
           <span>{post.comment_count}</span>
         </span>
+        <ShareButton
+          title="Aangan आँगन"
+          text={content.length > 100 ? `${content.slice(0, 100)}...` : content}
+        />
       </div>
     </article>
   );

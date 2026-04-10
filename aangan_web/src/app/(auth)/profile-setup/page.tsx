@@ -10,7 +10,13 @@ import { uploadAvatar } from '@/lib/utils/uploadMedia';
 export default function ProfileSetupPage() {
   const router = useRouter();
   const { user, updateProfile, session } = useAuthStore();
-  const [name, setName] = useState('');
+  const [name, setName] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const saved = sessionStorage.getItem('signup_name');
+      if (saved) { sessionStorage.removeItem('signup_name'); return saved; }
+    }
+    return '';
+  });
   const [nameHindi, setNameHindi] = useState('');
   const [city, setCity] = useState('');
   const [bio, setBio] = useState('');

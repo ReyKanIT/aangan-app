@@ -75,6 +75,8 @@ export const metadata: Metadata = {
     apple: '/apple-touch-icon.png',
   },
 
+  manifest: '/manifest.json',
+
   other: {
     'mobile-web-app-capable': 'yes',
     'apple-mobile-web-app-capable': 'yes',

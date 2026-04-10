@@ -6,15 +6,46 @@ import GoldButton from '@/components/ui/GoldButton';
 import InputField from '@/components/ui/InputField';
 import { VALIDATION } from '@/lib/constants';
 
+type AuthTab = 'login' | 'signup';
 type AuthMode = 'email' | 'phone';
+
+function PasswordStrength({ password }: { password: string }) {
+  if (!password) return null;
+  const checks = [
+    password.length >= 6,
+    password.length >= 8,
+    /[A-Z]/.test(password),
+    /[0-9]/.test(password),
+  ];
+  const score = checks.filter(Boolean).length;
+  const labels = ['कमज़ोर Weak', 'ठीक Fair', 'अच्छा Good', 'मज़बूत Strong'];
+  const colors = ['bg-red-400', 'bg-yellow-400', 'bg-blue-400', 'bg-mehndi-green'];
+  return (
+    <div className="space-y-1">
+      <div className="flex gap-1">
+        {[0, 1, 2, 3].map((i) => (
+          <div key={i} className={`h-1 flex-1 rounded-full ${i < score ? colors[score - 1] : 'bg-gray-200'}`} />
+        ))}
+      </div>
+      <p className={`font-body text-xs ${score <= 1 ? 'text-red-500' : score === 2 ? 'text-yellow-600' : 'text-mehndi-green'}`}>
+        {labels[score - 1]}
+      </p>
+    </div>
+  );
+}
 
 export default function LoginPage() {
   const router = useRouter();
   const { sendOtp, sendEmailOtp, signInWithEmail, signUpWithEmail, signInWithGoogle, signInWithApple, session, isNewUser, isLoading, initialize, error, setError } = useAuthStore();
+  const [tab, setTab] = useState<AuthTab>('login');
   const [mode, setMode] = useState<AuthMode>('email');
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [fullName, setFullName] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isSending, setIsSending] = useState(false);
 
   useEffect(() => { initialize(); }, [initialize]);
@@ -28,14 +59,26 @@ export default function LoginPage() {
   const isValidPhone = VALIDATION.phoneRegex.test(phone);
   const isValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   const isValidPassword = password.length >= 6;
+  const passwordsMatch = password === confirmPassword;
+  const isValidName = fullName.trim().length >= 2;
+
+  const switchTab = (t: AuthTab) => {
+    setTab(t);
+    setError(null);
+    setPassword('');
+    setConfirmPassword('');
+    setFullName('');
+  };
 
   const handlePhoneOtp = async () => {
     if (!isValidPhone || isSending) return;
+    if (tab === 'signup' && !isValidName) return;
     setIsSending(true);
     const ok = await sendOtp(phone);
     setIsSending(false);
     if (ok) {
       sessionStorage.setItem('otp_phone', phone);
+      if (fullName.trim()) sessionStorage.setItem('signup_name', fullName.trim());
       router.push('/otp');
     }
   };
@@ -49,11 +92,16 @@ export default function LoginPage() {
   };
 
   const handleEmailSignUp = async () => {
-    if (!isValidEmail || !isValidPassword || isSending) return;
+    if (!isValidEmail || !isValidPassword || !passwordsMatch || !isValidName || isSending) return;
     setIsSending(true);
+    setError(null);
     const ok = await signUpWithEmail(email, password);
     setIsSending(false);
-    if (!ok) setError('साइन अप नहीं हो पाया — Sign up failed');
+    if (ok) {
+      sessionStorage.setItem('otp_email', email);
+      if (fullName.trim()) sessionStorage.setItem('signup_name', fullName.trim());
+      router.push('/otp');
+    }
   };
 
   const handleEmailOtp = async () => {
@@ -110,24 +158,26 @@ export default function LoginPage() {
         <div className="flex-1 h-px bg-gray-200" />
       </div>
 
-      {/* Mode Toggle — Email / Phone */}
+      {/* Login / Sign Up Tab Toggle */}
       <div className="flex bg-cream rounded-xl p-1 mb-5">
-        {(['email', 'phone'] as AuthMode[]).map((m) => (
-          <button
-            key={m}
-            onClick={() => { setMode(m); setError(null); }}
-            aria-pressed={mode === m}
-            aria-label={m === 'email' ? 'ईमेल से लॉगिन — Login with Email' : 'फ़ोन OTP से लॉगिन — Login with Phone OTP'}
-            className={`flex-1 py-3 rounded-lg font-body font-semibold text-base transition-all ${
-              mode === m
-                ? 'bg-white shadow-sm text-haldi-gold'
-                : 'text-brown-light hover:text-brown'
-            }`}
-          >
-            {m === 'email' ? 'ईमेल' : 'फ़ोन'}
-            <span className="block text-xs font-normal opacity-60 mt-0.5">{m === 'email' ? 'Email' : 'Phone'}</span>
-          </button>
-        ))}
+        <button
+          onClick={() => switchTab('login')}
+          className={`flex-1 py-3 rounded-lg font-body font-semibold text-base transition-all ${
+            tab === 'login' ? 'bg-white shadow-sm text-haldi-gold' : 'text-brown-light hover:text-brown'
+          }`}
+        >
+          लॉगिन
+          <span className="block text-xs font-normal opacity-60 mt-0.5">Login</span>
+        </button>
+        <button
+          onClick={() => switchTab('signup')}
+          className={`flex-1 py-3 rounded-lg font-body font-semibold text-base transition-all ${
+            tab === 'signup' ? 'bg-white shadow-sm text-haldi-gold' : 'text-brown-light hover:text-brown'
+          }`}
+        >
+          साइन अप
+          <span className="block text-xs font-normal opacity-60 mt-0.5">Sign Up</span>
+        </button>
       </div>
 
       {/* Error Message */}
@@ -138,74 +188,226 @@ export default function LoginPage() {
         </div>
       )}
 
-      {/* Form Fields */}
-      {mode === 'phone' ? (
-        <div className="space-y-4">
-          <InputField
-            label="फ़ोन नंबर"
-            sublabel="Phone Number"
-            type="tel"
-            inputMode="numeric"
-            prefix="+91"
-            value={phone}
-            onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
-            placeholder="9876543210"
-            maxLength={10}
-          />
-          <GoldButton className="w-full" loading={isSending} disabled={!isValidPhone} onClick={handlePhoneOtp}>
-            OTP भेजें — Send OTP
-          </GoldButton>
-          <p className="font-body text-xs text-brown-light/60 text-center">
-            SMS OTP सीमित है — Google से साइन इन करें (सबसे तेज़)
-          </p>
-        </div>
-      ) : (
-        <div className="space-y-4">
-          <InputField
-            label="ईमेल"
-            sublabel="Email"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="name@example.com"
-            autoComplete="email"
-          />
-          <InputField
-            label="पासवर्ड"
-            sublabel="Password (6+ characters)"
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="6+ अक्षर"
-            autoComplete="current-password"
-          />
-
-          {/* Login & Sign Up side by side */}
-          <div className="flex gap-3">
-            <GoldButton className="flex-1 flex-col !gap-0" loading={isSending} disabled={!isValidEmail || !isValidPassword} onClick={handleEmailLogin}>
-              <span>लॉगिन</span>
-              <span className="text-xs font-normal opacity-80">Login</span>
-            </GoldButton>
-            <GoldButton variant="outline" className="flex-1 flex-col !gap-0" loading={isSending} disabled={!isValidEmail || !isValidPassword} onClick={handleEmailSignUp}>
-              <span>साइन अप</span>
-              <span className="text-xs font-normal opacity-80">Sign Up</span>
-            </GoldButton>
+      {/* ===== LOGIN TAB ===== */}
+      {tab === 'login' && (
+        <>
+          {/* Email / Phone toggle within Login */}
+          <div className="flex bg-cream/50 rounded-lg p-1 mb-4">
+            {(['email', 'phone'] as AuthMode[]).map((m) => (
+              <button
+                key={m}
+                onClick={() => { setMode(m); setError(null); }}
+                className={`flex-1 py-2 rounded-md font-body text-sm font-medium transition-all ${
+                  mode === m ? 'bg-white shadow-sm text-haldi-gold' : 'text-brown-light hover:text-brown'
+                }`}
+              >
+                {m === 'email' ? 'ईमेल Email' : 'फ़ोन Phone'}
+              </button>
+            ))}
           </div>
 
-          {/* Helper note */}
-          <p className="font-body text-xs text-brown-light text-center leading-relaxed">
-            नए उपयोगकर्ता — <span className="font-semibold text-haldi-gold">Sign Up</span> | मौजूदा उपयोगकर्ता — <span className="font-semibold text-haldi-gold">Login</span>
-          </p>
+          {mode === 'phone' ? (
+            <div className="space-y-4">
+              <InputField
+                label="फ़ोन नंबर"
+                sublabel="Phone Number"
+                type="tel"
+                inputMode="numeric"
+                prefix="+91"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
+                placeholder="9876543210"
+                maxLength={10}
+              />
+              <GoldButton className="w-full" loading={isSending} disabled={!isValidPhone} onClick={handlePhoneOtp}>
+                OTP भेजें — Send OTP
+              </GoldButton>
+              <p className="font-body text-xs text-brown-light/60 text-center">
+                SMS OTP सीमित है — Google से साइन इन करें (सबसे तेज़)
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <InputField
+                label="ईमेल"
+                sublabel="Email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="name@example.com"
+                autoComplete="email"
+              />
+              <div className="relative">
+                <InputField
+                  label="पासवर्ड"
+                  sublabel="Password"
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="अपना पासवर्ड डालें"
+                  autoComplete="current-password"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-9 text-brown-light hover:text-brown text-sm font-body"
+                  tabIndex={-1}
+                >
+                  {showPassword ? 'छुपाएं' : 'दिखाएं'}
+                </button>
+              </div>
+              <GoldButton className="w-full" loading={isSending} disabled={!isValidEmail || !isValidPassword} onClick={handleEmailLogin}>
+                लॉगिन करें — Login
+              </GoldButton>
 
-          {/* Email OTP option */}
-          <button
-            className={`w-full py-2.5 font-body text-sm text-haldi-gold hover:underline transition-all ${(!isValidEmail || isSending) ? 'opacity-40 pointer-events-none' : ''}`}
-            disabled={!isValidEmail || isSending}
-            onClick={handleEmailOtp}
-          >
-            बिना पासवर्ड — Email OTP भेजें
-          </button>
-        </div>
+              {/* Email OTP option */}
+              <button
+                className={`w-full py-2 font-body text-sm text-haldi-gold hover:underline transition-all ${(!isValidEmail || isSending) ? 'opacity-40 pointer-events-none' : ''}`}
+                disabled={!isValidEmail || isSending}
+                onClick={handleEmailOtp}
+              >
+                बिना पासवर्ड — Email OTP भेजें
+              </button>
+
+              <p className="font-body text-xs text-brown-light text-center">
+                नए हैं? <button onClick={() => switchTab('signup')} className="text-haldi-gold font-semibold hover:underline">अकाउंट बनाएं — Sign Up</button>
+              </p>
+            </div>
+          )}
+        </>
+      )}
+
+      {/* ===== SIGN UP TAB ===== */}
+      {tab === 'signup' && (
+        <>
+          {/* Email / Phone toggle */}
+          <div className="flex bg-cream/50 rounded-lg p-1 mb-4">
+            {(['phone', 'email'] as AuthMode[]).map((m) => (
+              <button
+                key={m}
+                onClick={() => { setMode(m); setError(null); }}
+                className={`flex-1 py-2 rounded-md font-body text-sm font-medium transition-all ${
+                  mode === m ? 'bg-white shadow-sm text-haldi-gold' : 'text-brown-light hover:text-brown'
+                }`}
+              >
+                {m === 'phone' ? 'फ़ोन Phone' : 'ईमेल Email'}
+              </button>
+            ))}
+          </div>
+
+          {/* Name field — shown for both phone and email signup */}
+          <InputField
+            label="आपका नाम *"
+            sublabel="Your Name"
+            value={fullName}
+            onChange={(e) => setFullName(e.target.value)}
+            placeholder="अपना नाम डालें"
+            autoComplete="name"
+          />
+
+          {mode === 'phone' ? (
+            <div className="space-y-4">
+              <InputField
+                label="फ़ोन नंबर"
+                sublabel="Phone Number"
+                type="tel"
+                inputMode="numeric"
+                prefix="+91"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
+                placeholder="9876543210"
+                maxLength={10}
+              />
+              <p className="font-body text-xs text-brown-light text-center leading-relaxed">
+                OTP से खाता बनेगा — पासवर्ड की ज़रूरत नहीं
+                <br /><span className="text-brown-light/60">No password needed — account created via OTP</span>
+              </p>
+              <GoldButton className="w-full" loading={isSending} disabled={!isValidPhone || !isValidName} onClick={handlePhoneOtp}>
+                अकाउंट बनाएं — Create Account
+              </GoldButton>
+              <p className="font-body text-xs text-brown-light/60 text-center">
+                SMS OTP सीमित है — Google से साइन इन करें (सबसे तेज़)
+              </p>
+              <p className="font-body text-xs text-brown-light text-center">
+                पहले से अकाउंट है? <button onClick={() => switchTab('login')} className="text-haldi-gold font-semibold hover:underline">लॉगिन करें — Login</button>
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <InputField
+                label="ईमेल"
+                sublabel="Email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="name@example.com"
+                autoComplete="email"
+              />
+
+              {/* Password with show/hide toggle */}
+              <div className="relative">
+                <InputField
+                  label="पासवर्ड बनाएं"
+                  sublabel="Create Password (6+ characters)"
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="6+ अक्षर का पासवर्ड"
+                  autoComplete="new-password"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-9 text-brown-light hover:text-brown text-sm font-body"
+                  tabIndex={-1}
+                >
+                  {showPassword ? 'छुपाएं' : 'दिखाएं'}
+                </button>
+              </div>
+              <PasswordStrength password={password} />
+
+              <div className="relative">
+                <InputField
+                  label="पासवर्ड दोबारा डालें"
+                  sublabel="Confirm Password"
+                  type={showConfirmPassword ? 'text' : 'password'}
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="वही पासवर्ड दोबारा"
+                  autoComplete="new-password"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute right-3 top-9 text-brown-light hover:text-brown text-sm font-body"
+                  tabIndex={-1}
+                >
+                  {showConfirmPassword ? 'छुपाएं' : 'दिखाएं'}
+                </button>
+              </div>
+
+              {/* Password match feedback */}
+              {confirmPassword.length > 0 && (
+                <p className={`font-body text-xs ${passwordsMatch ? 'text-mehndi-green' : 'text-error'}`}>
+                  {passwordsMatch ? 'पासवर्ड मेल खा रहे हैं ✓' : 'पासवर्ड मेल नहीं खा रहे — Passwords do not match'}
+                </p>
+              )}
+
+              <GoldButton
+                className="w-full"
+                loading={isSending}
+                disabled={!isValidEmail || !isValidPassword || !passwordsMatch || !isValidName || confirmPassword.length === 0}
+                onClick={handleEmailSignUp}
+              >
+                अकाउंट बनाएं — Create Account
+              </GoldButton>
+
+              <p className="font-body text-xs text-brown-light text-center">
+                पहले से अकाउंट है? <button onClick={() => switchTab('login')} className="text-haldi-gold font-semibold hover:underline">लॉगिन करें — Login</button>
+              </p>
+            </div>
+          )}
+        </>
       )}
 
       {/* Terms */}

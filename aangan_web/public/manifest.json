@@ -1,0 +1,26 @@
+{
+  "name": "Aangan आँगन — Your Family's Digital Home",
+  "short_name": "Aangan",
+  "description": "परिवार से जुड़ें — India's first Hindi-first family social network",
+  "start_url": "/feed",
+  "display": "standalone",
+  "background_color": "#FBF7EF",
+  "theme_color": "#C8A84B",
+  "lang": "hi",
+  "dir": "ltr",
+  "categories": ["social"],
+  "icons": [
+    {
+      "src": "/icons/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

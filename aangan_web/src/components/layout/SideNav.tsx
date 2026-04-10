@@ -60,7 +60,7 @@ export default function SideNav() {
 
       {/* Version Footer */}
       <div className="px-6 py-4 border-t border-cream-dark">
-        <p className="font-body text-xs text-brown-light">v0.6.0 — Media + Storage</p>
+        <p className="font-body text-xs text-brown-light">v0.7.0 — Email OTP + SMTP</p>
       </div>
     </nav>
   );
