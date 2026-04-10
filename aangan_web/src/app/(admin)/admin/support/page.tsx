@@ -124,7 +124,7 @@ export default function SupportPage() {
       ticket_id: selected.id,
       sender_id: user!.id,
       message: reply.trim(),
-      is_from_support: !isNote,
+      is_from_support: true,
       is_internal_note: isNote,
     });
     // Update ticket status to in_progress if it was open
