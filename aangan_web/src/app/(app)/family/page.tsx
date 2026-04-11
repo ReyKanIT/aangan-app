@@ -17,7 +17,7 @@ const LEVELS = [
 ];
 
 export default function FamilyPage() {
-  const { members, fetchMembers, removeMember, isLoading } = useFamilyStore();
+  const { members, fetchMembers, removeMember, isLoading, error } = useFamilyStore();
   const [activeLevel, setActiveLevel] = useState(0);
   const [drawerOpen, setDrawerOpen] = useState(false);
 
@@ -27,7 +27,12 @@ export default function FamilyPage() {
 
   const handleRemove = useCallback(async (m: FamilyMember) => {
     if (!confirm(`${m.member?.display_name_hindi ?? m.member?.display_name} को हटाएं?`)) return;
-    await removeMember(m.family_member_id);
+    try {
+      const success = await removeMember(m.family_member_id);
+      if (!success) alert('सदस्य हटाने में समस्या हुई — Member removal failed');
+    } catch {
+      alert('सदस्य हटाने में समस्या हुई — Member removal failed');
+    }
   }, [removeMember]);
 
   return (
@@ -53,6 +58,13 @@ export default function FamilyPage() {
           </button>
         ))}
       </div>
+
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 mb-4 font-body text-base">
+          <p className="font-semibold">कुछ गड़बड़ हुई — Something went wrong</p>
+          <p className="text-sm mt-1">{error}</p>
+        </div>
+      )}
 
       {isLoading ? (
         <div className="flex justify-center py-20"><LoadingSpinner /></div>

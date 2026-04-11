@@ -10,7 +10,7 @@ import { EVENT_TYPES } from '@/lib/constants';
 import EventCreatorModal from '@/components/events/EventCreatorModal';
 
 export default function EventsPage() {
-  const { events, fetchEvents, isLoading } = useEventStore();
+  const { events, fetchEvents, isLoading, error } = useEventStore();
   const [modalOpen, setModalOpen] = useState(false);
 
   useEffect(() => { fetchEvents(); }, [fetchEvents]);
@@ -26,6 +26,13 @@ export default function EventsPage() {
         </div>
         <GoldButton size="sm" onClick={() => setModalOpen(true)}>+ उत्सव बनाएं</GoldButton>
       </div>
+
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 mb-4 font-body text-base">
+          <p className="font-semibold">कुछ गड़बड़ हुई — Something went wrong</p>
+          <p className="text-sm mt-1">{error}</p>
+        </div>
+      )}
 
       {isLoading ? (
         <div className="flex justify-center py-20"><LoadingSpinner /></div>

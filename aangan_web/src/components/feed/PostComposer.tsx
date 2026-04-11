@@ -55,7 +55,7 @@ export default function PostComposer({ onClose }: PostComposerProps) {
             <select
               value={audience}
               onChange={(e) => setAudience(e.target.value)}
-              className="font-body text-sm text-brown-light bg-cream-dark rounded-full px-2 py-0.5 border-0 focus:outline-none mt-0.5"
+              className="font-body text-base text-brown-light bg-cream-dark rounded-full px-2 py-0.5 border-0 focus:outline-none mt-0.5"
             >
               {AUDIENCE_OPTIONS.map((opt) => (
                 <option key={opt.value} value={opt.value}>{opt.label} — {opt.sublabel}</option>

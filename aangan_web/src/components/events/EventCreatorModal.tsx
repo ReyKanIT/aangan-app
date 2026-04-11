@@ -63,7 +63,7 @@ export default function EventCreatorModal({ onClose }: Props) {
                   className={`p-4 rounded-2xl border-2 flex flex-col items-center gap-1 transition-all min-h-[80px] ${eventType === t.value ? 'border-haldi-gold bg-unread-bg' : 'border-gray-200 hover:border-haldi-gold-light'}`}
                 >
                   <span className="text-3xl">{t.emoji}</span>
-                  <span className="font-body text-xs text-brown font-semibold">{t.label}</span>
+                  <span className="font-body text-base text-brown font-semibold">{t.label}</span>
                 </button>
               ))}
             </div>

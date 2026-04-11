@@ -93,7 +93,7 @@ export default function FestivalsPage() {
           <a href="/" className="font-heading text-2xl text-haldi-gold tracking-wide">
             Aangan <span className="text-haldi-gold-dark">आँगन</span>
           </a>
-          <a href="/login" className="px-5 py-2 rounded-full bg-haldi-gold text-white font-semibold text-sm hover:bg-haldi-gold-dark transition-colors">
+          <a href="/login" className="px-5 py-2 rounded-full bg-haldi-gold text-white font-semibold text-base hover:bg-haldi-gold-dark transition-colors">
             Login / Sign Up
           </a>
         </div>

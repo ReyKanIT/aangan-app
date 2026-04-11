@@ -277,19 +277,19 @@ export default function SupportPage() {
                 <>
                   <button
                     onClick={() => updateStatus(selected.id, 'waiting_for_user')}
-                    className="px-3 py-1.5 text-xs bg-orange-50 text-orange-700 rounded-lg hover:bg-orange-100 transition-colors font-medium"
+                    className="px-3 py-1.5 text-sm bg-orange-50 text-orange-700 rounded-lg hover:bg-orange-100 transition-colors font-medium"
                   >
                     Waiting
                   </button>
                   <button
                     onClick={() => setShowResolve(true)}
-                    className="px-3 py-1.5 text-xs bg-green-50 text-green-700 rounded-lg hover:bg-green-100 transition-colors font-medium"
+                    className="px-3 py-1.5 text-sm bg-green-50 text-green-700 rounded-lg hover:bg-green-100 transition-colors font-medium"
                   >
                     Resolve ✓
                   </button>
                   <button
                     onClick={() => updateStatus(selected.id, 'closed')}
-                    className="px-3 py-1.5 text-xs bg-gray-50 text-gray-600 rounded-lg hover:bg-gray-100 transition-colors font-medium"
+                    className="px-3 py-1.5 text-sm bg-gray-50 text-gray-600 rounded-lg hover:bg-gray-100 transition-colors font-medium"
                   >
                     Close
                   </button>
@@ -312,11 +312,11 @@ export default function SupportPage() {
               <div className="flex gap-2 mt-2">
                 <button
                   onClick={() => updateStatus(selected.id, 'resolved', resolveNote)}
-                  className="px-4 py-1.5 text-xs bg-green-600 text-white rounded-lg font-medium hover:bg-green-700"
+                  className="px-4 py-1.5 text-sm bg-green-600 text-white rounded-lg font-medium hover:bg-green-700"
                 >
                   Mark Resolved
                 </button>
-                <button onClick={() => setShowResolve(false)} className="px-4 py-1.5 text-xs text-brown-light hover:text-brown">
+                <button onClick={() => setShowResolve(false)} className="px-4 py-1.5 text-sm text-brown-light hover:text-brown">
                   Cancel
                 </button>
               </div>
@@ -363,14 +363,14 @@ export default function SupportPage() {
               <div className="flex gap-3 mb-2">
                 <button
                   onClick={() => setIsNote(false)}
-                  className={cn('text-xs px-3 py-1 rounded-full font-medium transition-colors',
+                  className={cn('text-sm px-3 py-1 rounded-full font-medium transition-colors',
                     !isNote ? 'bg-brown text-cream' : 'text-brown-light hover:text-brown')}
                 >
                   Reply to User
                 </button>
                 <button
                   onClick={() => setIsNote(true)}
-                  className={cn('text-xs px-3 py-1 rounded-full font-medium transition-colors',
+                  className={cn('text-sm px-3 py-1 rounded-full font-medium transition-colors',
                     isNote ? 'bg-yellow-500 text-white' : 'text-brown-light hover:text-brown')}
                 >
                   📌 Internal Note
