@@ -38,7 +38,7 @@ export default function EventDetailPage() {
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-6">
-      <Link href="/events" className="font-body text-base text-brown-light flex items-center gap-1 mb-4 min-h-[44px]">
+      <Link href="/events" className="font-body text-base text-brown-light flex items-center gap-1 mb-4 min-h-dadi">
         ← वापस / Back
       </Link>
 

@@ -184,7 +184,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         data.display_name === session.user.email;
       set({ user: data, isNewUser, isLoading: false });
       // Update last_seen_at (fire-and-forget)
-      supabase.from('users').update({ last_seen_at: new Date().toISOString() }).eq('id', session.user.id).then();
+      supabase.from('users').update({ last_seen_at: new Date().toISOString() }).eq('id', session.user.id).then(() => {}, () => {});
     } catch (e: unknown) {
       set({ error: e instanceof Error ? e.message : 'Failed to fetch profile', isLoading: false });
     }

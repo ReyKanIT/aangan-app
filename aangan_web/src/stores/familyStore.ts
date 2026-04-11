@@ -43,7 +43,7 @@ export const useFamilyStore = create<FamilyState>((set) => ({
       const { data, error } = await supabase
         .from('users')
         .select('*')
-        .or(`display_name.ilike.%${query}%,display_name_hindi.ilike.%${query}%`)
+        .or(`display_name.ilike.%${query.replace(/[%_,.()\\']/g, '\\$&')}%,display_name_hindi.ilike.%${query.replace(/[%_,.()\\']/g, '\\$&')}%`)
         .limit(20);
 
       if (error) { set({ error: error.message }); return; }

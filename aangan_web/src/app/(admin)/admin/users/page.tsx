@@ -65,7 +65,7 @@ export default function AdminUsersPage() {
 
       if (search.trim()) {
         // Escape PostgREST filter metacharacters to prevent query injection
-        const escaped = search.trim().replace(/[%_,.()\\']/g, '\\$&');
+        const escaped = search.trim().replace(/[%_,.()\\'"!@*]/g, '\\$&');
         query = query.or(`display_name.ilike.%${escaped}%,phone_number.ilike.%${escaped}%`);
       }
 

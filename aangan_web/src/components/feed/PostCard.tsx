@@ -52,7 +52,7 @@ export default function PostCard({ post }: { post: Post }) {
             <button
               onClick={handleDelete}
               disabled={deleting}
-              className="text-gray-400 hover:text-error transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
+              className="text-gray-400 hover:text-error transition-colors min-w-dadi min-h-dadi flex items-center justify-center"
               aria-label="पोस्ट हटाएं — Delete post"
             >
               🗑️
@@ -99,14 +99,14 @@ export default function PostCard({ post }: { post: Post }) {
       <div className="flex items-center gap-4 pt-2 border-t border-cream-dark">
         <button
           onClick={() => likePost(post.id)}
-          className={`flex items-center gap-1.5 min-h-[44px] px-3 font-body text-base rounded-lg ${post.is_liked ? 'text-red-500' : 'text-brown-light'} hover:text-red-500 hover:bg-red-50 transition-colors`}
+          className={`flex items-center gap-1.5 min-h-dadi px-3 font-body text-base rounded-lg ${post.is_liked ? 'text-red-500' : 'text-brown-light'} hover:text-red-500 hover:bg-red-50 transition-colors`}
         >
           <span>{post.is_liked ? '❤️' : '🤍'}</span>
           <span>{post.like_count}</span>
         </button>
         <button
           onClick={() => setShowComments(!showComments)}
-          className="flex items-center gap-1.5 min-h-[44px] px-3 font-body text-base text-brown-light hover:text-haldi-gold hover:bg-cream-dark rounded-lg transition-colors"
+          className="flex items-center gap-1.5 min-h-dadi px-3 font-body text-base text-brown-light hover:text-haldi-gold hover:bg-cream-dark rounded-lg transition-colors"
         >
           <span>💬</span>
           <span>{post.comment_count}</span>
@@ -114,7 +114,7 @@ export default function PostCard({ post }: { post: Post }) {
         <ShareButton
           title="Aangan आँगन"
           text={content.length > 100 ? `${content.slice(0, 100)}...` : content}
-          className="min-h-[44px] px-3 text-base"
+          className="min-h-dadi px-3 text-base"
         />
       </div>
 

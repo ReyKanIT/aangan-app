@@ -91,7 +91,7 @@ export default function CommentSection({ postId }: { postId: string }) {
                 {isOwn && (
                   <button
                     onClick={() => deleteComment(c.id, postId)}
-                    className="text-gray-400 hover:text-error transition-colors p-2 flex-shrink-0 self-start min-w-[44px] min-h-[44px] flex items-center justify-center"
+                    className="text-gray-400 hover:text-error transition-colors p-2 flex-shrink-0 self-start min-w-dadi min-h-dadi flex items-center justify-center"
                     aria-label="टिप्पणी हटाएं (Delete comment)"
                     title="हटाएं / Delete"
                   >

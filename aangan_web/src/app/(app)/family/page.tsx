@@ -97,7 +97,7 @@ function MemberCard({ member, onRemove }: { member: FamilyMember; onRemove: () =
       )}
       <button
         onClick={onRemove}
-        className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 text-gray-400 hover:text-error transition-all min-w-[44px] min-h-[44px] flex items-center justify-center text-base rounded-lg"
+        className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 text-gray-400 hover:text-error transition-all min-w-dadi min-h-dadi flex items-center justify-center text-base rounded-lg"
         aria-label="सदस्य हटाएं — Remove member"
       >✕</button>
     </div>
