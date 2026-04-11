@@ -316,14 +316,14 @@ export default function LandingPage() {
           <div className="flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="text-center md:text-left">
               <span className="font-heading text-2xl text-haldi-gold">Aangan आँगन</span>
-              <p className="text-cream-dark text-sm mt-1">Your Family&rsquo;s Digital Home</p>
+              <p className="text-cream-dark text-base mt-1">Your Family&rsquo;s Digital Home</p>
             </div>
 
             <div className="flex gap-6 text-base">
-              <a href="/privacy" className="text-cream-dark hover:text-haldi-gold transition-colors py-2">
+              <a href="/privacy" className="inline-flex items-center text-cream-dark hover:text-haldi-gold transition-colors min-h-dadi px-2">
                 Privacy Policy
               </a>
-              <a href="/terms" className="text-cream-dark hover:text-haldi-gold transition-colors py-2">
+              <a href="/terms" className="inline-flex items-center text-cream-dark hover:text-haldi-gold transition-colors min-h-dadi px-2">
                 Terms of Service
               </a>
             </div>
