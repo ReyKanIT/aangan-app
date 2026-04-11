@@ -7,6 +7,10 @@ export async function GET(request: NextRequest) {
 
   let redirectPath = '/feed';
 
+  if (!code) {
+    return NextResponse.redirect(new URL('/login?error=auth_failed', request.url));
+  }
+
   if (code) {
     const supabase = await createSupabaseServer();
     const { data } = await supabase.auth.exchangeCodeForSession(code);

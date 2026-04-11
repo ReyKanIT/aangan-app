@@ -132,9 +132,10 @@ export const usePostStore = create<PostState>((set, get) => ({
       } else {
         await supabase.from('post_likes').insert({ post_id: postId, user_id: user.id });
       }
-    } catch {
-      // Rollback on error
+    } catch (e: unknown) {
+      // Rollback on error + show error
       set((state) => ({
+        error: e instanceof Error ? e.message : 'Like failed',
         posts: state.posts.map((p) =>
           p.id === postId
             ? { ...p, like_count: wasLiked ? p.like_count + 1 : p.like_count - 1, is_liked: wasLiked }

@@ -1,12 +1,14 @@
 'use client';
 import { useEffect, useState, useCallback } from 'react';
+import dynamic from 'next/dynamic';
 import { usePostStore } from '@/stores/postStore';
 import PostCard from '@/components/feed/PostCard';
-import PostComposer from '@/components/feed/PostComposer';
 import GoldButton from '@/components/ui/GoldButton';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import EmptyState from '@/components/ui/EmptyState';
 import PanchangWidget from '@/components/feed/PanchangWidget';
+
+const PostComposer = dynamic(() => import('@/components/feed/PostComposer'), { ssr: false });
 
 export default function FeedPage() {
   const { posts, fetchPosts, isLoading, isFetching, hasMore } = usePostStore();

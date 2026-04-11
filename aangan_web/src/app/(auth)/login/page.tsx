@@ -167,7 +167,7 @@ export default function LoginPage() {
           }`}
         >
           लॉगिन
-          <span className="block text-xs font-normal opacity-60 mt-0.5">Login</span>
+          <span className="block text-sm font-normal opacity-60 mt-0.5">Login</span>
         </button>
         <button
           onClick={() => switchTab('signup')}
@@ -176,7 +176,7 @@ export default function LoginPage() {
           }`}
         >
           साइन अप
-          <span className="block text-xs font-normal opacity-60 mt-0.5">Sign Up</span>
+          <span className="block text-sm font-normal opacity-60 mt-0.5">Sign Up</span>
         </button>
       </div>
 
@@ -222,7 +222,7 @@ export default function LoginPage() {
               <GoldButton className="w-full" loading={isSending} disabled={!isValidPhone} onClick={handlePhoneOtp}>
                 OTP भेजें — Send OTP
               </GoldButton>
-              <p className="font-body text-xs text-brown-light/60 text-center">
+              <p className="font-body text-sm text-brown-light/60 text-center">
                 SMS OTP सीमित है — Google से साइन इन करें (सबसे तेज़)
               </p>
             </div>
@@ -262,14 +262,14 @@ export default function LoginPage() {
 
               {/* Email OTP option */}
               <button
-                className={`w-full py-2 font-body text-sm text-haldi-gold hover:underline transition-all ${(!isValidEmail || isSending) ? 'opacity-40 pointer-events-none' : ''}`}
+                className={`w-full py-2 font-body text-base text-haldi-gold hover:underline transition-all ${(!isValidEmail || isSending) ? 'opacity-40 pointer-events-none' : ''}`}
                 disabled={!isValidEmail || isSending}
                 onClick={handleEmailOtp}
               >
                 बिना पासवर्ड — Email OTP भेजें
               </button>
 
-              <p className="font-body text-xs text-brown-light text-center">
+              <p className="font-body text-sm text-brown-light text-center">
                 नए हैं? <button onClick={() => switchTab('signup')} className="text-haldi-gold font-semibold hover:underline">अकाउंट बनाएं — Sign Up</button>
               </p>
             </div>
@@ -318,17 +318,17 @@ export default function LoginPage() {
                 placeholder="9876543210"
                 maxLength={10}
               />
-              <p className="font-body text-xs text-brown-light text-center leading-relaxed">
+              <p className="font-body text-sm text-brown-light text-center leading-relaxed">
                 OTP से खाता बनेगा — पासवर्ड की ज़रूरत नहीं
                 <br /><span className="text-brown-light/60">No password needed — account created via OTP</span>
               </p>
               <GoldButton className="w-full" loading={isSending} disabled={!isValidPhone || !isValidName} onClick={handlePhoneOtp}>
                 अकाउंट बनाएं — Create Account
               </GoldButton>
-              <p className="font-body text-xs text-brown-light/60 text-center">
+              <p className="font-body text-sm text-brown-light/60 text-center">
                 SMS OTP सीमित है — Google से साइन इन करें (सबसे तेज़)
               </p>
-              <p className="font-body text-xs text-brown-light text-center">
+              <p className="font-body text-sm text-brown-light text-center">
                 पहले से अकाउंट है? <button onClick={() => switchTab('login')} className="text-haldi-gold font-semibold hover:underline">लॉगिन करें — Login</button>
               </p>
             </div>
@@ -402,7 +402,7 @@ export default function LoginPage() {
                 अकाउंट बनाएं — Create Account
               </GoldButton>
 
-              <p className="font-body text-xs text-brown-light text-center">
+              <p className="font-body text-sm text-brown-light text-center">
                 पहले से अकाउंट है? <button onClick={() => switchTab('login')} className="text-haldi-gold font-semibold hover:underline">लॉगिन करें — Login</button>
               </p>
             </div>
@@ -411,7 +411,7 @@ export default function LoginPage() {
       )}
 
       {/* Terms */}
-      <p className="font-body text-xs text-brown-light text-center mt-6 leading-relaxed">
+      <p className="font-body text-sm text-brown-light text-center mt-6 leading-relaxed">
         आगे बढ़कर आप हमारी{' '}
         <a href="/terms" className="text-haldi-gold hover:underline" aria-label="Terms of Service">Terms</a>{' '}
         और{' '}

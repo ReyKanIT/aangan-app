@@ -114,7 +114,7 @@ export default function FestivalsPage() {
         {/* Legend */}
         <div className="flex flex-wrap gap-3 justify-center mb-8">
           {Object.entries(TYPE_LABELS).map(([key, { label, color }]) => (
-            <span key={key} className={`px-3 py-1 rounded-full text-xs font-semibold ${color}`}>
+            <span key={key} className={`px-3 py-1 rounded-full text-sm font-semibold ${color}`}>
               {label}
             </span>
           ))}
@@ -140,7 +140,7 @@ export default function FestivalsPage() {
                             <span className={`px-2 py-0.5 rounded-full text-xs ${typeInfo.color}`}>{typeInfo.label}</span>
                           </div>
                           <p className="text-sm text-brown-light">{f.name}</p>
-                          <p className="text-xs text-brown-light/70 mt-1">{f.desc}</p>
+                          <p className="text-sm text-brown-light/70 mt-1">{f.desc}</p>
                         </div>
                         <span className="font-heading text-sm text-haldi-gold whitespace-nowrap">{f.date}</span>
                       </div>

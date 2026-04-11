@@ -120,7 +120,7 @@ export default function PanchangPage() {
         </div>
 
         {/* Location note */}
-        <p className="text-center text-xs text-brown-light/60 mt-4">
+        <p className="text-center text-sm text-brown-light/60 mt-4">
           स्थान: नई दिल्ली (28.61°N, 77.21°E) &middot; Location: New Delhi
         </p>
 

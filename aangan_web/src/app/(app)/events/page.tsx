@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
+import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { useEventStore } from '@/stores/eventStore';
 import GoldButton from '@/components/ui/GoldButton';
@@ -7,7 +8,8 @@ import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import EmptyState from '@/components/ui/EmptyState';
 import { formatEventDate, formatEventTime } from '@/lib/utils/formatters';
 import { EVENT_TYPES } from '@/lib/constants';
-import EventCreatorModal from '@/components/events/EventCreatorModal';
+
+const EventCreatorModal = dynamic(() => import('@/components/events/EventCreatorModal'), { ssr: false });
 
 export default function EventsPage() {
   const { events, fetchEvents, isLoading, error } = useEventStore();
@@ -61,7 +63,7 @@ export default function EventsPage() {
                       <p className="font-body text-base text-haldi-gold font-semibold mt-0.5">
                         {formatEventDate(event.start_datetime)}
                       </p>
-                      <p className="font-body text-xs text-brown-light mt-0.5">
+                      <p className="font-body text-sm text-brown-light mt-0.5">
                         🕐 {formatEventTime(event.start_datetime)}
                         {event.location && ` · 📍 ${event.location}`}
                       </p>

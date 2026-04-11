@@ -45,21 +45,31 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
   },
 
   markAsRead: async (id) => {
-    await supabase.from('notifications').update({ is_read: true }).eq('id', id);
-    set((state) => ({
-      notifications: state.notifications.map((n) => n.id === id ? { ...n, is_read: true } : n),
-      unreadCount: Math.max(0, state.unreadCount - 1),
-    }));
+    try {
+      const { error } = await supabase.from('notifications').update({ is_read: true }).eq('id', id);
+      if (error) { set({ error: error.message }); return; }
+      set((state) => ({
+        notifications: state.notifications.map((n) => n.id === id ? { ...n, is_read: true } : n),
+        unreadCount: Math.max(0, state.unreadCount - 1),
+      }));
+    } catch (e: unknown) {
+      set({ error: e instanceof Error ? e.message : 'Failed to mark as read' });
+    }
   },
 
   markAllAsRead: async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
-    await supabase.from('notifications').update({ is_read: true }).eq('user_id', user.id).eq('is_read', false);
-    set((state) => ({
-      notifications: state.notifications.map((n) => ({ ...n, is_read: true })),
-      unreadCount: 0,
-    }));
+    try {
+      const { error } = await supabase.from('notifications').update({ is_read: true }).eq('user_id', user.id).eq('is_read', false);
+      if (error) { set({ error: error.message }); return; }
+      set((state) => ({
+        notifications: state.notifications.map((n) => ({ ...n, is_read: true })),
+        unreadCount: 0,
+      }));
+    } catch (e: unknown) {
+      set({ error: e instanceof Error ? e.message : 'Failed to mark all as read' });
+    }
   },
 
   subscribeToRealtime: () => {

@@ -71,7 +71,7 @@ export default function SettingsPage() {
           </div>
           <input type="file" accept="image/*" onChange={handleAvatarChange} className="hidden" />
         </label>
-        <p className="font-body text-xs text-brown-light mt-2">फ़ोटो बदलें — Change Photo</p>
+        <p className="font-body text-sm text-brown-light mt-2">फ़ोटो बदलें — Change Photo</p>
       </div>
 
       {error && <div className="bg-red-50 border border-error rounded-lg px-4 py-3 mb-4"><p className="font-body text-sm text-error">{error}</p></div>}
@@ -85,7 +85,7 @@ export default function SettingsPage() {
         <label className="block font-body font-semibold text-brown mb-1">अपने बारे में <span className="text-brown-light text-sm font-normal">Bio</span></label>
         <textarea value={bio} onChange={(e) => setBio(e.target.value)} rows={3} maxLength={200}
           className="w-full border-2 border-gray-300 rounded-xl px-4 py-3 font-body text-base text-brown focus:border-haldi-gold focus:outline-none resize-none" />
-        <p className="text-xs text-brown-light text-right font-body">{bio.length}/200</p>
+        <p className="text-sm text-brown-light text-right font-body">{bio.length}/200</p>
       </div>
 
       <GoldButton className="w-full mb-4" loading={isSaving} onClick={handleSave}>
@@ -101,34 +101,34 @@ export default function SettingsPage() {
       {/* v0.5 Voice Features */}
       <div className="bg-cream-dark rounded-2xl p-4 mb-4">
         <h3 className="font-heading text-lg text-brown mb-1">🎙️ वॉइस फ़ीचर्स</h3>
-        <p className="font-body text-xs text-brown-light mb-3">Voice Features (v0.5)</p>
+        <p className="font-body text-sm text-brown-light mb-3">Voice Features (v0.5)</p>
         <ul className="space-y-3 font-body text-sm text-brown">
           <li className="flex items-start gap-2">
             <span className="text-haldi-gold mt-0.5">🗣️</span>
             <div>
               <p className="font-semibold">वॉइस-टू-टेक्स्ट</p>
-              <p className="text-xs text-brown-light">Voice-to-Text in Hindi & English</p>
+              <p className="text-sm text-brown-light">Voice-to-Text in Hindi & English</p>
             </div>
           </li>
           <li className="flex items-start gap-2">
             <span className="text-haldi-gold mt-0.5">🎯</span>
             <div>
               <p className="font-semibold">वॉइस कमांड</p>
-              <p className="text-xs text-brown-light">Hands-free navigation with voice commands</p>
+              <p className="text-sm text-brown-light">Hands-free navigation with voice commands</p>
             </div>
           </li>
           <li className="flex items-start gap-2">
             <span className="text-haldi-gold mt-0.5">💬</span>
             <div>
               <p className="font-semibold">वॉइस मैसेज</p>
-              <p className="text-xs text-brown-light">Send voice messages in chat</p>
+              <p className="text-sm text-brown-light">Send voice messages in chat</p>
             </div>
           </li>
           <li className="flex items-start gap-2">
             <span className="text-haldi-gold mt-0.5">🌐</span>
             <div>
               <p className="font-semibold">भाषा चयन</p>
-              <p className="text-xs text-brown-light">Language selector on login (Hindi / English)</p>
+              <p className="text-sm text-brown-light">Language selector on login (Hindi / English)</p>
             </div>
           </li>
         </ul>
@@ -139,7 +139,7 @@ export default function SettingsPage() {
       </GoldButton>
 
       {/* Version */}
-      <p className="font-body text-xs text-brown-light text-center mt-6">Aangan v0.8.0</p>
+      <p className="font-body text-sm text-brown-light text-center mt-6">Aangan v0.8.0</p>
     </div>
   );
 }

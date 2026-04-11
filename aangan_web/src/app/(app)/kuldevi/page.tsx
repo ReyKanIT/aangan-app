@@ -130,7 +130,7 @@ export default function KuldeviPage() {
                 <span className="text-2xl">🙏</span>
                 <div>
                   <h3 className="font-heading text-lg text-haldi-gold">कुलदेवी</h3>
-                  <p className="font-body text-xs text-brown-light">Kuldevi</p>
+                  <p className="font-body text-sm text-brown-light">Kuldevi</p>
                 </div>
               </div>
               {isEditing ? (
@@ -167,11 +167,11 @@ export default function KuldeviPage() {
               ) : (
                 <div className="space-y-3">
                   <div>
-                    <p className="font-body text-xs text-brown-light">नाम — Name</p>
+                    <p className="font-body text-sm text-brown-light">नाम — Name</p>
                     <p className="font-body text-base text-brown">{kuldeviName || '—'}</p>
                   </div>
                   <div>
-                    <p className="font-body text-xs text-brown-light">मंदिर स्थान — Temple Location</p>
+                    <p className="font-body text-sm text-brown-light">मंदिर स्थान — Temple Location</p>
                     <p className="font-body text-base text-brown">{kuldeviTemple || '—'}</p>
                   </div>
                 </div>
@@ -184,7 +184,7 @@ export default function KuldeviPage() {
                 <span className="text-2xl">🙏</span>
                 <div>
                   <h3 className="font-heading text-lg text-haldi-gold">कुलदेवता</h3>
-                  <p className="font-body text-xs text-brown-light">Kuldevta</p>
+                  <p className="font-body text-sm text-brown-light">Kuldevta</p>
                 </div>
               </div>
               {isEditing ? (
@@ -221,11 +221,11 @@ export default function KuldeviPage() {
               ) : (
                 <div className="space-y-3">
                   <div>
-                    <p className="font-body text-xs text-brown-light">नाम — Name</p>
+                    <p className="font-body text-sm text-brown-light">नाम — Name</p>
                     <p className="font-body text-base text-brown">{kuldevtaName || '—'}</p>
                   </div>
                   <div>
-                    <p className="font-body text-xs text-brown-light">मंदिर स्थान — Temple Location</p>
+                    <p className="font-body text-sm text-brown-light">मंदिर स्थान — Temple Location</p>
                     <p className="font-body text-base text-brown">{kuldevtaTemple || '—'}</p>
                   </div>
                 </div>
@@ -240,7 +240,7 @@ export default function KuldeviPage() {
                 <span className="text-xl">📿</span>
                 <div>
                   <h3 className="font-heading text-lg text-brown">पूजा पद्धति</h3>
-                  <p className="font-body text-xs text-brown-light">Puja Method</p>
+                  <p className="font-body text-sm text-brown-light">Puja Method</p>
                 </div>
               </div>
               {isEditing && (
@@ -267,7 +267,7 @@ export default function KuldeviPage() {
                 <span className="text-xl">📜</span>
                 <div>
                   <h3 className="font-heading text-lg text-brown">पूजा नियम</h3>
-                  <p className="font-body text-xs text-brown-light">Puja Rules</p>
+                  <p className="font-body text-sm text-brown-light">Puja Rules</p>
                 </div>
               </div>
               {isEditing && (

@@ -127,7 +127,7 @@ export default function MessagesPage() {
         {/* New Chat Picker */}
         {showNewChat && (
           <div className="border-b border-cream-dark bg-cream p-3">
-            <p className="font-body text-sm text-brown-light mb-2">
+            <p className="font-body text-base text-brown-light mb-2">
               परिवार का सदस्य चुनें — Select a family member
             </p>
             {members.length === 0 ? (
@@ -153,7 +153,7 @@ export default function MessagesPage() {
                       <p className="font-body text-base text-brown font-semibold">
                         {m.member?.display_name_hindi || m.member?.display_name}
                       </p>
-                      <p className="font-body text-xs text-brown-light">{m.relationship_hindi}</p>
+                      <p className="font-body text-sm text-brown-light">{m.relationship_hindi}</p>
                     </div>
                   </button>
                 ))}
@@ -259,7 +259,7 @@ export default function MessagesPage() {
               <div>
                 <p className="font-body text-base text-brown font-semibold">{selectedName}</p>
                 {selectedConversation?.displayNameHindi && selectedConversation.displayName !== selectedConversation.displayNameHindi && (
-                  <p className="font-body text-xs text-brown-light">{selectedConversation.displayName}</p>
+                  <p className="font-body text-sm text-brown-light">{selectedConversation.displayName}</p>
                 )}
               </div>
             </div>

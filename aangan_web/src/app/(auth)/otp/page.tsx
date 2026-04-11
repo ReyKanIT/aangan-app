@@ -97,7 +97,7 @@ function OtpForm() {
           ? 'ईमेल में 6 अंकों का कोड आया है — वो यहाँ डालें'
           : 'SMS में 6 अंकों का कोड आया है — वो यहाँ डालें'}
         <br />
-        <span className="text-sm">
+        <span className="text-base">
           {isEmail ? 'Check your email for a 6-digit code' : 'Check your SMS for a 6-digit code'}
         </span>
       </p>
