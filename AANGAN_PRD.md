@@ -1,6 +1,6 @@
 # Aangan (आँगन) — Product Requirements Document
 
-> **Living document.** Updated after every release. Last updated: 2026-04-09
+> **Living document.** Updated after every release. Last updated: 2026-04-11
 
 ---
 
@@ -18,6 +18,8 @@
 | v0.4.4  | 2026-04-04 | Family Reminders — family_important_dates (birthday/anniversary/barsi/puja/other), Supabase Edge Function daily-reminders fires at 08:00 IST via pg_cron, sends batch push notifications to all L1+L2 family members, dedup log prevents duplicates, wedding_anniversary field on profile |
 | v0.5.0  | 2026-04-04 | Voice Enabled — voice-to-text on all text inputs (Hindi + English), voice commands for hands-free navigation (8 commands), voice messages in chat (WhatsApp-style audio notes), language selector on login screen |
 | v0.6.0  | 2026-04-09 | Media & Storage — B2 cloud storage with Cloudflare CDN (media.aangan.app), post likes persistence (Supabase post_likes table + auto-count trigger), client-side image compression (max 1MB, 1920px, WebP), version bump for all platforms |
+| v0.7.0  | 2026-04-10 | AI & Communication — Aangan chatbot (family assistant), DMs/messaging enhancements, notification system improvements |
+| v0.8.0  | 2026-04-11 | **SHIPPED** — Play Store submission + Vercel web deploy. Admin dashboard, Expo SDK 36 upgrade, Dadi Test compliance audit pass |
 
 ---
 
@@ -256,7 +258,7 @@
 
 ## 5. Technical Architecture
 
-### Frontend — React Native (Expo SDK 52)
+### Frontend — React Native (Expo SDK 36)
 - Navigation: `@react-navigation/native-stack` + bottom tabs
 - State: Zustand stores (auth, post, family, event, notification, message, story, theme, language, lifeEvent, importantDate, voice)
 - Styling: StyleSheet with centralized theme tokens (colors, typography, spacing)
@@ -332,19 +334,198 @@ supabase_migration_v0.4.4_reminders.sql    — family_important_dates + reminder
 
 ---
 
-## 8. Pending / Roadmap
+## 8. Shipped Features (v0.8.0) ✅
+
+All features listed in sections 4.1–4.11 are **SHIPPED** as of v0.8.0 (2026-04-11), including:
+
+| Feature | Status |
+|---------|--------|
+| Phone OTP auth + Google OAuth | ✅ SHIPPED |
+| Family tree (L1/L2/L3) + interactive SVG | ✅ SHIPPED |
+| Posts & feed with audience control | ✅ SHIPPED |
+| Events & RSVP with multi-ceremony | ✅ SHIPPED |
+| Voice messages + voice-to-text + voice commands | ✅ SHIPPED |
+| Panchang / Vedic calendar (offline) | ✅ SHIPPED |
+| Festival calendar | ✅ SHIPPED |
+| Kuldevi / Kuldevta | ✅ SHIPPED |
+| Aangan chatbot (family assistant) | ✅ SHIPPED |
+| DMs / messaging with read receipts | ✅ SHIPPED |
+| Push notifications + family reminders | ✅ SHIPPED |
+| Admin dashboard (web) | ✅ SHIPPED |
+| B2 cloud storage + Cloudflare CDN | ✅ SHIPPED |
+| Dadi Test compliance (52px+ buttons, 16px+ text, Hindi-first) | ✅ SHIPPED |
+| Play Store submission (v0.8.0 AAB) | ✅ SHIPPED |
+| Web app live on Vercel | ✅ SHIPPED |
+
+---
+
+## 9. Roadmap — v0.9.0 (Target: May 2026)
+
+**Theme: Monetisation, Offline, and Growth**
+
+### 9.1 Payments Integration (Razorpay)
+
+- Razorpay SDK integration for in-app payments
+- UPI, cards, net banking, wallets support
+- Payment history screen
+- Receipt generation (PDF)
+- Supabase tables: `payments`, `subscriptions`
+- Webhook handler for payment status updates
+
+### 9.2 Aangan Gold Subscription (आँगन गोल्ड)
+
+| Feature | Free | Gold (₹149/month) |
+|---------|------|-------------------|
+| Photo storage | 10 GB | Unlimited |
+| Family tree | Basic list + SVG | Advanced visualization (interactive, zoomable, exportable PDF) |
+| Festival greeting cards | View only | Create & send custom greeting cards with family photos and personalised messages |
+| Voice messages | 2 min limit | 5 min limit |
+| Themes | Light/Dark | Premium themes (Rangoli, Mughal, Temple) |
+
+- Monthly and annual billing (₹149/month or ₹1,499/year — 2 months free)
+- Family plan: ₹299/month covers up to 10 members
+- 14-day free trial for new users
+- Gold badge on profile
+- Upgrade CTA on storage limit, tree export, and greeting card screens
+
+### 9.3 Offline Mode
+
+- Local SQLite cache for family member data, recent posts, and events
+- Queue system for offline-created posts, comments, and RSVPs
+- Auto-sync when network restored (conflict resolution: server wins, user notified)
+- Offline indicator banner (Dadi Test: large, clear "ऑफलाइन" banner in red)
+- Panchang already works offline (self-contained engine)
+- Cache expiry: 7 days for posts, 30 days for family data
+
+### 9.4 Push Notifications (FCM)
+
+- Migrate from Expo Push to Firebase Cloud Messaging (FCM) for reliability
+- Notification channels (Android):
+  - Events & RSVP (high priority)
+  - Birthdays & festivals (default priority)
+  - Posts & comments (low priority)
+  - DMs (high priority)
+- Rich notifications with images (event photos, profile pics)
+- Notification grouping by type
+- Deep links: tap notification → open relevant screen
+
+### 9.5 WhatsApp Invite Deep Links
+
+- Generate shareable invite link: `https://aangan.app/join/{family_code}`
+- WhatsApp share button with pre-filled Hindi message:
+  > "🏡 आँगन पर हमारे परिवार से जुड़ें! अभी डाउनलोड करें: [link]"
+- Deep link handling: app opens → auto-join family after auth
+- Invite tracking: who invited whom, conversion rate
+- QR code generation for in-person invites (shaadi cards, family gatherings)
+
+### 9.6 Photo Albums per Event
+
+- Auto-create album when event is created
+- Manual album creation within events
+- Album cover photo selection
+- Slideshow mode (auto-play with transitions)
+- Download album as ZIP
+- Album sharing via link (privacy-respecting)
+
+### 9.7 Performance Improvements
+
+- Image lazy loading with blur-hash placeholders
+- Skeleton screens on all list views (feed, family tree, events, messages)
+- Virtualized lists (FlashList) for feed and family members
+- Image CDN resizing (thumbnail, medium, full via Cloudflare transforms)
+- Bundle size optimization: code splitting, tree shaking
+- Startup time target: < 3 seconds on mid-range Android devices
+
+---
+
+## 10. Roadmap — v1.0.0 (Target: July 2026)
+
+**Theme: Production Launch, Multi-Platform, Community**
+
+### 10.1 Production Release
+
+- Google Play Store: full production launch (out of review/beta)
+- App Store Optimization (ASO): Hindi + English keywords, screenshots, feature graphic
+- In-app review prompt after 7 days of active use
+- Crash reporting: Sentry integration
+- Analytics: Mixpanel or PostHog for user engagement tracking
+
+### 10.2 iOS App Store Launch
+
+- EAS Build for iOS (production profile)
+- Apple Developer account setup
+- App Store review guidelines compliance
+- iOS-specific UI adjustments (safe areas, haptics, Dynamic Island)
+- TestFlight beta distribution before launch
+- Universal Links for iOS deep linking
+
+### 10.3 Family Analytics Dashboard
+
+- Activity summary: daily/weekly/monthly active members
+- Engagement metrics: posts created, comments, reactions, event RSVPs
+- Family tree completeness score (% of members with photos, DOB, relationships filled)
+- "Most active members" leaderboard (gamification)
+- "Quiet members" nudge — suggest reaching out to inactive family members
+- Admin-only view (family admin role)
+- Export as PDF report
+
+### 10.4 Video Messages
+
+- Short video clips up to 30 seconds in chat
+- Video recording with timer countdown
+- Video compression (target: < 5 MB per clip)
+- Thumbnail generation
+- Playback in chat bubble (inline player)
+- Storage: Supabase Storage `video-messages` bucket
+- Aangan Gold: up to 60-second videos
+
+### 10.5 Multi-Language Support
+
+| Language | Script | Priority |
+|----------|--------|----------|
+| Hindi (हिंदी) | Devanagari | ✅ Already shipped |
+| English | Latin | ✅ Already shipped |
+| Gujarati (ગુજરાતી) | Gujarati | v1.0 |
+| Kannada (ಕನ್ನಡ) | Kannada | v1.0 |
+| Marathi (मराठी) | Devanagari | v1.0 |
+| Tamil (தமிழ்) | Tamil | v1.0 |
+
+- Karnataka has 65M+ population; Bangalore is India's tech capital — strategic for early adopter families
+- i18n framework: `react-i18next` with namespace-based translation files
+- Language selector in settings (expandable beyond 6 languages)
+- Community-contributed translations (post-launch)
+- RTL support preparation for future Urdu/Arabic
+
+### 10.6 Family Memory Timeline
+
+- Auto-generated yearly recap: "Your Family in 2026"
+- Timeline view: major events, milestones, top posts, new members added
+- Photo montage generation (top 12 photos of the year)
+- Shareable recap card (image) for WhatsApp/Instagram
+- Birthday & anniversary highlights
+- "On this day" feature — resurface posts from 1 year ago
+- Available for Aangan Gold subscribers
+
+### 10.7 Community Features
+
+- **Kuldevi/Village Connect:** find and connect with other families who share the same Kuldevi or ancestral village
+- Community feed: public posts visible to connected families (opt-in)
+- Community events: temple gatherings, village reunions visible to relevant families
+- Privacy controls: families choose what to share with community (nothing by default)
+- Moderation: community-level admins, report system
+- Search: find families by Kuldevi name, village name, gotra, or state
+
+---
+
+## 11. Future Backlog (Post v1.0)
 
 | Priority | Feature |
 |----------|---------|
-| High | Run Supabase migrations (v0.4.2–v0.4.4) |
-| High | Configure Twilio in Supabase Auth settings |
-| High | Deploy daily-reminders Edge Function + pg_cron |
-| High | Set first admin: `UPDATE users SET is_app_admin=TRUE WHERE phone_number='+91XXXXXXXXXX'` |
-| Medium | Make event-photos bucket public + anon INSERT policy |
-| Medium | Deploy web app: `npx vercel --prod` from `aangan_web/` |
-| Medium | Video posts (upload to Supabase Storage) |
-| Medium | In-app notification bell real-time badge update |
-| Low | Family albums (grouped by event/year) |
-| Low | Family recipe / tradition archive |
-| Low | Ancestral village map |
-| Low | Multi-family support (user belongs to multiple families) |
+| Medium | Family recipe / tradition archive |
+| Medium | Ancestral village map with GPS pins |
+| Medium | Multi-family support (user belongs to multiple families) |
+| Medium | Web app feature parity (posts, events, family tree on web) |
+| Low | AR family tree (3D visualization) |
+| Low | Family newspaper (auto-generated weekly digest PDF) |
+| Low | Integration with genealogy services (FamilySearch, MyHeritage) |
+| Low | Smart photo tagging (face recognition to tag family members) |

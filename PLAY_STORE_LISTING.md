@@ -1,0 +1,337 @@
+# Google Play Store Listing — Aangan v0.8.0
+
+> Ready to copy-paste into Google Play Console.
+> Last updated: 2026-04-11
+
+---
+
+## 1. App Details
+
+### App Name
+```
+Aangan — Family Social Network
+```
+
+### Short Description (80 chars max)
+```
+परिवार का WhatsApp ग्रुप नहीं, अपना सोशल नेटवर्क — Family Tree, Panchang, Chat
+```
+*(79 characters)*
+
+### Full Description (English + Hindi, 4000 chars max)
+
+```
+🏠 Aangan (आँगन) — Your Family's Private Social Network
+
+Tired of managing 10 WhatsApp groups for one family? Aangan replaces them all with one beautiful, private space — designed specifically for Indian families. Share photos, celebrate festivals, build your family tree, send voice messages in Hindi, and stay connected across generations.
+
+✨ KEY FEATURES:
+
+🌳 Family Tree (वंशवृक्ष)
+Build and explore your family tree across 3 levels — parents, siblings, children, and extended family. See your roots, share stories, and preserve your lineage for future generations.
+
+📅 Panchang (पंचांग)
+Daily Hindu Panchang with Tithi, Nakshatra, Yoga, and Karana. Never miss an auspicious day. Integrated festival calendar with reminders for Diwali, Holi, Navratri, Makar Sankranti, and 50+ Hindu festivals.
+
+🎉 Events & RSVP (कार्यक्रम)
+Create family events — weddings, puja, birthdays, get-togethers. Send invitations, collect RSVPs, and share event photos. Keep the whole family in the loop.
+
+🗣️ Voice Messages & Voice-to-Text (आवाज़ से चलाएं)
+Send voice messages in Hindi or English. Voice-to-text converts your spoken words into text — perfect for elders who find typing difficult. Navigate the app with voice commands.
+
+💬 Direct Messages & Family Chat (पारिवारिक चैट)
+Private DMs and group messaging within your family. Share updates, coordinate plans, and stay connected — no strangers, no ads, just family.
+
+🙏 Kuldevi / Kuldevta (कुलदेवी)
+Document and share your family's Kuldevi or Kuldevta traditions. Keep your spiritual heritage alive across generations.
+
+📸 Photo Sharing (फोटो शेयरिंग)
+Share family photos with audience control — choose who sees what. Create albums for events, festivals, and everyday moments.
+
+🤖 AI Family Chatbot (AI सहायक)
+Ask questions about festivals, traditions, and family customs. Your personal guide to Indian culture and family heritage — answers in Hindi and English.
+
+— — —
+
+आँगन — परिवार का अपना सोशल नेटवर्क
+
+आँगन आपके पूरे परिवार को एक सुंदर, निजी जगह में जोड़ता है। WhatsApp के 10 ग्रुप की जगह एक आँगन। फ़ोटो शेयर करें, त्योहार मनाएं, वंशवृक्ष बनाएं, वॉइस मैसेज भेजें, और पीढ़ियों से जुड़े रहें।
+
+दादी टेस्ट पास ✅ — बड़े बटन, बड़ा टेक्स्ट, हिंदी में सब कुछ। दादी-नानी भी आसानी से चला सकें।
+
+— — —
+
+WHY AANGAN?
+✅ WhatsApp Group Replacement — One app for your entire family. No more 10 groups.
+✅ Privacy First — Your family data stays private. No ads. No strangers.
+✅ Dadi Test Passed — Large buttons (52px+), big text (16px+), Hindi-first UI. Designed so grandmothers can use it easily.
+✅ Made in India — Built for Indian families, with Indian traditions at the core.
+✅ Phone-First — Works perfectly on mobile. No email needed — login with phone OTP.
+✅ Free to Use — Core features are completely free for every family.
+
+🏅 COMING SOON — Aangan Gold
+Premium features for families who want more: unlimited photo storage, advanced family tree, priority support, and exclusive festival content.
+
+KEYWORDS: family app india, hindi family app, parivaar app, family tree app, dadi friendly app, family social network, panchang, hindu calendar, family chat, kuldevi, festival calendar, family events, RSVP, photo sharing, voice message hindi, pariwaar, vanshavriksha, parivar, whatsapp family group alternative
+```
+*(~3,200 characters — within 4,000 char limit)*
+
+---
+
+## 2. Categorization
+
+| Field | Value |
+|-------|-------|
+| **Category** | Social |
+| **Content Rating** | Everyone |
+| **Target Audience** | 13+ |
+| **Tags** | family, social, panchang, hindu, festivals, voice, hindi |
+| **Contains Ads** | No |
+| **In-app Purchases** | No (for v0.8.0; Aangan Gold planned) |
+
+---
+
+## 3. Store Listing — Hindi Localization (hi-IN)
+
+### Title (Hindi)
+```
+आँगन — परिवार का सोशल नेटवर्क
+```
+
+### Short Description (Hindi, 80 chars max)
+```
+WhatsApp ग्रुप भूलो, परिवार का अपना ऐप — वंशवृक्ष, पंचांग, चैट, वॉइस मैसेज
+```
+
+### Full Description (Hindi)
+
+```
+🏠 आँगन — परिवार का अपना प्राइवेट सोशल नेटवर्क
+
+WhatsApp के 10 ग्रुप चला-चलाकर थक गए? आँगन एक ही जगह पर पूरे परिवार को जोड़ता है — खासकर भारतीय परिवारों के लिए बनाया गया। फ़ोटो शेयर करें, त्योहार मनाएं, वंशवृक्ष बनाएं, वॉइस मैसेज भेजें, और पीढ़ियों से जुड़े रहें।
+
+✨ मुख्य विशेषताएं:
+
+🌳 वंशवृक्ष (Family Tree)
+3 स्तरों तक अपना वंशवृक्ष बनाएं — माता-पिता, भाई-बहन, बच्चे और विस्तारित परिवार। अपनी जड़ों को जानें और आने वाली पीढ़ियों के लिए संरक्षित करें।
+
+📅 पंचांग (Panchang)
+दैनिक हिंदू पंचांग — तिथि, नक्षत्र, योग और करण। दिवाली, होली, नवरात्रि, मकर संक्रांति सहित 50+ त्योहारों का कैलेंडर।
+
+🎉 कार्यक्रम और RSVP (Events)
+शादी, पूजा, जन्मदिन — परिवार के कार्यक्रम बनाएं, निमंत्रण भेजें, RSVP लें।
+
+🗣️ वॉइस मैसेज और वॉइस-टू-टेक्स्ट (Voice)
+हिंदी या अंग्रेजी में वॉइस मैसेज भेजें। बोलकर टेक्स्ट टाइप करें — बुज़ुर्गों के लिए बिल्कुल सही।
+
+💬 डायरेक्ट मैसेज और पारिवारिक चैट (DMs & Chat)
+परिवार के भीतर निजी संदेश और DM। कोई अजनबी नहीं, कोई विज्ञापन नहीं — सिर्फ परिवार।
+
+🙏 कुलदेवी / कुलदेवता (Kuldevi)
+अपने परिवार की कुलदेवी या कुलदेवता की परंपराओं को दस्तावेज़ और साझा करें।
+
+📸 फोटो शेयरिंग (Photo Sharing)
+परिवार की फ़ोटो शेयर करें — चुनें कि कौन क्या देखे। त्योहारों और कार्यक्रमों के एल्बम बनाएं।
+
+🤖 AI फैमिली चैटबॉट (AI Assistant)
+त्योहारों, परंपराओं और रीति-रिवाजों के बारे में हिंदी या अंग्रेजी में सवाल पूछें।
+
+— — —
+
+आँगन क्यों?
+✅ WhatsApp ग्रुप का विकल्प — पूरे परिवार के लिए एक ऐप। 10 ग्रुप नहीं।
+✅ प्राइवेसी पहले — आपका पारिवारिक डेटा निजी रहता है। न विज्ञापन, न अजनबी।
+✅ दादी टेस्ट पास — बड़े बटन, बड़ा टेक्स्ट, हिंदी में। दादी-नानी भी चला सकें।
+✅ मेड इन इंडिया — भारतीय परिवारों के लिए, भारतीय परंपराओं के साथ।
+✅ फ़ोन-फर्स्ट — मोबाइल पर बढ़िया चलता है। ईमेल की ज़रूरत नहीं — फोन OTP से लॉगिन।
+✅ फ्री — सभी मुख्य फीचर्स बिल्कुल मुफ्त।
+
+🏅 जल्द आ रहा है — आँगन गोल्ड
+प्रीमियम फीचर्स: अनलिमिटेड फोटो स्टोरेज, एडवांस्ड वंशवृक्ष, प्रायोरिटी सपोर्ट।
+```
+
+---
+
+## 4. What's New — v0.8.0
+
+### What's New (English)
+```
+Aangan v0.8.0 — Your Family's WhatsApp Group Replacement
+
+NEW IN THIS VERSION:
+• 🗣️ Voice Messages — Send voice notes in Hindi & English to family members
+• 🗣️ Voice-to-Text — Speak in Hindi, see it typed out. Perfect for elders.
+• 🤖 AI Family Chatbot — Ask about festivals, puja vidhi, traditions & customs in Hindi
+• 💬 Direct Messages — Private 1-on-1 DMs within your family
+• 🙏 Kuldevi / Kuldevta — Document your family deity traditions
+
+ALSO INCLUDED:
+• 🌳 Family Tree — Build your 3-level family tree with easy drag-and-drop
+• 📅 Panchang — Daily Hindu calendar with Tithi, Nakshatra & festival alerts
+• 🎉 Events — Create family events, send invites, collect RSVPs
+• 📸 Photo Sharing — Share moments with audience control
+• ⚡ Performance improvements, bug fixes, and Dadi Test UX polish
+```
+
+### What's New (Hindi)
+```
+आँगन v0.8.0 — परिवार का WhatsApp ग्रुप का विकल्प
+
+इस वर्ज़न में नया:
+• 🗣️ वॉइस मैसेज — हिंदी और अंग्रेज़ी में परिवार को वॉइस नोट्स भेजें
+• 🗣️ वॉइस-टू-टेक्स्ट — हिंदी में बोलें, टेक्स्ट में बदलें। बुज़ुर्गों के लिए।
+• 🤖 AI चैटबॉट — त्योहारों, पूजा विधि, परंपराओं के बारे में हिंदी में पूछें
+• 💬 डायरेक्ट मैसेज — परिवार के भीतर 1-on-1 निजी DM
+• 🙏 कुलदेवी — अपनी पारिवारिक देवी/देवता की परंपरा संभालें
+
+पहले से शामिल:
+• 🌳 वंशवृक्ष — 3 स्तरों तक अपना परिवार का पेड़ बनाएं
+• 📅 पंचांग — रोज़ का हिंदू कैलेंडर, तिथि, नक्षत्र और त्योहार अलर्ट
+• 🎉 कार्यक्रम — शादी, पूजा, जन्मदिन के लिए इवेंट बनाएं और RSVP लें
+• 📸 फोटो शेयरिंग — चुनें कि कौन क्या देखे
+• ⚡ प्रदर्शन सुधार, बग फिक्स, और दादी टेस्ट UX पॉलिश
+```
+
+---
+
+## 5. Privacy Policy
+
+| Field | Value |
+|-------|-------|
+| **Privacy Policy URL** | https://aangan.app/privacy |
+| **Terms of Service URL** | https://aangan.app/terms |
+
+---
+
+## 6. Contact Details
+
+| Field | Value |
+|-------|-------|
+| **Support Email** | support@aangan.app |
+| **General Email** | info@aangan.app |
+| **Website** | https://aangan.app |
+
+---
+
+## 7. Screenshots Needed (Phone — 1080x1920 or 1440x2560)
+
+Capture 8 screenshots in this order:
+
+| # | Screen | What to Show | Caption (Hindi + English) |
+|---|--------|-------------|--------------------------|
+| 1 | **Login** | Phone OTP login screen with Haldi Gold branding | फ़ोन से लॉगिन करें — Login with Phone OTP |
+| 2 | **Feed** | Family feed with posts, photos, likes | परिवार की बातें — Family Feed & Updates |
+| 3 | **Family Tree** | 3-level family tree visualization | अपना वंशवृक्ष बनाएं — Build Your Family Tree |
+| 4 | **Events** | Event creation or event list with RSVP | कार्यक्रम और RSVP — Events & Invitations |
+| 5 | **Panchang** | Daily Panchang with Tithi, Nakshatra | आज का पंचांग — Daily Hindu Panchang |
+| 6 | **Voice Message** | Voice recording UI or voice-to-text in action | वॉइस मैसेज — Speak in Hindi, Send as Text |
+| 7 | **DMs / Chat** | Direct message conversation with voice note | पारिवारिक चैट — Family Messages & DMs |
+| 8 | **Chatbot** | AI chatbot answering a festival question in Hindi | AI सहायक — Ask About Traditions in Hindi |
+
+### Screenshot Tips
+- Use a real device or emulator at 1080x1920 minimum
+- Show Hindi UI (not English) — this is the differentiator
+- Use sample data that looks realistic (Indian names, festival photos)
+- Ensure large text and buttons are visible (Dadi Test)
+
+---
+
+## 8. Feature Graphic (1024x500 px)
+
+### Design Brief
+- **Size**: 1024 x 500 px (PNG or JPEG, max 1 MB)
+- **Background**: Gradient from Cream (#FDFAF0) to soft Haldi Gold (#C8A84B)
+- **Center**: Aangan logo + app icon
+- **Text**: "आँगन — परिवार का अपना सोशल नेटवर्क" (top line, Tiro Devanagari Hindi)
+- **Subtitle**: "WhatsApp Group नहीं, Family Network" (below, Poppins)
+- **Accents**: Mehndi Green (#7A9A3A) decorative elements (rangoli pattern or leaf motifs)
+- **Right side**: Phone mockup showing the Feed screen
+
+### Hi-res Icon (512x512)
+- Already available: `aangan_icon_512.png`
+- Also available: `aangan_icon_1024.png` (for adaptive icon)
+
+---
+
+## 9. SEO Keywords
+
+### Primary Keywords (target in description + metadata)
+| Keyword | Search Intent |
+|---------|--------------|
+| family app india | Users looking for family-focused apps in India |
+| hindi family app | Hindi-speaking users wanting Hindi-first apps |
+| parivaar app | Hindi keyword for family app |
+| family tree app | Users wanting to build family trees |
+| dadi friendly app | Accessibility / elder-friendly apps |
+| panchang app | Daily Hindu calendar seekers |
+| family social network | Alternative to generic social media |
+| whatsapp family group | Users frustrated with WhatsApp groups |
+
+### Long-tail Keywords
+- family group app alternative to whatsapp
+- hindu festival calendar app hindi
+- voice message app for family
+- family tree builder india
+- kuldevi kuldevta app
+- parivar ka app
+- vanshavriksha app
+
+---
+
+## 10. Promotional Text — Aangan Gold (Coming Soon)
+
+```
+🏅 Aangan Gold — Premium for Families Who Want More
+
+Coming soon to Aangan:
+• Unlimited photo & video storage for family memories
+• Advanced family tree — unlimited levels, photo timelines, family history export
+• Priority customer support in Hindi & English
+• Exclusive festival content — puja vidhi, mantra, and traditions
+• Custom family themes and branding
+• Ad-free experience (already ad-free, stays that way forever)
+
+Early bird pricing for founding families. Stay tuned!
+```
+
+---
+
+## Pre-Submission Checklist
+
+- [ ] App signed with upload key (keystore generated)
+- [ ] AAB (Android App Bundle) built and uploaded
+- [ ] Privacy policy page live at https://aangan.app/privacy
+- [ ] Terms of service page live at https://aangan.app/terms
+- [ ] 8 screenshots captured (1080x1920 minimum)
+- [ ] Feature graphic designed (1024x500)
+- [ ] App icon uploaded (512x512)
+- [ ] Content rating questionnaire completed
+- [ ] Target audience and content declarations filled
+- [ ] Data safety form completed (phone number collection, family data)
+- [ ] Hindi localization added as secondary listing
+- [ ] Internal testing track created with test APK
+- [ ] Tested on 3+ devices (different screen sizes)
+
+---
+
+## Data Safety Form Answers
+
+| Question | Answer |
+|----------|--------|
+| Does your app collect or share user data? | Yes |
+| **Data collected**: | |
+| — Phone number | Yes (for OTP authentication) |
+| — Name | Yes (profile) |
+| — Photos | Yes (user-uploaded family photos) |
+| — Family relationships | Yes (family tree) |
+| — Messages | Yes (family chat & DMs) |
+| — Voice recordings | Yes (voice messages, processed on-device for voice-to-text) |
+| Is data encrypted in transit? | Yes (HTTPS/TLS) |
+| Is data encrypted at rest? | Yes (Supabase encryption) |
+| Can users request data deletion? | Yes |
+| Is data shared with third parties? | No |
+| Data retention | Until user deletes account |
+
+---
+
+*File updated 2026-04-11 for Google Play Console submission. All text blocks are ready to copy-paste.*
