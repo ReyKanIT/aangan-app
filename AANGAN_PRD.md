@@ -361,34 +361,9 @@ All features listed in sections 4.1–4.11 are **SHIPPED** as of v0.8.0 (2026-04
 
 ## 9. Roadmap — v0.9.0 (Target: May 2026)
 
-**Theme: Monetisation, Offline, and Growth**
+**Theme: Offline, Growth, and Performance**
 
-### 9.1 Payments Integration (Razorpay)
-
-- Razorpay SDK integration for in-app payments
-- UPI, cards, net banking, wallets support
-- Payment history screen
-- Receipt generation (PDF)
-- Supabase tables: `payments`, `subscriptions`
-- Webhook handler for payment status updates
-
-### 9.2 Aangan Gold Subscription (आँगन गोल्ड)
-
-| Feature | Free | Gold (₹149/month) |
-|---------|------|-------------------|
-| Photo storage | 10 GB | Unlimited |
-| Family tree | Basic list + SVG | Advanced visualization (interactive, zoomable, exportable PDF) |
-| Festival greeting cards | View only | Create & send custom greeting cards with family photos and personalised messages |
-| Voice messages | 2 min limit | 5 min limit |
-| Themes | Light/Dark | Premium themes (Rangoli, Mughal, Temple) |
-
-- Monthly and annual billing (₹149/month or ₹1,499/year — 2 months free)
-- Family plan: ₹299/month covers up to 10 members
-- 14-day free trial for new users
-- Gold badge on profile
-- Upgrade CTA on storage limit, tree export, and greeting card screens
-
-### 9.3 Offline Mode
+### 9.1 Offline Mode
 
 - Local SQLite cache for family member data, recent posts, and events
 - Queue system for offline-created posts, comments, and RSVPs
@@ -397,7 +372,7 @@ All features listed in sections 4.1–4.11 are **SHIPPED** as of v0.8.0 (2026-04
 - Panchang already works offline (self-contained engine)
 - Cache expiry: 7 days for posts, 30 days for family data
 
-### 9.4 Push Notifications (FCM)
+### 9.2 Push Notifications (FCM)
 
 - Migrate from Expo Push to Firebase Cloud Messaging (FCM) for reliability
 - Notification channels (Android):
@@ -409,7 +384,7 @@ All features listed in sections 4.1–4.11 are **SHIPPED** as of v0.8.0 (2026-04
 - Notification grouping by type
 - Deep links: tap notification → open relevant screen
 
-### 9.5 WhatsApp Invite Deep Links
+### 9.3 WhatsApp Invite Deep Links
 
 - Generate shareable invite link: `https://aangan.app/join/{family_code}`
 - WhatsApp share button with pre-filled Hindi message:
@@ -418,7 +393,7 @@ All features listed in sections 4.1–4.11 are **SHIPPED** as of v0.8.0 (2026-04
 - Invite tracking: who invited whom, conversion rate
 - QR code generation for in-person invites (shaadi cards, family gatherings)
 
-### 9.6 Photo Albums per Event
+### 9.4 Photo Albums per Event
 
 - Auto-create album when event is created
 - Manual album creation within events
@@ -427,7 +402,7 @@ All features listed in sections 4.1–4.11 are **SHIPPED** as of v0.8.0 (2026-04
 - Download album as ZIP
 - Album sharing via link (privacy-respecting)
 
-### 9.7 Performance Improvements
+### 9.5 Performance Improvements
 
 - Image lazy loading with blur-hash placeholders
 - Skeleton screens on all list views (feed, family tree, events, messages)
@@ -477,7 +452,6 @@ All features listed in sections 4.1–4.11 are **SHIPPED** as of v0.8.0 (2026-04
 - Thumbnail generation
 - Playback in chat bubble (inline player)
 - Storage: Supabase Storage `video-messages` bucket
-- Aangan Gold: up to 60-second videos
 
 ### 10.5 Multi-Language Support
 
@@ -504,7 +478,6 @@ All features listed in sections 4.1–4.11 are **SHIPPED** as of v0.8.0 (2026-04
 - Shareable recap card (image) for WhatsApp/Instagram
 - Birthday & anniversary highlights
 - "On this day" feature — resurface posts from 1 year ago
-- Available for Aangan Gold subscribers
 
 ### 10.7 Community Features
 
@@ -517,7 +490,22 @@ All features listed in sections 4.1–4.11 are **SHIPPED** as of v0.8.0 (2026-04
 
 ---
 
-## 11. Future Backlog (Post v1.0)
+## 11. Future Monetization (Phase 2+, post 10K families)
+
+When Aangan reaches 10,000+ active families with strong retention, optional premium add-ons will be introduced. The core app remains 100% free forever.
+
+| Add-On | Type | Price Range | Notes |
+|--------|------|-------------|-------|
+| Premium stickers & themes | One-time purchase | ₹49-199 | Rangoli, Mughal, Temple themes for posts |
+| Professional family tree prints | One-time purchase | ₹299-999 | Physical poster or PDF export |
+| Large event management (100+ guests) | Per-event purchase | ₹499-4,999 | Seating charts, vendor tools, guest management |
+| Sponsored festival greetings | Free to users | Brands pay | Tasteful, family-appropriate brand partnerships |
+
+No subscription model until proven demand and strong retention metrics.
+
+---
+
+## 12. Future Backlog (Post v1.0)
 
 | Priority | Feature |
 |----------|---------|

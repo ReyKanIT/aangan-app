@@ -123,7 +123,7 @@ Every screen in Aangan passes the Dadi Test — our proprietary UX standard for 
 | Tailwind | Impact |
 |----------|--------|
 | **Jio Effect** | 500M+ rural users online since 2016. Hindi internet > English internet |
-| **UPI at 12B txns/month** | In-app purchases are frictionless. India pays digitally now |
+| **UPI at 12B txns/month** | When premium add-ons launch, payments are frictionless |
 | **Post-Covid family bonding** | Demand for family connection tools surged — and stayed |
 | **Cultural revival trend** | Young Indians rediscovering roots — #SanatanDharma trending |
 | **Voice AI maturity** | Hindi speech recognition finally good enough for production use |
@@ -132,38 +132,40 @@ Every screen in Aangan passes the Dadi Test — our proprietary UX standard for 
 
 ## Slide 7 — Business Model
 
-### Aangan Gold — Freemium Subscription
+### 100% Free. Growth First. Monetize at Scale.
 
-| Tier | What you get | Price |
-|------|-------------|-------|
-| **Free** | 10 GB storage, basic features, 1 family | ₹0 |
-| **Aangan Gold** | 50 GB, priority support, advanced family tree, multiple families, HD photo backup | **₹99/month** (₹999/year) |
-| **Aangan Gold Family** | 250 GB shared pool, all Gold features for entire family | **₹249/month** (₹2,499/year) |
+**Core philosophy:** WhatsApp doesn't charge. Instagram doesn't charge. Aangan won't charge — not until we have the families, the retention, and the right moment.
 
-### Event Bundles (One-time purchases)
+| Phase | Families | Strategy | Revenue |
+|-------|----------|----------|---------|
+| **Phase 1 (Now → 10K)** | 0 → 10,000 | Completely FREE. Pure growth. Land grab. | ₹0 |
+| **Phase 2 (10K → 100K)** | 10,000+ | Optional premium add-ons (themes, family tree prints, event tools) | ₹5-15L/month |
+| **Phase 3 (100K+)** | 100,000+ | Brand partnerships + sponsored festival greetings + premium add-ons | ₹50L-2Cr/month |
 
-| Bundle | Use Case | Price |
-|--------|----------|-------|
-| **Shagun** | Small puja/gathering (up to 25 guests) | ₹499 |
-| **Mangal** | Wedding (up to 200 guests, QR photo upload) | ₹1,499 |
-| **Maharaja** | Grand wedding + video + unlimited guests | ₹4,999 |
+### Premium Add-Ons (Phase 2+ — NOT subscription)
 
-### Unit Economics
+| Add-On | Description | Price Range |
+|--------|-------------|-------------|
+| **Premium Stickers & Themes** | Rangoli, Mughal, Temple themes for family posts | ₹49-199 one-time |
+| **Family Tree Prints** | Professional PDF/physical poster of family tree | ₹299-999 one-time |
+| **Large Event Management** | Guest management for 100+ guest events, seating, vendor tools | ₹499-4,999 per event |
+| **Sponsored Festival Greetings** | Brand-sponsored Diwali/Holi cards (family-appropriate) | Free to users, brands pay |
 
-| Metric | Target (Year 2) |
-|--------|-----------------|
-| Active families | 5M |
-| Paid conversion | 5% |
-| Blended ARPU | ₹59/family/month |
-| Gold subscribers | 250K families |
-| **Projected ARR** | **₹35 Cr** (conservative) |
-| Event bundle revenue | ₹10 Cr (wedding season uplift) |
-| **Total Year 2 revenue** | **₹45 Cr** |
+### Why This Is Better Than Subscription (for investors)
+
+| Metric | Subscription Model | Free + Add-Ons Model |
+|--------|-------------------|---------------------|
+| Growth speed | Slower (paywall friction) | **Faster (zero friction)** |
+| TAM coverage | Only paying 5-12% | **100% of families use product** |
+| Network effects | Weakened by paywall | **Maximized — everyone participates** |
+| Revenue ceiling | Capped by conversion % | **Uncapped — multiple revenue streams at scale** |
+| Investor narrative | SaaS metrics | **Platform play — WhatsApp for families** |
 
 ### Growth Flywheel
 - Each verified referral = +2 GB storage bonus
 - Viral loop: user invites cousin → cousin invites parents → entire family joins
 - **Family network effect:** one user brings avg 6 family members. CAC drops to near-zero after first family member
+- **No paywall = no friction = faster viral spread**
 
 ---
 
@@ -255,7 +257,7 @@ Every screen in Aangan passes the Dadi Test — our proprietary UX standard for 
 ### Phase 3: B2B2C + Diaspora (Year 2)
 
 - **Wedding planners** bundle Aangan with venue packages (₹50,000 Cr industry)
-- **NRI diaspora** (US, UK, Canada, Gulf) — premium plan for families split across countries
+- **NRI diaspora** (US, UK, Canada, Gulf) — premium add-ons for families split across countries
 - **Enterprise family offices** — large business families managing shared assets
 
 ---
@@ -298,8 +300,8 @@ Every screen in Aangan passes the Dadi Test — our proprietary UX standard for 
 | Milestone | Target |
 |-----------|--------|
 | Active families | 50,000 |
-| Aangan Gold subscribers | 2,500 (5% conversion) |
-| ARR | ₹1.5 Cr |
+| Premium add-on revenue | Begins at 10K+ families (Phase 2) |
+| Revenue target (Year 2) | ₹3-5 Cr (add-ons + event bundles + brand partnerships) |
 | App Store listings | Google Play + Apple App Store + Indus |
 | Languages | Hindi + Gujarati + Kannada + Marathi |
 | Wedding planner partnerships | 10 |
@@ -328,7 +330,7 @@ Aangan is the digital version of that courtyard:
 
 We're not building another social network. We're building the operating system for the Indian family.
 
-**The window is open. No dominant player. 500M Hindi-belt users online. UPI-ready payments. And a founder who knows what Indian families actually need.**
+**The window is open. No dominant player. 500M Hindi-belt users online. And a founder who knows what Indian families actually need — giving them a free home first, monetizing later.**
 
 ---
 

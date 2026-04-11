@@ -16,7 +16,8 @@
 | v0.4.3  | 2026-04-04 | Added Life Events (birth/death + Sutak) to cultural moat analysis |
 | v0.4.4  | 2026-04-04 | Added Family Reminders (auto push notifications) to engagement & retention model |
 | v0.5    | 2026-04-04 | Added Voice-Enabled Operations — full Hindi voice control for posts, search, and navigation |
-| v0.6    | 2026-04-11 | **Strategic pivot:** Aangan Gold freemium model, WhatsApp viral loops, offline-first architecture, family-as-unit metrics, v1.0 roadmap |
+| v0.6    | 2026-04-11 | **Strategic pivot:** Growth-first free model, WhatsApp viral loops, offline-first architecture, family-as-unit metrics, v1.0 roadmap |
+| v0.7    | 2026-04-11 | **Monetization pivot:** Removed Aangan Gold subscription (₹99/mo). App is 100% FREE — revenue via premium add-ons at scale (Phase 2: 10K+ families) |
 
 ---
 
@@ -36,7 +37,7 @@ Aangan is a mobile-first platform that gives Indian families a private, structur
 
 **Current status (v0.8.0):** 5 CEO Mode rounds completed, 35+ issues fixed, all screens Dadi Test compliant, submitted to Google Play closed testing, live on Indus App Store.
 
-**Funding ask:** Rs.2 Cr seed round to reach 50,000 active families and Rs.1 Cr ARR in 18 months.
+**Funding ask:** Rs.2 Cr seed round to reach 50,000 active families in 18 months. Revenue begins at scale via premium add-ons (not subscription).
 
 ---
 
@@ -149,7 +150,7 @@ For rural India where connectivity is intermittent:
 ### 4.2 Market Trends Driving Adoption
 
 1. **Jio Effect:** 500M new internet users since 2016 — many from rural and semi-urban India, exactly Aangan's audience
-2. **UPI Normalization:** Digital payments frictionless — removes subscription friction for Aangan Gold
+2. **UPI Normalization:** Digital payments frictionless — enables future premium add-on purchases
 3. **Post-Covid family consciousness:** Surveys show increased desire for family connection tools
 4. **NRI diaspora growth:** 32M Indians abroad desperate to stay connected to family
 5. **Rising smartphone penetration in 55+ age group:** 40% YoY growth in elderly smartphone users
@@ -188,37 +189,35 @@ Aangan's primary competitor is not another social network — it is the WhatsApp
 
 ## 5. Business Model
 
-### 5.1 Monetization: Aangan Gold (Freemium)
+### 5.1 Monetization Strategy: Free Now, Premium Add-Ons at Scale
 
-The core product is free forever. **Aangan Gold** is the premium subscription that unlocks enhanced family features.
+**Core philosophy:** WhatsApp doesn't charge. Instagram doesn't charge. Aangan shouldn't charge — not until it has momentum, proven retention, and a family base large enough to monetize tastefully.
 
-#### Free Tier (Aangan)
-- 5 GB photo/video storage
-- Basic family tree (up to 20 members)
-- Posts, reactions, comments, DMs
-- Panchang and festival calendar
-- Voice messages and voice-to-text
-- Standard event creation (2 active events)
+**The app is 100% FREE.** No subscription. No paywall. No feature gating. Every family gets everything.
 
-#### Aangan Gold Subscription
+#### Phased Revenue Model
 
-| Plan | Price | Annual Price | Annual Savings |
-|------|-------|-------------|----------------|
-| **Aangan Gold Monthly** | Rs.99/month | Rs.1,188/year | — |
-| **Aangan Gold Annual** | Rs.67/month | Rs.799/year | 33% savings |
+**Phase 1 — Growth (Now → 10,000 families): Completely FREE**
+- All features unlocked for all users
+- Focus entirely on family acquisition, activation, and retention
+- Zero monetization — pure land grab
 
-#### Aangan Gold Features
-- **Unlimited photo & video storage** — never worry about family memories being deleted
-- **Advanced family tree visualization** — unlimited members, multi-branch view, heritage timeline, export to PDF
-- **Festival reminders with custom messages** — auto-send personalized greetings to family on Holi, Diwali, Rakhi, birthdays, anniversaries
-- **Priority support** — direct WhatsApp support line, response within 4 hours
-- **Unlimited active events** — manage multiple weddings, pujas, gatherings simultaneously
-- **HD photo downloads** — original quality, no compression
-- **Family analytics** — most active members, memory timeline, family growth stats
-- **Gold badge** — visible on profile, shows family pride
+**Phase 2 — Test Willingness to Pay (10,000+ families): Optional Premium Add-Ons**
+- **Premium stickers & themes** for family posts (Rangoli, Mughal, Temple themes)
+- **Professional family tree prints** — physical poster or PDF export of family tree
+- **Event planning premium features** — guest management for large events (100+ guests), seating charts, vendor coordination
+- All add-ons are optional enhancements. The core app remains 100% free.
 
-### 5.2 Revenue Stream 2: Event Bundles (One-time, High-Value)
-Tied to life events — natural purchase moment with high willingness to pay:
+**Phase 3 — Brand Partnerships (100,000+ families): Sponsored Content**
+- **Sponsored festival greetings** from family-appropriate brands (Cadbury, Haldiram's, Tanishq)
+- **Sponsored puja kits** — brands sponsor puja content with tasteful product placement
+- **Local temple/vendor partnerships** — puja bookings, prasad delivery
+- All sponsored content must be family-appropriate and culturally respectful
+
+**NO subscription model** until there is proven demand and strong retention metrics.
+
+### 5.2 Future Revenue Stream: Event Bundles (One-time, High-Value)
+Tied to life events — natural purchase moment with high willingness to pay. Introduced in Phase 2.
 
 | Bundle | Target Event | Price | Storage | Duration |
 |--------|-------------|-------|---------|----------|
@@ -228,8 +227,8 @@ Tied to life events — natural purchase moment with high willingness to pay:
 
 **Wedding bundle economics:** India has ~10M weddings/year. Even 0.1% adoption = 10,000 bundles. At Rs.1,499 avg = **Rs.1.5 Cr/year from weddings alone.**
 
-### 5.3 Revenue Stream 3: Referral-Driven Viral Growth
-Each verified referral = +1 GB storage for referrer. Creates organic viral loop at zero CAC. Aangan Gold members get +2 GB per referral.
+### 5.3 Viral Growth Engine: Referral-Driven
+Each verified referral = +2 GB storage for referrer. Creates organic viral loop at zero CAC.
 
 ### 5.4 Unit Economics (Family-Centric)
 
@@ -237,31 +236,31 @@ Each verified referral = +1 GB storage for referrer. Creates organic viral loop 
 |--------|-------|-------|
 | Primary unit | Family (not user) | All metrics track families |
 | Avg family size on Aangan | 8 members | Mix of immediate + extended |
-| Aangan Gold conversion (target) | 12% of families | One member pays, whole family benefits |
-| ARPU per Gold family | Rs.99/month | Mix of monthly and annual |
-| ARPU free family | Rs.0 | But drives network effects |
+| ARPU (Phase 1) | Rs.0 | Growth phase — no monetization |
+| ARPU (Phase 2, target) | Rs.15-30/family/month | Premium add-ons, event bundles |
 | CAC (WhatsApp referral) | ~Rs.0 | Viral loop |
 | CAC (paid acquisition) | Rs.100-200 | Temple/community partnerships |
-| LTV (Gold family, 3yr) | Rs.3,564 | 36 months x Rs.99 |
 | LTV/CAC (referral) | Infinite | Zero-cost acquisition |
-| LTV/CAC (paid) | 18-36x | Excellent SaaS benchmark |
 
 ### 5.5 Financial Projections
 
 #### Conservative Scenario (Family-Centric Metrics)
-| Milestone | Families Connected | Gold % | MRR | Notes |
-|-----------|--------------------|--------|-----|-------|
-| v1.0 Launch (Jul 2026) | 1,000 | 8% | Rs.8K | Founding families |
-| Month 6 (Jan 2027) | 5,000 | 10% | Rs.50K | Wedding season boost |
-| Month 12 (Jul 2027) | 20,000 | 12% | Rs.2.4L | Word-of-mouth |
-| Month 18 (Jan 2028) | 50,000 | 15% | Rs.7.5L | Community partnerships |
-| Month 24 (Jul 2028) | 150,000 | 18% | Rs.27L | Village adoption campaigns |
-| Month 36 (Jul 2029) | 500,000 | 20% | Rs.1Cr | Mass market |
+| Milestone | Families Connected | Revenue Phase | Projected Revenue | Notes |
+|-----------|--------------------|---------------|-------------------|-------|
+| v1.0 Launch (Jul 2026) | 1,000 | Phase 1 (Free) | Rs.0 | Founding families |
+| Month 6 (Jan 2027) | 5,000 | Phase 1 (Free) | Rs.0 | Wedding season boost |
+| Month 12 (Jul 2027) | 20,000 | Phase 2 (Add-ons) | Rs.3-5L/month | Premium themes + event bundles |
+| Month 18 (Jan 2028) | 50,000 | Phase 2 (Add-ons) | Rs.10-15L/month | Event bundles + family tree prints |
+| Month 24 (Jul 2028) | 150,000 | Phase 2+3 | Rs.30-50L/month | Add brand partnerships |
+| Month 36 (Jul 2029) | 500,000 | Phase 3 (Scale) | Rs.1-2Cr/month | Full monetization engine |
 
-**Year 3 ARR (conservative): Rs.12 Cr**
+**Year 3 ARR (conservative): Rs.12-24 Cr** (from add-ons + event bundles + brand partnerships)
 
-#### Optimistic Scenario (viral growth + wedding season + temple partnerships)
-- 500K families by Month 24, 25% Gold = **Rs.1.25 Cr MRR = Rs.15 Cr ARR Year 2**
+#### Why This Is Better Than Subscription
+- **Faster growth:** No paywall friction means faster family acquisition
+- **Higher retention:** Families never feel "locked out" of features
+- **Bigger TAM:** 100% of families use the product, not just paying 12%
+- **More attractive to investors:** Land grab phase with clear monetization path at scale
 
 ### 5.6 Cost Structure
 
@@ -274,7 +273,7 @@ Each verified referral = +1 GB storage for referrer. Creates organic viral loop 
 | CDN/Bandwidth | $10-50/month | Storage egress |
 | **Total Infrastructure** | **~Rs.12,000/month** | At seed stage |
 
-Infrastructure scales to ~Rs.1.5L/month at 100K active families — well covered by Gold subscription revenue.
+Infrastructure scales to ~Rs.1.5L/month at 100K active families — covered by seed funding initially, then by premium add-on revenue at scale.
 
 ---
 
@@ -288,9 +287,9 @@ Infrastructure scales to ~Rs.1.5L/month at 100K active families — well covered
 - Feedback via built-in chatbot and WhatsApp group
 
 ### Phase 1: Founding Families (May — Jul 2026)
-**Goal:** 1,000 families connected, launch Aangan Gold
-- **v0.9 release (May 2026):** Payments integration + Aangan Gold subscription
-- **Beta incentive:** Lifetime Aangan Gold free for first 100 founding families
+**Goal:** 1,000 families connected, 100% free
+- **v0.9 release (May 2026):** Offline mode, push notifications, WhatsApp invites, photo albums, performance
+- **Beta incentive:** Founding family badge + priority feature requests for first 100 families
 - **WhatsApp viral loop:** One-tap "Invite family to Aangan" — generates personalized WhatsApp message with deep link
 - **Feedback loop:** Weekly calls with 10 power families
 
@@ -302,7 +301,7 @@ Infrastructure scales to ~Rs.1.5L/month at 100K active families — well covered
   - Family admin sends invite via WhatsApp to each member
   - Invite includes family name, admin's name, and one-tap join link
   - New member joins with phone OTP — same number as WhatsApp, zero friction
-- **Wedding season prep (Oct-Feb):** Activate event bundle marketing before peak season
+- **Wedding season prep (Oct-Feb):** Onboard families during peak wedding season — free event management as hook
 - **Hindi YouTube content:** "WhatsApp group vs Aangan — kya farak hai" comparison videos
 - **Referral bonus:** +1 GB per verified referral = viral storage incentive
 
@@ -322,7 +321,7 @@ Infrastructure scales to ~Rs.1.5L/month at 100K active families — well covered
 
 ### Phase 4: Mass Adoption (Year 2+)
 - **Village adoption playbook:** Repeat temple/community model across 1,000+ villages
-- **Corporate gifting:** Aangan Gold family subscription as employee Diwali gift
+- **Corporate gifting:** Aangan premium themes as employee Diwali gift
 - **Telecom bundle:** Jio/Airtel family plan bundle
 - **Indus App Store featuring:** Leverage Made-in-India positioning
 - **PWA launch:** Feature phone users can access Aangan via browser
@@ -331,12 +330,12 @@ Infrastructure scales to ~Rs.1.5L/month at 100K active families — well covered
 
 ## 7. Product Roadmap
 
-### v0.9 — Payments & Gold (May 2026)
-- Razorpay/Cashfree integration for UPI, cards, net banking
-- Aangan Gold subscription management (monthly/annual toggle)
-- Gold-exclusive features unlock
-- Payment receipts and invoice generation
-- Subscription analytics dashboard
+### v0.9 — Offline, Growth & Polish (May 2026)
+- Offline mode (SQLite local cache, background sync)
+- FCM push notifications (migrate from Expo Push)
+- WhatsApp invite deep links with tracking
+- Photo albums per event (auto-create, slideshow, ZIP download)
+- Performance: lazy loading, skeleton screens, FlashList, < 3s startup
 
 ### v1.0 — Production Launch (July 2026)
 - Production-grade stability (crash rate < 0.5%)
@@ -348,7 +347,7 @@ Infrastructure scales to ~Rs.1.5L/month at 100K active families — well covered
 
 ### v1.1 — Growth Features (Sep 2026)
 - WhatsApp invite flow optimization (A/B tested)
-- Family analytics for Gold members
+- Family analytics dashboard (admin view)
 - Multi-language support (Marathi, Gujarati, Tamil — Phase 1)
 - Advanced family tree: marriage connections, in-law branches
 - Family memory timeline (auto-generated from posts + events)
@@ -358,7 +357,7 @@ Infrastructure scales to ~Rs.1.5L/month at 100K active families — well covered
 - Village adoption toolkit (offline demo mode, batch onboarding)
 - Full offline-first (read + write + sync)
 - Group video calls for family events
-- Family document vault (Gold feature)
+- Family document vault
 
 ---
 
@@ -369,20 +368,20 @@ Infrastructure scales to ~Rs.1.5L/month at 100K active families — well covered
 |---------|-----------------|
 | Panchang widget | Users open app to check tithi/nakshatra |
 | Morning reminder push | 08:00 AM IST — birthday/anniversary/event alerts |
-| Festival greetings (Gold) | Custom messages auto-sent on festivals |
+| Festival greetings | Custom messages auto-sent on festivals |
 | Stories | 24-hour expiry creates daily check-in habit |
 | Upcoming festivals | 30-day calendar keeps family planning ahead |
 | Post feed | New posts from family create notification pull |
 | Voice commands | Elderly users engage daily via voice — no typing friction |
 
 ### 8.2 Seasonal Spikes (Natural Revenue Events)
-| Season | Feature | Revenue driver |
-|--------|---------|----------------|
-| Wedding season (Oct-Feb) | Event bundles | Maharaja/Mangal bundle sales |
-| Holi, Diwali, Navratri | Posts, stories, puja events | DAU spikes + Gold upgrades |
-| New year (Jan) | Important dates setup | New Gold subscriptions |
-| Family reunions (summer) | Event creation + photo uploads | Shagun bundles |
-| Raksha Bandhan, Bhai Dooj | Festival greetings | Gold conversion via custom messages |
+| Season | Feature | Growth driver |
+|--------|---------|---------------|
+| Wedding season (Oct-Feb) | Event management | Family onboarding spike |
+| Holi, Diwali, Navratri | Posts, stories, puja events | DAU spikes + viral sharing |
+| New year (Jan) | Important dates setup | New family registrations |
+| Family reunions (summer) | Event creation + photo uploads | Family activation |
+| Raksha Bandhan, Bhai Dooj | Festival greetings | Viral sharing + new invites |
 
 ### 8.3 Retention Mechanics
 - **Sunk cost:** Family photos and tree — you can't leave without losing memories
@@ -403,7 +402,7 @@ The family is the atomic unit of Aangan. Individual user counts are secondary.
 | **Families Connected** | Families with 3+ active members | 1,000 | 20,000 |
 | **Family Activation Rate** | % of created families with 3+ members within 7 days | — | 60% |
 | **Family DAF (Daily Active Families)** | Families with at least 1 post/reaction/event action per day | — | 40% of total |
-| **Gold Conversion Rate** | % of families with at least 1 Gold member | 8% | 12% |
+| **Premium Add-on Adoption** | % of families purchasing any premium add-on (Phase 2+) | N/A | 5% |
 | **Family Referral Rate** | % of families that invite at least 1 new family | — | 25% |
 | **WhatsApp Invite Completion** | % of WhatsApp invites that result in app install + join | — | 15% |
 | **Dadi Index** | % of families with at least 1 member aged 55+ active weekly | — | 30% |
@@ -419,7 +418,7 @@ The family is the atomic unit of Aangan. Individual user counts are secondary.
 
 ### 10.1 Data Privacy
 - **DPDP Act 2023 (India):** Consent framework, data localization readiness
-- **No data selling:** Business model is pure subscription — no ad targeting, no data brokers
+- **No data selling:** Business model is free app + premium add-ons — no ad targeting, no data brokers
 - **Encrypted storage:** Supabase RLS + Storage policies
 - **Right to deletion:** User can delete account and all data
 
@@ -433,10 +432,10 @@ The family is the atomic unit of Aangan. Individual user counts are secondary.
 - Age verification recommended (13+ per platform policy)
 - No public profiles — all content family-scoped
 
-### 10.4 Payment Compliance
-- RBI-compliant payment gateway (Razorpay/Cashfree)
-- Auto-generated GST invoices for Gold subscriptions
-- Transparent cancellation and refund policy
+### 10.4 Payment Compliance (Phase 2+)
+- RBI-compliant payment gateway (Razorpay/Cashfree) — when premium add-ons launch
+- Auto-generated GST invoices for premium purchases
+- Transparent refund policy for one-time purchases
 
 ---
 
@@ -445,9 +444,9 @@ The family is the atomic unit of Aangan. Individual user counts are secondary.
 | Risk | Probability | Impact | Mitigation |
 |------|------------|--------|------------|
 | WhatsApp launches family features | Medium | High | Deep cultural moat (panchang, kuldevi, sutak); 2-year head start; switching cost via photos/tree |
-| Low Gold conversion | Medium | Medium | Event bundle revenue compensates; Rs.99/mo is low friction via UPI |
+| Low premium add-on adoption | Medium | Medium | Multiple revenue streams (themes, prints, event bundles, brand partnerships) diversify risk |
 | Rural connectivity issues | High | Medium | Offline-first architecture; PWA for feature phones; compressed media |
-| Storage costs exceed revenue | Low | High | Aggressive compression + CDN; Aangan Gold covers storage |
+| Storage costs exceed revenue | Low | High | Aggressive compression + CDN; seed funding covers infrastructure until Phase 2 revenue |
 | Data breach | Low | Critical | RLS on every table, audit logs, service role key never in app |
 | Regulatory (DPDP Act) | Medium | Medium | Privacy by design from day 1; no ad model |
 | Founder single point of failure | High | High | Document architecture, hire engineer post-funding |
@@ -484,7 +483,7 @@ The family is the atomic unit of Aangan. Individual user counts are secondary.
 |-----------|---------|-------------|--------|
 | Core product complete | v0.8 | Apr 2026 | Done |
 | Google Play closed testing | v0.8 | Apr 2026 | Submitted |
-| Payments + Aangan Gold | v0.9 | May 2026 | Planned |
+| Offline + Growth + Polish | v0.9 | May 2026 | Planned |
 | Production launch + 1,000 families | v1.0 | Jul 2026 | Planned |
 | iOS launch + growth features | v1.1 | Sep 2026 | Planned |
 | Temple partnerships + offline-first | v1.2 | Nov 2026 | Planned |
@@ -493,11 +492,11 @@ The family is the atomic unit of Aangan. Individual user counts are secondary.
 
 | Milestone | Timeline | Funds Required |
 |-----------|----------|---------------|
-| v1.0 launch + 1,000 founding families | Month 1-3 | Rs.10L (infra + marketing + payments setup) |
+| v1.0 launch + 1,000 founding families | Month 1-3 | Rs.10L (infra + marketing) |
 | 5,000 families + temple partnerships (10 temples) | Month 6 | Rs.30L (2 hires + growth) |
 | App Store listings (Google, Apple, Indus) | Month 6 | Rs.15L (legal + dev accounts) |
 | 50,000 families + village adoption pilot | Month 18 | Rs.1.2 Cr (full team + field ops) |
-| Rs.1 Cr ARR | Month 18 | Self-sustaining |
+| Premium add-ons launch (Phase 2) | Month 12 | Revenue begins |
 
 ### Fund Allocation
 | Category | Amount | % |
@@ -521,7 +520,7 @@ The family is the atomic unit of Aangan. Individual user counts are secondary.
 
 ### Secondary Exit: IPO (8-10 years)
 - If 5M+ active families achieved, standalone consumer tech IPO viable
-- Benchmark: ShareChat (valued $5B at 160M users) — Aangan has higher ARPU per family
+- Benchmark: ShareChat (valued $5B at 160M users) — Aangan has deeper engagement per family unit
 
 ### Target valuation at exit: Rs.500 Cr - Rs.2,000 Cr (based on 5-7x ARR multiple)
 
@@ -530,7 +529,7 @@ The family is the atomic unit of Aangan. Individual user counts are secondary.
 ## 15. Why Now?
 
 1. **WhatsApp fatigue is real:** Families are drowning in group spam — the market is ready for a structured alternative
-2. **UPI makes Rs.99/mo frictionless:** Payment infrastructure is finally ready for micro-subscriptions in rural India
+2. **UPI makes micro-payments frictionless:** When premium add-ons launch, payment infrastructure is ready
 3. **Jio brought rural India online:** 500M new users need apps designed for them, not Silicon Valley adaptations
 4. **AI enables solo founders:** Claude Code allowed one person to build in 12 days what would take a 5-person team 6 months
 5. **Cultural moment:** Post-Covid, families want to stay connected; India's digital heritage is being lost as elders age
