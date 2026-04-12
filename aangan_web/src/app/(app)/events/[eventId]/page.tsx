@@ -93,6 +93,32 @@ export default function EventDetailPage() {
         ) : null}
       </div>
 
+      {/* Share & Guest Upload */}
+      {isCreator && (
+        <div className="bg-white rounded-2xl p-6 shadow-sm mb-4">
+          <h3 className="font-heading text-lg text-brown mb-2">शेयर करें — Share</h3>
+          <div className="flex flex-col sm:flex-row gap-3">
+            <a
+              href={`https://wa.me/?text=${encodeURIComponent(`🎉 ${currentEvent.title_hindi ?? currentEvent.title}\n📅 ${formatEventDate(currentEvent.start_datetime)}\n🕐 ${formatEventTime(currentEvent.start_datetime)}${currentEvent.location ? `\n📍 ${currentEvent.location}` : ''}\n\nRSVP करें: https://aangan.app/events/${currentEvent.id}`)}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex-1 flex items-center justify-center gap-2 min-h-dadi rounded-xl bg-[#25D366] text-white font-body font-semibold text-base hover:bg-[#1DA851] transition-colors"
+            >
+              <span>💬</span> WhatsApp पर भेजें
+            </a>
+            <Link
+              href={`/upload/${currentEvent.id}`}
+              className="flex-1 flex items-center justify-center gap-2 min-h-dadi rounded-xl border-2 border-haldi-gold text-haldi-gold-dark font-body font-semibold text-base hover:bg-haldi-gold/10 transition-colors"
+            >
+              <span>📸</span> Guest Photo Upload Link
+            </Link>
+          </div>
+          <p className="font-body text-sm text-brown-light mt-3">
+            गेस्ट अपलोड लिंक मेहमानों को भेजें — वे बिना अकाउंट के फ़ोटो अपलोड कर सकते हैं
+          </p>
+        </div>
+      )}
+
       {/* Attendees */}
       {rsvps.filter((r) => r.status === 'going').length > 0 && (
         <div className="bg-white rounded-2xl p-6 shadow-sm">
