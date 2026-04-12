@@ -32,7 +32,7 @@
     },
     "android": {
       "package": "app.aangan.family",
-      "versionCode": 12,
+      "versionCode": 13,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#FDFAF0"
