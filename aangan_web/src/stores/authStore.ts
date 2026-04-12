@@ -110,7 +110,17 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     set({ error: null });
     try {
       const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) { set({ error: error.message }); return false; }
+      if (error) {
+        const msg = error.message?.toLowerCase() || '';
+        if (msg.includes('email not confirmed') || msg.includes('not confirmed')) {
+          set({ error: 'ईमेल वेरिफ़ाई नहीं हुआ। "Email OTP भेजें" दबाकर वेरिफ़ाई करें।' });
+        } else if (msg.includes('invalid login credentials') || msg.includes('invalid')) {
+          set({ error: 'ईमेल या पासवर्ड गलत है।' });
+        } else {
+          set({ error: error.message });
+        }
+        return false;
+      }
       if (data.session) { set({ session: data.session }); await get().fetchProfile(); return true; }
       return false;
     } catch (e: unknown) {

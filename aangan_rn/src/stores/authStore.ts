@@ -151,7 +151,15 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     try {
       const { data, error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) {
-        set({ error: safeError(error, "कुछ गलत हो गया। फिर से कोशिश करें।") });
+        // Detect "Email not confirmed" specifically
+        const msg = error.message?.toLowerCase() || '';
+        if (msg.includes('email not confirmed') || msg.includes('not confirmed')) {
+          set({ error: 'ईमेल वेरिफ़ाई नहीं हुआ। पहले "Email OTP भेजें" दबाएँ।' });
+        } else if (msg.includes('invalid login credentials') || msg.includes('invalid') || msg.includes('credentials')) {
+          set({ error: 'ईमेल या पासवर्ड गलत है।' });
+        } else {
+          set({ error: safeError(error, "कुछ गलत हो गया। फिर से कोशिश करें।") });
+        }
         return false;
       }
       if (data.session) {
@@ -177,6 +185,16 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       if (data.session) {
         set({ session: data.session });
         await get().fetchProfile();
+        return true;
+      }
+      // Email confirmation required — send email OTP for verification
+      if (data.user) {
+        const { error: otpError } = await supabase.auth.signInWithOtp({ email });
+        if (otpError) {
+          set({ error: safeError(otpError, 'वेरिफ़िकेशन OTP नहीं भेजा जा सका।') });
+          return false;
+        }
+        // Signal that OTP was sent (caller should navigate to OTP screen)
         return true;
       }
       return false;
@@ -212,10 +230,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         .single();
 
       if (error) {
-        // If user profile not found (deleted), sign out to force re-login
+        // If user profile not found, mark as new user (trigger will create on next attempt)
         if (error.code === 'PGRST116' || error.message?.includes('no rows')) {
-          secureLog.warn('User profile not found, signing out');
-          await get().signOut();
+          secureLog.warn('User profile not found, redirecting to profile setup');
+          set({ user: null, isNewUser: true, isLoading: false });
           return;
         }
         set({ error: safeError(error, 'कुछ गलत हो गया।'), isLoading: false });

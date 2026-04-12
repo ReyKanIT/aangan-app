@@ -6,9 +6,6 @@ import GoldButton from '@/components/ui/GoldButton';
 import InputField from '@/components/ui/InputField';
 import { VALIDATION } from '@/lib/constants';
 
-type AuthTab = 'login' | 'signup';
-type AuthMode = 'email' | 'phone';
-
 function PasswordStrength({ password }: { password: string }) {
   if (!password) return null;
   const checks = [
@@ -48,16 +45,18 @@ function LoginContent() {
   const redirectTo = searchParams.get('redirect') || '/feed';
   const authError = searchParams.get('error');
   const { sendOtp, sendEmailOtp, signInWithEmail, signUpWithEmail, signInWithGoogle, signInWithApple, session, isNewUser, isLoading, initialize, error, setError } = useAuthStore();
-  const [tab, setTab] = useState<AuthTab>('login');
-  const [mode, setMode] = useState<AuthMode>('email');
+
+  // State
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [fullName, setFullName] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isSending, setIsSending] = useState(false);
+  const [showEmailSection, setShowEmailSection] = useState(false);
+  const [showPasswordField, setShowPasswordField] = useState(false);
+  const [isSignUp, setIsSignUp] = useState(false);
 
   useEffect(() => { initialize(); }, [initialize]);
 
@@ -67,54 +66,27 @@ function LoginContent() {
     }
   }, [session, isNewUser, isLoading, router]);
 
+  // Validation
   const isValidPhone = VALIDATION.phoneRegex.test(phone);
   const isValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   const isValidPassword = password.length >= 6;
   const passwordsMatch = password === confirmPassword;
-  const isValidName = fullName.trim().length >= 2;
 
-  const switchTab = (t: AuthTab) => {
-    setTab(t);
-    setError(null);
-    setPassword('');
-    setConfirmPassword('');
-    setFullName('');
-  };
+  // ========== HANDLERS ==========
 
+  // Phone OTP — works for both login & signup (auto-detect)
   const handlePhoneOtp = async () => {
     if (!isValidPhone || isSending) return;
-    if (tab === 'signup' && !isValidName) return;
     setIsSending(true);
     const ok = await sendOtp(phone);
     setIsSending(false);
     if (ok) {
       sessionStorage.setItem('otp_phone', phone);
-      if (fullName.trim()) sessionStorage.setItem('signup_name', fullName.trim());
       router.push('/otp');
     }
   };
 
-  const handleEmailLogin = async () => {
-    if (!isValidEmail || !isValidPassword || isSending) return;
-    setIsSending(true);
-    const ok = await signInWithEmail(email, password);
-    setIsSending(false);
-    // error already set by signInWithEmail in the store
-  };
-
-  const handleEmailSignUp = async () => {
-    if (!isValidEmail || !isValidPassword || !passwordsMatch || !isValidName || isSending) return;
-    setIsSending(true);
-    setError(null);
-    const ok = await signUpWithEmail(email, password);
-    setIsSending(false);
-    if (ok) {
-      sessionStorage.setItem('otp_email', email);
-      if (fullName.trim()) sessionStorage.setItem('signup_name', fullName.trim());
-      router.push('/otp');
-    }
-  };
-
+  // Email OTP — passwordless, works for both login & signup
   const handleEmailOtp = async () => {
     if (!isValidEmail || isSending) return;
     setIsSending(true);
@@ -126,17 +98,41 @@ function LoginContent() {
     }
   };
 
+  // Password login — for existing users
+  const handlePasswordLogin = async () => {
+    if (!isValidEmail || !isValidPassword || isSending) return;
+    setIsSending(true);
+    const ok = await signInWithEmail(email, password);
+    setIsSending(false);
+    // error shown via store's error state
+  };
+
+  // Password signup — for new email+password users
+  const handlePasswordSignUp = async () => {
+    if (!isValidEmail || !isValidPassword || !passwordsMatch || isSending) return;
+    setIsSending(true);
+    setError(null);
+    const ok = await signUpWithEmail(email, password);
+    setIsSending(false);
+    if (ok) {
+      sessionStorage.setItem('otp_email', email);
+      router.push('/otp');
+    }
+  };
+
+  // ========== RENDER ==========
+
   return (
     <div className="bg-white rounded-2xl shadow-lg border border-cream-dark p-6 sm:p-8">
-      {/* Logo & Branding */}
+      {/* Logo */}
       <div className="text-center mb-6">
         <h1 className="font-heading text-4xl text-haldi-gold font-bold tracking-wide">AANGAN</h1>
-        <p className="font-heading text-2xl text-brown mt-1">आँगन</p>
-        <p className="font-body text-brown-light mt-2 text-base">परिवार से जुड़ें</p>
+        <p className="font-heading text-2xl text-brown mt-1">{'\u0906\u0901\u0917\u0928'}</p>
+        <p className="font-body text-brown-light mt-2 text-base">{'\u092A\u0930\u093F\u0935\u093E\u0930 \u0938\u0947 \u091C\u0941\u0921\u093C\u0947\u0902'}</p>
         <p className="font-body text-sm text-brown-light">Connect with Family</p>
       </div>
 
-      {/* Google Sign-In — Primary auth method */}
+      {/* ===== 1. SOCIAL LOGIN — Primary (like Instagram/ShareChat) ===== */}
       <div className="space-y-3">
         <button
           onClick={signInWithGoogle}
@@ -148,7 +144,7 @@ function LoginContent() {
             <path fill="#FBBC05" d="M10.53 28.59a14.5 14.5 0 0 1 0-9.18l-7.98-6.19a24.1 24.1 0 0 0 0 21.56l7.98-6.19z"/>
             <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
           </svg>
-          Google से साइन इन करें
+          Google से जारी रखें
         </button>
 
         <button
@@ -158,7 +154,7 @@ function LoginContent() {
           <svg width="20" height="24" viewBox="0 0 17 20" fill="white">
             <path d="M13.545 10.239c-.022-2.234 1.823-3.306 1.905-3.358-.036-.053-1.063-1.575-2.704-1.575-1.138 0-2.122.693-2.693.693-.597 0-1.474-.676-2.437-.657-1.244.018-2.407.732-3.044 1.842-1.315 2.273-.336 5.614.926 7.455.632.9 1.371 1.9 2.339 1.865.948-.038 1.299-.604 2.443-.604 1.131 0 1.455.604 2.437.583.016 0-.003 0 0 0 1.003-.019 1.639-.9 2.254-1.807.724-1.03 1.013-2.042 1.027-2.095-.023-.009-1.97-.756-1.991-2.994l-.462-.348zM11.15 3.292c.503-.623.851-1.467.754-2.332-.734.032-1.652.504-2.175 1.113-.464.539-.882 1.42-.773 2.251.826.063 1.676-.416 2.194-1.032z"/>
           </svg>
-          Apple से साइन इन करें
+          Apple से जारी रखें
         </button>
       </div>
 
@@ -167,28 +163,6 @@ function LoginContent() {
         <div className="flex-1 h-px bg-gray-200" />
         <span className="font-body text-sm text-brown-light uppercase tracking-wider">या / or</span>
         <div className="flex-1 h-px bg-gray-200" />
-      </div>
-
-      {/* Login / Sign Up Tab Toggle */}
-      <div className="flex bg-cream rounded-xl p-1 mb-5">
-        <button
-          onClick={() => switchTab('login')}
-          className={`flex-1 py-3 rounded-lg font-body font-semibold text-base transition-all ${
-            tab === 'login' ? 'bg-white shadow-sm text-haldi-gold' : 'text-brown-light hover:text-brown'
-          }`}
-        >
-          लॉगिन
-          <span className="block text-sm font-normal opacity-60 mt-0.5">Login</span>
-        </button>
-        <button
-          onClick={() => switchTab('signup')}
-          className={`flex-1 py-3 rounded-lg font-body font-semibold text-base transition-all ${
-            tab === 'signup' ? 'bg-white shadow-sm text-haldi-gold' : 'text-brown-light hover:text-brown'
-          }`}
-        >
-          साइन अप
-          <span className="block text-sm font-normal opacity-60 mt-0.5">Sign Up</span>
-        </button>
       </div>
 
       {/* Auth callback error */}
@@ -207,59 +181,75 @@ function LoginContent() {
       {error && (
         <div className="bg-red-50 border border-error/30 rounded-xl px-4 py-3 mb-4 flex items-start gap-2">
           <span className="text-error mt-0.5">!</span>
-          <p className="font-body text-sm text-error">{error}</p>
+          <p className="font-body text-base text-error">{error}</p>
         </div>
       )}
 
-      {/* ===== LOGIN TAB ===== */}
-      {tab === 'login' && (
-        <>
-          {/* Email / Phone toggle within Login */}
-          <div className="flex bg-cream/50 rounded-lg p-1 mb-4">
-            {(['email', 'phone'] as AuthMode[]).map((m) => (
-              <button
-                key={m}
-                onClick={() => { setMode(m); setError(null); }}
-                className={`flex-1 py-3 rounded-md font-body text-base font-medium transition-all ${
-                  mode === m ? 'bg-white shadow-sm text-haldi-gold' : 'text-brown-light hover:text-brown'
-                }`}
-              >
-                {m === 'email' ? 'ईमेल Email' : 'फ़ोन Phone'}
-              </button>
-            ))}
-          </div>
+      {/* ===== 2. PHONE OTP — India's default (like WhatsApp/PhonePe) ===== */}
+      <div className="space-y-3">
+        <InputField
+          label="फ़ोन नंबर"
+          sublabel="Phone Number"
+          type="tel"
+          inputMode="numeric"
+          prefix="+91"
+          value={phone}
+          onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
+          placeholder="9876543210"
+          maxLength={10}
+        />
+        <GoldButton className="w-full" loading={isSending && !showEmailSection} disabled={!isValidPhone} onClick={handlePhoneOtp}>
+          OTP भेजें — Send OTP
+        </GoldButton>
+      </div>
 
-          {mode === 'phone' ? (
-            <div className="space-y-4">
-              <InputField
-                label="फ़ोन नंबर"
-                sublabel="Phone Number"
-                type="tel"
-                inputMode="numeric"
-                prefix="+91"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
-                placeholder="9876543210"
-                maxLength={10}
-              />
-              <GoldButton className="w-full" loading={isSending} disabled={!isValidPhone} onClick={handlePhoneOtp}>
+      {/* Divider */}
+      <div className="flex items-center gap-3 my-5">
+        <div className="flex-1 h-px bg-gray-200" />
+        <span className="font-body text-sm text-brown-light uppercase tracking-wider">या / or</span>
+        <div className="flex-1 h-px bg-gray-200" />
+      </div>
+
+      {/* ===== 3. EMAIL — Expandable (like Notion/Slack) ===== */}
+      {!showEmailSection ? (
+        <button
+          onClick={() => { setShowEmailSection(true); setError(null); }}
+          className="w-full flex items-center justify-center gap-3 min-h-dadi py-3 px-4 bg-cream rounded-xl border border-gray-200 font-body text-base text-brown hover:bg-cream-dark hover:shadow-sm transition-all"
+        >
+          <span className="text-xl">📧</span>
+          <span className="font-semibold">ईमेल से जारी रखें</span>
+          <span className="text-sm text-brown-light">Continue with Email</span>
+        </button>
+      ) : (
+        <div className="space-y-3 bg-cream/50 rounded-xl p-4 border border-gray-100">
+          <InputField
+            label="ईमेल"
+            sublabel="Email"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="name@example.com"
+            autoComplete="email"
+            autoFocus
+          />
+
+          {/* Default: OTP (passwordless) */}
+          {!showPasswordField ? (
+            <>
+              <GoldButton className="w-full" loading={isSending} disabled={!isValidEmail} onClick={handleEmailOtp}>
                 OTP भेजें — Send OTP
               </GoldButton>
-              <p className="font-body text-sm text-brown-light/60 text-center">
-                SMS OTP सीमित है — Google से साइन इन करें (सबसे तेज़)
-              </p>
-            </div>
+
+              <button
+                onClick={() => { setShowPasswordField(true); setError(null); }}
+                className="w-full py-2 font-body text-base text-haldi-gold font-semibold hover:underline transition-all"
+              >
+                🔑 पासवर्ड से लॉगिन — Use Password
+              </button>
+            </>
           ) : (
-            <div className="space-y-4">
-              <InputField
-                label="ईमेल"
-                sublabel="Email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="name@example.com"
-                autoComplete="email"
-              />
+            <>
+              {/* Password field */}
               <div className="relative">
                 <InputField
                   label="पासवर्ड"
@@ -267,8 +257,9 @@ function LoginContent() {
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="अपना पासवर्ड डालें"
-                  autoComplete="current-password"
+                  placeholder={isSignUp ? '6+ अक्षर का पासवर्ड' : 'अपना पासवर्ड डालें'}
+                  autoComplete={isSignUp ? 'new-password' : 'current-password'}
+                  autoFocus
                 />
                 <button
                   type="button"
@@ -279,158 +270,102 @@ function LoginContent() {
                   {showPassword ? 'छुपाएं' : 'दिखाएं'}
                 </button>
               </div>
-              <GoldButton className="w-full" loading={isSending} disabled={!isValidEmail || !isValidPassword} onClick={handleEmailLogin}>
-                लॉगिन करें — Login
-              </GoldButton>
 
-              {/* Email OTP option */}
-              <button
-                className={`w-full py-2 font-body text-base text-haldi-gold hover:underline transition-all ${(!isValidEmail || isSending) ? 'opacity-40 pointer-events-none' : ''}`}
-                disabled={!isValidEmail || isSending}
-                onClick={handleEmailOtp}
-              >
-                बिना पासवर्ड — Email OTP भेजें
-              </button>
-
-              <p className="font-body text-sm text-brown-light text-center">
-                नए हैं? <button onClick={() => switchTab('signup')} className="text-haldi-gold font-semibold hover:underline">अकाउंट बनाएं — Sign Up</button>
-              </p>
-            </div>
-          )}
-        </>
-      )}
-
-      {/* ===== SIGN UP TAB ===== */}
-      {tab === 'signup' && (
-        <>
-          {/* Email / Phone toggle */}
-          <div className="flex bg-cream/50 rounded-lg p-1 mb-4">
-            {(['phone', 'email'] as AuthMode[]).map((m) => (
-              <button
-                key={m}
-                onClick={() => { setMode(m); setError(null); }}
-                className={`flex-1 py-3 rounded-md font-body text-base font-medium transition-all ${
-                  mode === m ? 'bg-white shadow-sm text-haldi-gold' : 'text-brown-light hover:text-brown'
-                }`}
-              >
-                {m === 'phone' ? 'फ़ोन Phone' : 'ईमेल Email'}
-              </button>
-            ))}
-          </div>
-
-          {/* Name field — shown for both phone and email signup */}
-          <InputField
-            label="आपका नाम *"
-            sublabel="Your Name"
-            value={fullName}
-            onChange={(e) => setFullName(e.target.value)}
-            placeholder="अपना नाम डालें"
-            autoComplete="name"
-          />
-
-          {mode === 'phone' ? (
-            <div className="space-y-4">
-              <InputField
-                label="फ़ोन नंबर"
-                sublabel="Phone Number"
-                type="tel"
-                inputMode="numeric"
-                prefix="+91"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
-                placeholder="9876543210"
-                maxLength={10}
-              />
-              <p className="font-body text-sm text-brown-light text-center leading-relaxed">
-                OTP से खाता बनेगा — पासवर्ड की ज़रूरत नहीं
-                <br /><span className="text-brown-light/60">No password needed — account created via OTP</span>
-              </p>
-              <GoldButton className="w-full" loading={isSending} disabled={!isValidPhone || !isValidName} onClick={handlePhoneOtp}>
-                अकाउंट बनाएं — Create Account
-              </GoldButton>
-              <p className="font-body text-sm text-brown-light/60 text-center">
-                SMS OTP सीमित है — Google से साइन इन करें (सबसे तेज़)
-              </p>
-              <p className="font-body text-sm text-brown-light text-center">
-                पहले से अकाउंट है? <button onClick={() => switchTab('login')} className="text-haldi-gold font-semibold hover:underline">लॉगिन करें — Login</button>
-              </p>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              <InputField
-                label="ईमेल"
-                sublabel="Email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="name@example.com"
-                autoComplete="email"
-              />
-
-              {/* Password with show/hide toggle */}
-              <div className="relative">
-                <InputField
-                  label="पासवर्ड बनाएं"
-                  sublabel="Create Password (6+ characters)"
-                  type={showPassword ? 'text' : 'password'}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="6+ अक्षर का पासवर्ड"
-                  autoComplete="new-password"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-9 text-brown-light hover:text-brown text-base font-body py-1 px-2"
-                  tabIndex={-1}
-                >
-                  {showPassword ? 'छुपाएं' : 'दिखाएं'}
-                </button>
-              </div>
-              <PasswordStrength password={password} />
-
-              <div className="relative">
-                <InputField
-                  label="पासवर्ड दोबारा डालें"
-                  sublabel="Confirm Password"
-                  type={showConfirmPassword ? 'text' : 'password'}
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  placeholder="वही पासवर्ड दोबारा"
-                  autoComplete="new-password"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-3 top-9 text-brown-light hover:text-brown text-base font-body py-1 px-2"
-                  tabIndex={-1}
-                >
-                  {showConfirmPassword ? 'छुपाएं' : 'दिखाएं'}
-                </button>
-              </div>
-
-              {/* Password match feedback */}
-              {confirmPassword.length > 0 && (
-                <p className={`font-body text-sm ${passwordsMatch ? 'text-mehndi-green' : 'text-error'}`}>
-                  {passwordsMatch ? 'पासवर्ड मेल खा रहे हैं ✓' : 'पासवर्ड मेल नहीं खा रहे — Passwords do not match'}
-                </p>
+              {isSignUp && (
+                <>
+                  <PasswordStrength password={password} />
+                  <div className="relative">
+                    <InputField
+                      label="पासवर्ड दोबारा डालें"
+                      sublabel="Confirm Password"
+                      type={showConfirmPassword ? 'text' : 'password'}
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      placeholder="वही पासवर्ड दोबारा"
+                      autoComplete="new-password"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      className="absolute right-3 top-9 text-brown-light hover:text-brown text-base font-body py-1 px-2"
+                      tabIndex={-1}
+                    >
+                      {showConfirmPassword ? 'छुपाएं' : 'दिखाएं'}
+                    </button>
+                  </div>
+                  {confirmPassword.length > 0 && (
+                    <p className={`font-body text-sm ${passwordsMatch ? 'text-mehndi-green' : 'text-error'}`}>
+                      {passwordsMatch ? 'पासवर्ड मेल खा रहे हैं ✓' : 'पासवर्ड मेल नहीं खा रहे'}
+                    </p>
+                  )}
+                </>
               )}
 
-              <GoldButton
-                className="w-full"
-                loading={isSending}
-                disabled={!isValidEmail || !isValidPassword || !passwordsMatch || !isValidName || confirmPassword.length === 0}
-                onClick={handleEmailSignUp}
-              >
-                अकाउंट बनाएं — Create Account
-              </GoldButton>
+              {/* Login or SignUp button */}
+              {isSignUp ? (
+                <GoldButton
+                  className="w-full !bg-mehndi-green hover:!bg-mehndi-green-dark"
+                  loading={isSending}
+                  disabled={!isValidEmail || !isValidPassword || !passwordsMatch || confirmPassword.length === 0}
+                  onClick={handlePasswordSignUp}
+                >
+                  खाता बनाएँ — Sign Up
+                </GoldButton>
+              ) : (
+                <GoldButton
+                  className="w-full"
+                  loading={isSending}
+                  disabled={!isValidEmail || !isValidPassword}
+                  onClick={handlePasswordLogin}
+                >
+                  लॉगिन करें — Login
+                </GoldButton>
+              )}
 
-              <p className="font-body text-sm text-brown-light text-center">
-                पहले से अकाउंट है? <button onClick={() => switchTab('login')} className="text-haldi-gold font-semibold hover:underline">लॉगिन करें — Login</button>
-              </p>
-            </div>
+              {/* Toggle login/signup */}
+              <button
+                onClick={() => {
+                  setIsSignUp(!isSignUp);
+                  setConfirmPassword('');
+                  setError(null);
+                }}
+                className="w-full py-2 font-body text-base text-haldi-gold font-semibold hover:underline transition-all"
+              >
+                {isSignUp ? 'पहले से खाता है? लॉगिन करें →' : 'नए हैं? नया खाता बनाएँ →'}
+              </button>
+
+              {/* Back to OTP */}
+              <button
+                onClick={() => {
+                  setShowPasswordField(false);
+                  setPassword('');
+                  setConfirmPassword('');
+                  setIsSignUp(false);
+                  setError(null);
+                }}
+                className="w-full py-2 font-body text-sm text-brown-light hover:text-brown hover:underline transition-all"
+              >
+                ← बिना पासवर्ड — OTP से जारी रखें
+              </button>
+            </>
           )}
-        </>
+
+          {/* Collapse email */}
+          <button
+            onClick={() => {
+              setShowEmailSection(false);
+              setShowPasswordField(false);
+              setEmail('');
+              setPassword('');
+              setConfirmPassword('');
+              setIsSignUp(false);
+              setError(null);
+            }}
+            className="w-full py-1 font-body text-sm text-gray-400 hover:text-gray-600 transition-all"
+          >
+            ▲ बंद करें
+          </button>
+        </div>
       )}
 
       {/* Terms */}

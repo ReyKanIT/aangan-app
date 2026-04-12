@@ -21,12 +21,9 @@ import { useLanguageStore } from '../../stores/languageStore';
 import { supabase } from '../../config/supabase';
 
 type Props = NativeStackScreenProps<any, 'Login'>;
-type AuthMode = 'phone' | 'email';
-type EmailAction = 'login' | 'signup';
 
 export default function LoginScreen({ navigation }: Props) {
-  const [authMode, setAuthMode] = useState<AuthMode>('email');
-  const [emailAction, setEmailAction] = useState<EmailAction>('login');
+  // --- State ---
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -34,10 +31,14 @@ export default function LoginScreen({ navigation }: Props) {
   const [phoneError, setPhoneError] = useState('');
   const [isSending, setIsSending] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const [showEmailSection, setShowEmailSection] = useState(false);
+  const [showPasswordField, setShowPasswordField] = useState(false);
+  const [isSignUp, setIsSignUp] = useState(false);
+
   const { sendOtp, sendEmailOtp, signInWithEmail, signUpWithEmail, session, isNewUser, isLoading } = useAuthStore();
   const { isHindi, toggleLanguage } = useLanguageStore();
 
-  // Navigate when session is established (after successful sign-in/sign-up)
+  // --- Navigation on auth ---
   React.useEffect(() => {
     if (session && !isLoading) {
       if (isNewUser) {
@@ -48,11 +49,13 @@ export default function LoginScreen({ navigation }: Props) {
     }
   }, [session, isNewUser, isLoading, navigation]);
 
+  // --- Validation ---
   const isValidPhone = VALIDATION.phoneRegex.test(phone);
   const isValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   const isValidPassword = password.length >= 6;
-  const isValidConfirmPassword = emailAction === 'signup' ? (confirmPassword.length >= 6 && confirmPassword === password) : true;
   const passwordsMatch = password === confirmPassword;
+
+  // ========== HANDLERS ==========
 
   const handlePhoneChange = useCallback((text: string) => {
     const cleaned = text.replace(/\D/g, '').slice(0, VALIDATION.phoneLength);
@@ -64,7 +67,8 @@ export default function LoginScreen({ navigation }: Props) {
     }
   }, []);
 
-  const handleSendPhoneOtp = useCallback(async () => {
+  // Phone OTP — works for both login & signup (auto-detect)
+  const handlePhoneOtp = useCallback(async () => {
     if (!isValidPhone || isSending) return;
     setIsSending(true);
     try {
@@ -85,76 +89,7 @@ export default function LoginScreen({ navigation }: Props) {
     }
   }, [phone, isValidPhone, isSending, sendOtp, navigation]);
 
-  const handleEmailLogin = useCallback(async () => {
-    if (!isValidEmail || !isValidPassword || isSending) return;
-    setIsSending(true);
-    try {
-      const success = await signInWithEmail(email, password);
-      if (success) return; // useEffect will navigate
-      Alert.alert(
-        'लॉगिन नहीं हो पाया',
-        'ईमेल या पासवर्ड गलत है। कृपया जाँचें और फिर से कोशिश करें।\n\nनया खाता बनाने के लिए "नया खाता" टैब दबाएँ।',
-        [{ text: 'ठीक है' }]
-      );
-    } catch {
-      Alert.alert('कनेक्शन समस्या', 'इंटरनेट कनेक्शन जाँचें।', [{ text: 'ठीक है' }]);
-    } finally {
-      setIsSending(false);
-    }
-  }, [email, password, isValidEmail, isValidPassword, isSending, signInWithEmail]);
-
-  const handleEmailSignUp = useCallback(async () => {
-    if (!isValidEmail || !isValidPassword || !isValidConfirmPassword || isSending) return;
-    if (!passwordsMatch) {
-      Alert.alert('पासवर्ड मेल नहीं खाते', 'दोनों पासवर्ड एक जैसे होने चाहिए।', [{ text: 'ठीक है' }]);
-      return;
-    }
-    setIsSending(true);
-    try {
-      useAuthStore.getState().setError(null);
-      const success = await signUpWithEmail(email, password);
-      if (success) return; // useEffect will navigate
-      Alert.alert(
-        'खाता नहीं बन सका',
-        'शायद यह ईमेल पहले से रजिस्टर है। लॉगिन करके देखें।',
-        [
-          { text: 'लॉगिन करें', onPress: () => setEmailAction('login') },
-          { text: 'ठीक है' },
-        ]
-      );
-    } catch {
-      Alert.alert('कनेक्शन समस्या', 'इंटरनेट कनेक्शन जाँचें।', [{ text: 'ठीक है' }]);
-    } finally {
-      setIsSending(false);
-    }
-  }, [email, password, confirmPassword, isValidEmail, isValidPassword, isValidConfirmPassword, passwordsMatch, isSending, signUpWithEmail]);
-
-  const handleGoogleSignIn = useCallback(async () => {
-    if (isGoogleLoading) return;
-    setIsGoogleLoading(true);
-    try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: { redirectTo: 'aangan://auth-callback' },
-      });
-      if (error) {
-        Alert.alert(
-          'Google साइन इन नहीं हुआ',
-          'Google साइन इन नहीं हुआ। दोबारा कोशिश करें।',
-          [{ text: 'ठीक है' }]
-        );
-      }
-    } catch {
-      Alert.alert(
-        'Google साइन इन नहीं हुआ',
-        'Google साइन इन नहीं हुआ। दोबारा कोशिश करें।',
-        [{ text: 'ठीक है' }]
-      );
-    } finally {
-      setIsGoogleLoading(false);
-    }
-  }, [isGoogleLoading]);
-
+  // Email OTP — passwordless, works for both login & signup (auto-detect)
   const handleEmailOtp = useCallback(async () => {
     if (!isValidEmail || isSending) return;
     setIsSending(true);
@@ -176,6 +111,99 @@ export default function LoginScreen({ navigation }: Props) {
     }
   }, [email, isValidEmail, isSending, sendEmailOtp, navigation]);
 
+  // Password login — for existing users
+  const handlePasswordLogin = useCallback(async () => {
+    if (!isValidEmail || !isValidPassword || isSending) return;
+    setIsSending(true);
+    try {
+      const success = await signInWithEmail(email, password);
+      if (success) return; // useEffect navigates
+
+      const storeError = useAuthStore.getState().error;
+      const isEmailNotConfirmed = storeError?.includes('वेरिफ़ाई');
+
+      if (isEmailNotConfirmed) {
+        Alert.alert(
+          'ईमेल वेरिफ़ाई करें',
+          'आपका ईमेल वेरिफ़ाई नहीं है।\n\nOTP से वेरिफ़ाई करें?',
+          [
+            { text: 'OTP भेजें', onPress: () => handleEmailOtp() },
+            { text: 'रद्द करें', style: 'cancel' },
+          ]
+        );
+      } else {
+        Alert.alert(
+          'लॉगिन नहीं हो पाया',
+          'ईमेल या पासवर्ड गलत है।\n\nनए हैं? "नया खाता" बटन दबाएँ।',
+          [
+            { text: 'नया खाता बनाएँ', onPress: () => setIsSignUp(true) },
+            { text: 'ठीक है' },
+          ]
+        );
+      }
+    } catch {
+      Alert.alert('कनेक्शन समस्या', 'इंटरनेट कनेक्शन जाँचें।', [{ text: 'ठीक है' }]);
+    } finally {
+      setIsSending(false);
+    }
+  }, [email, password, isValidEmail, isValidPassword, isSending, signInWithEmail, handleEmailOtp]);
+
+  // Password signup — for new email+password users
+  const handlePasswordSignUp = useCallback(async () => {
+    if (!isValidEmail || !isValidPassword || isSending) return;
+    if (!passwordsMatch) {
+      Alert.alert('पासवर्ड मेल नहीं खाते', 'दोनों पासवर्ड एक जैसे होने चाहिए।', [{ text: 'ठीक है' }]);
+      return;
+    }
+    setIsSending(true);
+    try {
+      useAuthStore.getState().setError(null);
+      const success = await signUpWithEmail(email, password);
+      if (success) {
+        // If no session yet (email confirmation needed), go to OTP screen
+        const { session: currentSession } = useAuthStore.getState();
+        if (!currentSession) {
+          navigation.navigate('OTP', { email });
+          return;
+        }
+        return; // useEffect navigates
+      }
+      Alert.alert(
+        'खाता नहीं बन सका',
+        'शायद यह ईमेल पहले से रजिस्टर है।',
+        [
+          { text: 'लॉगिन करें', onPress: () => setIsSignUp(false) },
+          { text: 'ठीक है' },
+        ]
+      );
+    } catch {
+      Alert.alert('कनेक्शन समस्या', 'इंटरनेट कनेक्शन जाँचें।', [{ text: 'ठीक है' }]);
+    } finally {
+      setIsSending(false);
+    }
+  }, [email, password, confirmPassword, isValidEmail, isValidPassword, passwordsMatch, isSending, signUpWithEmail, navigation]);
+
+  // Google Sign-In — one-tap, works for both login & signup
+  const handleGoogleSignIn = useCallback(async () => {
+    if (isGoogleLoading) return;
+    setIsGoogleLoading(true);
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: { redirectTo: 'aangan://auth-callback' },
+      });
+      if (error) {
+        Alert.alert('Google साइन इन नहीं हुआ', 'दोबारा कोशिश करें।', [{ text: 'ठीक है' }]);
+      }
+    } catch {
+      Alert.alert('Google साइन इन नहीं हुआ', 'दोबारा कोशिश करें।', [{ text: 'ठीक है' }]);
+    } finally {
+      setIsGoogleLoading(false);
+    }
+  }, [isGoogleLoading]);
+
+  // ========== RENDER ==========
+
   return (
     <KeyboardAvoidingView
       style={styles.flex}
@@ -187,7 +215,7 @@ export default function LoginScreen({ navigation }: Props) {
         bounces={false}
       >
         <View style={styles.container}>
-          {/* Language Toggle — top right */}
+          {/* Language Toggle */}
           <TouchableOpacity
             style={styles.langToggle}
             onPress={toggleLanguage}
@@ -199,112 +227,102 @@ export default function LoginScreen({ navigation }: Props) {
             <Text style={styles.langToggleIcon}>🌐</Text>
           </TouchableOpacity>
 
-          {/* Header Logo */}
+          {/* Logo */}
           <View style={styles.header}>
             <Text style={styles.logoText}>AANGAN</Text>
             <Text style={styles.logoHindi}>{'\u0906\u0901\u0917\u0928'}</Text>
           </View>
 
-          {/* Title */}
           <Text style={styles.title}>
             {'\u092A\u0930\u093F\u0935\u093E\u0930 \u0938\u0947 \u091C\u0941\u0921\u093C\u0947\u0902'}
           </Text>
           <Text style={styles.subtitle}>Connect with Family</Text>
 
-          {/* Auth Mode Toggle */}
-          <View style={styles.toggleRow}>
+          {/* ===== 1. GOOGLE — Primary, one-tap (like ShareChat/Instagram) ===== */}
+          <TouchableOpacity
+            style={styles.googleButton}
+            onPress={handleGoogleSignIn}
+            disabled={isGoogleLoading}
+            activeOpacity={0.8}
+            accessibilityRole="button"
+            accessibilityLabel="Google से जारी रखें"
+          >
+            {isGoogleLoading ? (
+              <ActivityIndicator size="small" color={Colors.brown} />
+            ) : (
+              <>
+                <Text style={styles.googleIcon}>🅖</Text>
+                <Text style={styles.googleButtonText}>Google से जारी रखें</Text>
+              </>
+            )}
+          </TouchableOpacity>
+
+          {/* Divider */}
+          <View style={styles.dividerRow}>
+            <View style={styles.dividerLine} />
+            <Text style={styles.dividerText}>या / or</Text>
+            <View style={styles.dividerLine} />
+          </View>
+
+          {/* ===== 2. PHONE OTP — India's default (like WhatsApp/PhonePe) ===== */}
+          <View style={styles.section}>
+            <Text style={styles.sectionLabel}>फ़ोन नंबर</Text>
+            <Text style={styles.sectionHint}>Phone Number</Text>
+            <View style={[styles.phoneRow, phoneError ? styles.inputError : null]}>
+              <View style={styles.prefixBox}>
+                <Text style={styles.prefixText}>+91</Text>
+              </View>
+              <TextInput
+                style={styles.phoneInput}
+                value={phone}
+                onChangeText={handlePhoneChange}
+                placeholder="9876543210"
+                placeholderTextColor={Colors.gray400}
+                keyboardType="number-pad"
+                maxLength={VALIDATION.phoneLength}
+              />
+            </View>
+            {phoneError !== '' && (
+              <Text style={styles.errorText}>{phoneError}</Text>
+            )}
             <TouchableOpacity
-              style={[styles.toggleButton, authMode === 'email' && styles.toggleActive]}
-              onPress={() => setAuthMode('email')}
+              style={[styles.goldButton, (!isValidPhone || isSending) && styles.buttonDisabled]}
+              onPress={handlePhoneOtp}
+              disabled={!isValidPhone || isSending}
+              activeOpacity={0.8}
             >
-              <Text style={[styles.toggleText, authMode === 'email' && styles.toggleTextActive]}>
-                ईमेल
-              </Text>
-              <Text style={[styles.toggleSubtext, authMode === 'email' && styles.toggleSubtextActive]}>
-                Email
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.toggleButton, authMode === 'phone' && styles.toggleActive]}
-              onPress={() => setAuthMode('phone')}
-            >
-              <Text style={[styles.toggleText, authMode === 'phone' && styles.toggleTextActive]}>
-                फ़ोन
-              </Text>
-              <Text style={[styles.toggleSubtext, authMode === 'phone' && styles.toggleSubtextActive]}>
-                Phone
-              </Text>
+              {isSending && !showEmailSection ? (
+                <ActivityIndicator size="small" color={Colors.white} />
+              ) : (
+                <Text style={styles.goldButtonText}>OTP भेजें — Send OTP</Text>
+              )}
             </TouchableOpacity>
           </View>
 
-          {authMode === 'phone' ? (
-            /* Phone Input */
-            <View style={styles.inputSection}>
-              <Text style={styles.inputLabel}>फ़ोन नंबर</Text>
-              <View style={[styles.phoneRow, phoneError ? styles.inputError : null]}>
-                <View style={styles.prefixBox}>
-                  <Text style={styles.prefixText}>+91</Text>
-                </View>
-                <TextInput
-                  style={styles.phoneInput}
-                  value={phone}
-                  onChangeText={handlePhoneChange}
-                  placeholder="9876543210"
-                  placeholderTextColor={Colors.gray400}
-                  keyboardType="number-pad"
-                  maxLength={VALIDATION.phoneLength}
-                  autoFocus
-                />
-              </View>
-              {phoneError !== '' && (
-                <Text style={styles.errorText}>{phoneError}</Text>
-              )}
+          {/* Divider */}
+          <View style={styles.dividerRow}>
+            <View style={styles.dividerLine} />
+            <Text style={styles.dividerText}>या / or</Text>
+            <View style={styles.dividerLine} />
+          </View>
 
-              <TouchableOpacity
-                style={[styles.sendButton, (!isValidPhone || isSending) && styles.sendButtonDisabled]}
-                onPress={handleSendPhoneOtp}
-                disabled={!isValidPhone || isSending}
-                activeOpacity={0.8}
-              >
-                {isSending ? (
-                  <ActivityIndicator size="small" color={Colors.white} />
-                ) : (
-                  <Text style={styles.sendButtonText}>OTP भेजें</Text>
-                )}
-              </TouchableOpacity>
-            </View>
+          {/* ===== 3. EMAIL — Expandable (like Notion/Slack) ===== */}
+          {!showEmailSection ? (
+            <TouchableOpacity
+              style={styles.emailExpandButton}
+              onPress={() => setShowEmailSection(true)}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.emailExpandIcon}>📧</Text>
+              <Text style={styles.emailExpandText}>ईमेल से जारी रखें</Text>
+              <Text style={styles.emailExpandHint}>Continue with Email</Text>
+            </TouchableOpacity>
           ) : (
-            /* Email Input */
-            <View style={styles.inputSection}>
-              {/* Login / Sign Up sub-toggle */}
-              <View style={styles.emailActionRow}>
-                <TouchableOpacity
-                  style={[styles.emailActionButton, emailAction === 'login' && styles.emailActionActive]}
-                  onPress={() => setEmailAction('login')}
-                >
-                  <Text style={[styles.emailActionText, emailAction === 'login' && styles.emailActionTextActive]}>
-                    लॉगिन
-                  </Text>
-                  <Text style={[styles.emailActionSubtext, emailAction === 'login' && styles.emailActionSubtextActive]}>
-                    Login
-                  </Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[styles.emailActionButton, emailAction === 'signup' && styles.emailActionActive]}
-                  onPress={() => setEmailAction('signup')}
-                >
-                  <Text style={[styles.emailActionText, emailAction === 'signup' && styles.emailActionTextActive]}>
-                    नया खाता
-                  </Text>
-                  <Text style={[styles.emailActionSubtext, emailAction === 'signup' && styles.emailActionSubtextActive]}>
-                    Sign Up
-                  </Text>
-                </TouchableOpacity>
-              </View>
-
-              <Text style={styles.inputLabel}>ईमेल</Text>
+            <View style={styles.section}>
+              <Text style={styles.sectionLabel}>ईमेल</Text>
+              <Text style={styles.sectionHint}>Email</Text>
               <TextInput
-                style={[styles.emailInput]}
+                style={styles.textInput}
                 value={email}
                 onChangeText={setEmail}
                 placeholder="name@example.com"
@@ -315,115 +333,150 @@ export default function LoginScreen({ navigation }: Props) {
                 autoFocus
               />
 
-              <Text style={[styles.inputLabel, { marginTop: Spacing.lg }]}>पासवर्ड</Text>
-              <TextInput
-                style={[styles.emailInput]}
-                value={password}
-                onChangeText={setPassword}
-                placeholder="6+ अक्षर"
-                placeholderTextColor={Colors.gray400}
-                secureTextEntry
-              />
-
-              {emailAction === 'signup' && (
+              {/* Default: OTP (passwordless) — like Slack/Notion */}
+              {!showPasswordField ? (
                 <>
-                  <Text style={[styles.inputLabel, { marginTop: Spacing.lg }]}>पासवर्ड दोबारा डालें</Text>
+                  <TouchableOpacity
+                    style={[styles.goldButton, (!isValidEmail || isSending) && styles.buttonDisabled]}
+                    onPress={handleEmailOtp}
+                    disabled={!isValidEmail || isSending}
+                    activeOpacity={0.8}
+                  >
+                    {isSending ? (
+                      <ActivityIndicator size="small" color={Colors.white} />
+                    ) : (
+                      <Text style={styles.goldButtonText}>OTP भेजें — Send OTP</Text>
+                    )}
+                  </TouchableOpacity>
+
+                  {/* Password option — small link (for existing password users) */}
+                  <TouchableOpacity
+                    style={styles.secondaryLink}
+                    onPress={() => setShowPasswordField(true)}
+                  >
+                    <Text style={styles.secondaryLinkText}>
+                      🔑 पासवर्ड से लॉगिन — Use Password
+                    </Text>
+                  </TouchableOpacity>
+                </>
+              ) : (
+                <>
+                  {/* Password fields */}
+                  <Text style={[styles.sectionLabel, { marginTop: Spacing.lg }]}>पासवर्ड</Text>
                   <TextInput
-                    style={[
-                      styles.emailInput,
-                      confirmPassword.length > 0 && !passwordsMatch && styles.inputErrorBorder,
-                    ]}
-                    value={confirmPassword}
-                    onChangeText={setConfirmPassword}
-                    placeholder="वही पासवर्ड दोबारा"
+                    style={styles.textInput}
+                    value={password}
+                    onChangeText={setPassword}
+                    placeholder="6+ अक्षर"
                     placeholderTextColor={Colors.gray400}
                     secureTextEntry
+                    autoFocus
                   />
-                  {confirmPassword.length > 0 && !passwordsMatch && (
-                    <Text style={styles.errorText}>पासवर्ड मेल नहीं खाते</Text>
+
+                  {isSignUp && (
+                    <>
+                      <Text style={[styles.sectionLabel, { marginTop: Spacing.lg }]}>पासवर्ड दोबारा डालें</Text>
+                      <TextInput
+                        style={[
+                          styles.textInput,
+                          confirmPassword.length > 0 && !passwordsMatch && styles.inputErrorBorder,
+                        ]}
+                        value={confirmPassword}
+                        onChangeText={setConfirmPassword}
+                        placeholder="वही पासवर्ड दोबारा"
+                        placeholderTextColor={Colors.gray400}
+                        secureTextEntry
+                      />
+                      {confirmPassword.length > 0 && !passwordsMatch && (
+                        <Text style={styles.errorText}>पासवर्ड मेल नहीं खाते</Text>
+                      )}
+                    </>
                   )}
+
+                  {/* Login or SignUp button */}
+                  {isSignUp ? (
+                    <TouchableOpacity
+                      style={[
+                        styles.goldButton,
+                        styles.signUpButton,
+                        (!isValidEmail || !isValidPassword || (confirmPassword.length > 0 && !passwordsMatch) || isSending) && styles.buttonDisabled,
+                      ]}
+                      onPress={handlePasswordSignUp}
+                      disabled={!isValidEmail || !isValidPassword || (confirmPassword.length > 0 && !passwordsMatch) || isSending}
+                      activeOpacity={0.8}
+                    >
+                      {isSending ? (
+                        <ActivityIndicator size="small" color={Colors.white} />
+                      ) : (
+                        <Text style={styles.goldButtonText}>खाता बनाएँ — Sign Up</Text>
+                      )}
+                    </TouchableOpacity>
+                  ) : (
+                    <TouchableOpacity
+                      style={[
+                        styles.goldButton,
+                        (!isValidEmail || !isValidPassword || isSending) && styles.buttonDisabled,
+                      ]}
+                      onPress={handlePasswordLogin}
+                      disabled={!isValidEmail || !isValidPassword || isSending}
+                      activeOpacity={0.8}
+                    >
+                      {isSending ? (
+                        <ActivityIndicator size="small" color={Colors.white} />
+                      ) : (
+                        <Text style={styles.goldButtonText}>लॉगिन करें — Login</Text>
+                      )}
+                    </TouchableOpacity>
+                  )}
+
+                  {/* Toggle login / signup */}
+                  <TouchableOpacity
+                    style={styles.secondaryLink}
+                    onPress={() => {
+                      setIsSignUp(!isSignUp);
+                      setConfirmPassword('');
+                    }}
+                  >
+                    <Text style={styles.secondaryLinkText}>
+                      {isSignUp
+                        ? 'पहले से खाता है? लॉगिन करें →'
+                        : 'नए हैं? नया खाता बनाएँ →'}
+                    </Text>
+                  </TouchableOpacity>
+
+                  {/* Back to OTP option */}
+                  <TouchableOpacity
+                    style={styles.secondaryLink}
+                    onPress={() => {
+                      setShowPasswordField(false);
+                      setPassword('');
+                      setConfirmPassword('');
+                      setIsSignUp(false);
+                    }}
+                  >
+                    <Text style={styles.secondaryLinkText}>
+                      ← बिना पासवर्ड — OTP से जारी रखें
+                    </Text>
+                  </TouchableOpacity>
                 </>
               )}
 
-              {emailAction === 'login' ? (
-                <TouchableOpacity
-                  style={[styles.sendButton, (!isValidEmail || !isValidPassword || isSending) && styles.sendButtonDisabled]}
-                  onPress={handleEmailLogin}
-                  disabled={!isValidEmail || !isValidPassword || isSending}
-                  activeOpacity={0.8}
-                >
-                  {isSending ? (
-                    <ActivityIndicator size="small" color={Colors.white} />
-                  ) : (
-                    <Text style={styles.sendButtonText}>लॉगिन करें</Text>
-                  )}
-                </TouchableOpacity>
-              ) : (
-                <TouchableOpacity
-                  style={[styles.sendButton, styles.signUpButton, (!isValidEmail || !isValidPassword || !isValidConfirmPassword || isSending) && styles.sendButtonDisabled]}
-                  onPress={handleEmailSignUp}
-                  disabled={!isValidEmail || !isValidPassword || !isValidConfirmPassword || isSending}
-                  activeOpacity={0.8}
-                >
-                  {isSending ? (
-                    <ActivityIndicator size="small" color={Colors.white} />
-                  ) : (
-                    <Text style={styles.sendButtonText}>नया खाता बनाएँ — Sign Up</Text>
-                  )}
-                </TouchableOpacity>
-              )}
-
-              {emailAction === 'login' && (
-                <TouchableOpacity
-                  style={styles.otpLink}
-                  onPress={handleEmailOtp}
-                  disabled={!isValidEmail || isSending}
-                >
-                  <Text style={[styles.otpLinkText, (!isValidEmail || isSending) && { opacity: 0.4 }]}>
-                    बिना पासवर्ड — Email OTP भेजें
-                  </Text>
-                </TouchableOpacity>
-              )}
-
-              {/* Switch prompt */}
+              {/* Collapse email section */}
               <TouchableOpacity
-                style={styles.switchPrompt}
-                onPress={() => setEmailAction(emailAction === 'login' ? 'signup' : 'login')}
+                style={styles.collapseLink}
+                onPress={() => {
+                  setShowEmailSection(false);
+                  setShowPasswordField(false);
+                  setEmail('');
+                  setPassword('');
+                  setConfirmPassword('');
+                  setIsSignUp(false);
+                }}
               >
-                <Text style={styles.switchPromptText}>
-                  {emailAction === 'login'
-                    ? 'नए हैं? नया खाता बनाएँ →'
-                    : 'पहले से खाता है? लॉगिन करें →'}
-                </Text>
+                <Text style={styles.collapseLinkText}>▲ बंद करें</Text>
               </TouchableOpacity>
             </View>
           )}
-
-          {/* Divider */}
-          <View style={styles.dividerRow}>
-            <View style={styles.dividerLine} />
-            <Text style={styles.dividerText}>या / or</Text>
-            <View style={styles.dividerLine} />
-          </View>
-
-          {/* Google Sign-In */}
-          <TouchableOpacity
-            style={styles.googleButton}
-            onPress={handleGoogleSignIn}
-            disabled={isGoogleLoading}
-            activeOpacity={0.8}
-            accessibilityRole="button"
-            accessibilityLabel="Google से साइन इन करें"
-          >
-            {isGoogleLoading ? (
-              <ActivityIndicator size="small" color={Colors.brown} />
-            ) : (
-              <>
-                <Text style={styles.googleIcon}>🅖</Text>
-                <Text style={styles.googleButtonText}>Google से साइन इन करें</Text>
-              </>
-            )}
-          </TouchableOpacity>
 
           {/* Footer */}
           <Text style={styles.termsText}>
@@ -438,6 +491,8 @@ export default function LoginScreen({ navigation }: Props) {
   );
 }
 
+// ========== STYLES ==========
+
 const styles = StyleSheet.create({
   flex: {
     flex: 1,
@@ -446,6 +501,8 @@ const styles = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
   },
+
+  // --- Language Toggle ---
   langToggle: {
     position: 'absolute',
     top: Platform.OS === 'ios' ? 50 : 16,
@@ -474,6 +531,8 @@ const styles = StyleSheet.create({
   langToggleIcon: {
     fontSize: 16,
   },
+
+  // --- Container ---
   container: {
     flex: 1,
     paddingHorizontal: Spacing.xxl,
@@ -481,9 +540,11 @@ const styles = StyleSheet.create({
     paddingBottom: Spacing.xxxl,
     backgroundColor: Colors.cream,
   },
+
+  // --- Header ---
   header: {
     alignItems: 'center',
-    marginBottom: Spacing.xl,
+    marginBottom: Spacing.lg,
   },
   logoText: {
     ...Typography.appTitle,
@@ -502,7 +563,7 @@ const styles = StyleSheet.create({
     fontSize: 24,
     textAlign: 'center',
     color: Colors.brown,
-    marginBottom: Spacing.sm,
+    marginBottom: Spacing.xs,
   },
   subtitle: {
     ...Typography.body,
@@ -511,107 +572,70 @@ const styles = StyleSheet.create({
     color: Colors.gray600,
     marginBottom: Spacing.xl,
   },
-  toggleRow: {
+
+  // --- Google Button (Primary — top) ---
+  googleButton: {
+    height: DADI_MIN_BUTTON_HEIGHT,
     flexDirection: 'row',
-    backgroundColor: Colors.creamDark,
-    borderRadius: BorderRadius.md,
-    padding: 4,
-    marginBottom: Spacing.xl,
-  },
-  toggleButton: {
-    flex: 1,
-    paddingVertical: Spacing.md,
     alignItems: 'center',
-    borderRadius: BorderRadius.md - 2,
-  },
-  toggleActive: {
+    justifyContent: 'center',
     backgroundColor: Colors.white,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
-  },
-  toggleText: {
-    ...Typography.label,
-    fontSize: 16,
-    color: Colors.gray500,
-  },
-  toggleTextActive: {
-    color: Colors.haldiGold,
-  },
-  toggleSubtext: {
-    ...Typography.caption,
-    fontSize: 11,
-    color: Colors.gray400,
-    marginTop: 1,
-  },
-  toggleSubtextActive: {
-    color: Colors.brownLight,
-  },
-  emailActionRow: {
-    flexDirection: 'row',
-    backgroundColor: Colors.creamDark,
+    borderWidth: 1.5,
+    borderColor: Colors.gray300,
     borderRadius: BorderRadius.md,
-    padding: 3,
-    marginBottom: Spacing.lg,
-  },
-  emailActionButton: {
-    flex: 1,
-    paddingVertical: Spacing.sm + 2,
-    alignItems: 'center',
-    borderRadius: BorderRadius.md - 2,
-  },
-  emailActionActive: {
-    backgroundColor: Colors.white,
+    gap: Spacing.sm,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 3,
   },
-  emailActionText: {
-    ...Typography.label,
-    fontSize: 15,
-    color: Colors.gray500,
+  googleIcon: {
+    fontSize: 22,
   },
-  emailActionTextActive: {
-    color: Colors.haldiGold,
-    fontWeight: '700',
-  },
-  emailActionSubtext: {
-    ...Typography.caption,
-    fontSize: 10,
-    color: Colors.gray400,
-    marginTop: 1,
-  },
-  emailActionSubtextActive: {
-    color: Colors.brownLight,
-  },
-  signUpButton: {
-    backgroundColor: Colors.mehndiGreen,
-  },
-  inputErrorBorder: {
-    borderColor: Colors.error,
-  },
-  switchPrompt: {
-    marginTop: Spacing.md,
-    alignItems: 'center',
-    paddingVertical: Spacing.sm,
-  },
-  switchPromptText: {
-    ...Typography.body,
-    fontSize: 14,
-    color: Colors.haldiGold,
+  googleButtonText: {
+    ...Typography.button,
+    fontSize: 18,
+    color: Colors.brown,
     fontWeight: '600',
   },
-  inputSection: {
-    marginBottom: Spacing.lg,
+
+  // --- Divider ---
+  dividerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: Spacing.lg,
   },
-  inputLabel: {
-    ...Typography.label,
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: Colors.gray300,
+  },
+  dividerText: {
+    ...Typography.caption,
+    fontSize: 13,
+    color: Colors.gray500,
+    marginHorizontal: Spacing.md,
+  },
+
+  // --- Section ---
+  section: {
     marginBottom: Spacing.sm,
   },
+  sectionLabel: {
+    ...Typography.label,
+    fontSize: 16,
+    color: Colors.brown,
+    marginBottom: 2,
+  },
+  sectionHint: {
+    ...Typography.caption,
+    fontSize: 12,
+    color: Colors.gray500,
+    marginBottom: Spacing.sm,
+  },
+
+  // --- Phone Input ---
   phoneRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -621,10 +645,6 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.white,
     height: DADI_MIN_BUTTON_HEIGHT,
     overflow: 'hidden',
-    marginBottom: Spacing.xl,
-  },
-  inputError: {
-    borderColor: Colors.error,
   },
   prefixBox: {
     paddingHorizontal: Spacing.lg,
@@ -648,7 +668,9 @@ const styles = StyleSheet.create({
     color: Colors.brown,
     height: '100%',
   },
-  emailInput: {
+
+  // --- Text Input (email, password) ---
+  textInput: {
     borderWidth: 1.5,
     borderColor: Colors.gray300,
     borderRadius: BorderRadius.md,
@@ -659,12 +681,9 @@ const styles = StyleSheet.create({
     fontSize: 18,
     color: Colors.brown,
   },
-  errorText: {
-    ...Typography.bodySmall,
-    color: Colors.error,
-    marginTop: Spacing.sm,
-  },
-  sendButton: {
+
+  // --- Buttons ---
+  goldButton: {
     height: DADI_MIN_BUTTON_HEIGHT,
     backgroundColor: Colors.haldiGold,
     borderRadius: BorderRadius.md,
@@ -672,70 +691,94 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: Spacing.lg,
   },
-  sendButtonDisabled: {
-    backgroundColor: Colors.haldiGoldLight,
-    opacity: 0.7,
-  },
-  sendButtonText: {
+  goldButtonText: {
     ...Typography.button,
     fontSize: 18,
     color: Colors.white,
     fontWeight: '600',
   },
-  otpLink: {
-    marginTop: Spacing.lg,
-    alignItems: 'center',
-    paddingVertical: Spacing.md,
+  signUpButton: {
+    backgroundColor: Colors.mehndiGreen,
   },
-  otpLinkText: {
-    ...Typography.bodySmall,
-    color: Colors.haldiGold,
-    textDecorationLine: 'underline',
+  buttonDisabled: {
+    opacity: 0.5,
   },
-  dividerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginVertical: Spacing.xl,
-  },
-  dividerLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: Colors.gray300,
-  },
-  dividerText: {
-    ...Typography.caption,
-    fontSize: 13,
-    color: Colors.gray500,
-    marginHorizontal: Spacing.md,
-  },
-  googleButton: {
-    height: 52,
+
+  // --- Email Expand Button (collapsed state) ---
+  emailExpandButton: {
+    height: DADI_MIN_BUTTON_HEIGHT,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: Colors.white,
+    backgroundColor: Colors.creamDark,
     borderWidth: 1,
     borderColor: Colors.gray300,
-    borderRadius: 12,
+    borderRadius: BorderRadius.md,
     gap: Spacing.sm,
-    marginBottom: Spacing.xl,
   },
-  googleIcon: {
+  emailExpandIcon: {
     fontSize: 20,
   },
-  googleButtonText: {
+  emailExpandText: {
     ...Typography.button,
     fontSize: 16,
     color: Colors.brown,
     fontWeight: '600',
   },
+  emailExpandHint: {
+    ...Typography.caption,
+    fontSize: 12,
+    color: Colors.gray500,
+  },
+
+  // --- Secondary links ---
+  secondaryLink: {
+    marginTop: Spacing.lg,
+    alignItems: 'center',
+    paddingVertical: Spacing.sm,
+    minHeight: 44,
+    justifyContent: 'center',
+  },
+  secondaryLinkText: {
+    ...Typography.body,
+    fontSize: 15,
+    color: Colors.haldiGold,
+    fontWeight: '600',
+  },
+
+  // --- Collapse link ---
+  collapseLink: {
+    marginTop: Spacing.md,
+    alignItems: 'center',
+    paddingVertical: Spacing.sm,
+  },
+  collapseLinkText: {
+    ...Typography.caption,
+    fontSize: 13,
+    color: Colors.gray500,
+  },
+
+  // --- Error & Input states ---
+  inputError: {
+    borderColor: Colors.error,
+  },
+  inputErrorBorder: {
+    borderColor: Colors.error,
+  },
+  errorText: {
+    ...Typography.bodySmall,
+    color: Colors.error,
+    marginTop: Spacing.sm,
+  },
+
+  // --- Footer ---
   termsText: {
     ...Typography.caption,
     fontSize: 13,
     textAlign: 'center',
     color: Colors.gray600,
     lineHeight: 20,
-    marginTop: 'auto',
+    marginTop: Spacing.xxl,
   },
   termsLink: {
     color: Colors.haldiGold,
