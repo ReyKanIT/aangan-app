@@ -12,6 +12,8 @@ import {
   Alert,
 } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import * as WebBrowser from 'expo-web-browser';
+import { makeRedirectUri } from 'expo-auth-session';
 import { Colors } from '../../theme/colors';
 import { Typography, DADI_MIN_BUTTON_HEIGHT } from '../../theme/typography';
 import { Spacing, BorderRadius } from '../../theme/spacing';
@@ -19,6 +21,9 @@ import { VALIDATION } from '../../config/constants';
 import { useAuthStore } from '../../stores/authStore';
 import { useLanguageStore } from '../../stores/languageStore';
 import { supabase } from '../../config/supabase';
+
+// Required for expo-web-browser OAuth flow
+WebBrowser.maybeCompleteAuthSession();
 
 type Props = NativeStackScreenProps<any, 'Login'>;
 
@@ -183,19 +188,57 @@ export default function LoginScreen({ navigation }: Props) {
     }
   }, [email, password, confirmPassword, isValidEmail, isValidPassword, passwordsMatch, isSending, signUpWithEmail, navigation]);
 
-  // Google Sign-In — one-tap, works for both login & signup
+  // Google Sign-In — proper Expo OAuth flow via WebBrowser
   const handleGoogleSignIn = useCallback(async () => {
     if (isGoogleLoading) return;
     setIsGoogleLoading(true);
     try {
-      const { error } = await supabase.auth.signInWithOAuth({
+      // Generate the redirect URI that expo-auth-session can intercept
+      const redirectTo = makeRedirectUri();
+
+      // Get the OAuth URL from Supabase WITHOUT opening the browser
+      const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
-        options: { redirectTo: 'aangan://auth-callback' },
+        options: {
+          redirectTo,
+          skipBrowserRedirect: true, // Critical: returns URL instead of opening browser
+        },
       });
-      if (error) {
+
+      if (error || !data?.url) {
         Alert.alert('Google साइन इन नहीं हुआ', 'दोबारा कोशिश करें।', [{ text: 'ठीक है' }]);
+        return;
       }
-    } catch {
+
+      // Open in-app browser — waits for redirect back to app
+      const result = await WebBrowser.openAuthSessionAsync(data.url, redirectTo);
+
+      if (result.type === 'success' && result.url) {
+        // Extract tokens from the redirect URL fragment (#access_token=...&refresh_token=...)
+        const url = result.url;
+        const hashPart = url.includes('#') ? url.split('#')[1] : url.split('?')[1];
+        if (hashPart) {
+          const params = new URLSearchParams(hashPart);
+          const accessToken = params.get('access_token');
+          const refreshToken = params.get('refresh_token');
+
+          if (accessToken && refreshToken) {
+            // Complete the session — this triggers onAuthStateChange → auto-navigation
+            const { error: sessionError } = await supabase.auth.setSession({
+              access_token: accessToken,
+              refresh_token: refreshToken,
+            });
+            if (sessionError) {
+              Alert.alert('Google साइन इन नहीं हुआ', 'सत्र स्थापित नहीं हो सका। दोबारा कोशिश करें।', [{ text: 'ठीक है' }]);
+            }
+            // Success — useEffect will navigate
+          } else {
+            Alert.alert('Google साइन इन नहीं हुआ', 'प्रमाणीकरण टोकन नहीं मिला।', [{ text: 'ठीक है' }]);
+          }
+        }
+      }
+      // If result.type === 'cancel' or 'dismiss', user closed the browser — do nothing
+    } catch (e) {
       Alert.alert('Google साइन इन नहीं हुआ', 'दोबारा कोशिश करें।', [{ text: 'ठीक है' }]);
     } finally {
       setIsGoogleLoading(false);

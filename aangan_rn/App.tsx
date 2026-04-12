@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { BackHandler, Alert, Platform } from 'react-native';
+import { BackHandler, Alert, Platform, Linking } from 'react-native';
 import * as Font from 'expo-font';
 import * as SplashScreenExpo from 'expo-splash-screen';
 import { StyleSheet } from 'react-native';
@@ -10,6 +10,7 @@ import AppNavigator from './src/navigation/AppNavigator';
 import ErrorBoundary from './src/components/common/ErrorBoundary';
 import { registerForPushNotifications, setupNotificationListeners } from './src/services/pushNotifications';
 import { useAuthStore } from './src/stores/authStore';
+import { supabase } from './src/config/supabase';
 
 // Prevent auto-hiding splash screen
 SplashScreenExpo.preventAutoHideAsync();
@@ -35,6 +36,40 @@ export default function App() {
       }
     }
     loadFonts();
+  }, []);
+
+  // Handle OAuth deep link callback (fallback for external browser redirects)
+  useEffect(() => {
+    const handleDeepLink = async (event: { url: string }) => {
+      const url = event.url;
+      if (!url) return;
+
+      // Handle OAuth callback: aangan://auth-callback#access_token=...&refresh_token=...
+      if (url.includes('auth-callback') || url.includes('access_token')) {
+        const hashPart = url.includes('#') ? url.split('#')[1] : url.split('?')[1];
+        if (hashPart) {
+          const params = new URLSearchParams(hashPart);
+          const accessToken = params.get('access_token');
+          const refreshToken = params.get('refresh_token');
+          if (accessToken && refreshToken) {
+            await supabase.auth.setSession({
+              access_token: accessToken,
+              refresh_token: refreshToken,
+            });
+          }
+        }
+      }
+    };
+
+    // Listen for incoming deep links while app is open
+    const subscription = Linking.addEventListener('url', handleDeepLink);
+
+    // Also check if app was opened via deep link (cold start)
+    Linking.getInitialURL().then((url) => {
+      if (url) handleDeepLink({ url });
+    });
+
+    return () => subscription.remove();
   }, []);
 
   // Register push notifications after auth

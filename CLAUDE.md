@@ -27,6 +27,7 @@ Kumar — solo founder building Aangan. New to FlutterFlow and Supabase (needs s
 
 ## Hard Rules
 - **Timestamp every reply** — Start EVERY response with a timestamp in 12-hour IST format: `[10:35 PM IST]`. No exceptions. This applies to all messages, summaries, dashboards, and agent reports.
+- **No regressions** — Never break working features. Before modifying any screen/flow, verify existing functionality is preserved. If restructuring a file, ensure every existing handler, navigation path, and feature is carried forward. Test build after every change.
 
 ---
 
