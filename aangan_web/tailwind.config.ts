@@ -26,6 +26,7 @@ const config: Config = {
       },
       minWidth: {
         tap: '44px',
+        dadi: '52px',
       },
       fontSize: {
         dadi: ['16px', '24px'],
