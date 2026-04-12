@@ -79,9 +79,9 @@ export default function FeedbackWidget() {
 
       {/* Feedback Panel */}
       {open && (
-        <div className="fixed inset-0 z-[60] flex items-end lg:items-center justify-center bg-black/40" onClick={() => setOpen(false)}>
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40" onClick={() => setOpen(false)}>
           <div
-            className="w-full max-w-md bg-white rounded-t-3xl lg:rounded-2xl p-5 max-h-[80vh] overflow-y-auto shadow-xl"
+            className="w-full max-w-md bg-white rounded-2xl p-5 mx-4 max-h-[85vh] overflow-y-auto shadow-xl"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}

@@ -43,9 +43,9 @@ export default function PostComposer({ onClose }: PostComposerProps) {
   };
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-end lg:items-center justify-center bg-black/40" onClick={onClose}>
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40" onClick={onClose}>
       <div
-        className="w-full max-w-lg bg-white rounded-t-3xl lg:rounded-2xl p-6 shadow-xl"
+        className="w-full max-w-lg bg-white rounded-2xl p-6 mx-4 max-h-[85vh] overflow-y-auto shadow-xl"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center gap-3 mb-4">
