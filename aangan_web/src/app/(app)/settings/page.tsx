@@ -2,10 +2,18 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/stores/authStore';
+import { supabase } from '@/lib/supabase/client';
 import GoldButton from '@/components/ui/GoldButton';
 import InputField from '@/components/ui/InputField';
 import AvatarCircle from '@/components/ui/AvatarCircle';
 import { uploadAvatar } from '@/lib/utils/uploadMedia';
+
+const FEEDBACK_CATEGORIES = [
+  { value: 'feature_request', label: 'सुझाव — Feature Request', emoji: '💡' },
+  { value: 'bug_report', label: 'समस्या — Bug Report', emoji: '🐛' },
+  { value: 'complaint', label: 'शिकायत — Complaint', emoji: '😟' },
+  { value: 'general', label: 'सामान्य — General', emoji: '💬' },
+] as const;
 
 export default function SettingsPage() {
   const router = useRouter();
@@ -19,6 +27,15 @@ export default function SettingsPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
+
+  // Feedback state
+  const [showFeedback, setShowFeedback] = useState(false);
+  const [fbCategory, setFbCategory] = useState<string>('general');
+  const [fbSubject, setFbSubject] = useState('');
+  const [fbMessage, setFbMessage] = useState('');
+  const [fbSending, setFbSending] = useState(false);
+  const [fbSuccess, setFbSuccess] = useState(false);
+  const [fbError, setFbError] = useState('');
 
   useEffect(() => {
     if (user) {
@@ -57,6 +74,40 @@ export default function SettingsPage() {
     router.replace('/login');
   };
 
+  const handleFeedbackSubmit = async () => {
+    if (!fbMessage.trim()) { setFbError('कृपया अपना संदेश लिखें'); return; }
+    if (!session?.user) return;
+    setFbSending(true); setFbError('');
+    try {
+      // Insert ticket and return its ID in one call (no race condition)
+      const { data: ticket, error: insertErr } = await supabase.from('support_tickets').insert({
+        user_id: session.user.id,
+        subject: fbSubject.trim() || `${FEEDBACK_CATEGORIES.find(c => c.value === fbCategory)?.label ?? 'Feedback'}`,
+        category: fbCategory,
+        priority: fbCategory === 'bug_report' ? 'high' : 'medium',
+        status: 'open',
+      }).select('id').single();
+      if (insertErr) throw insertErr;
+      if (!ticket) throw new Error('Ticket creation failed');
+
+      // Insert the feedback message (column is `message`, not `content`)
+      const { error: msgErr } = await supabase.from('support_messages').insert({
+        ticket_id: ticket.id,
+        sender_id: session.user.id,
+        message: fbMessage.trim(),
+        is_from_support: false,
+      });
+      if (msgErr) throw msgErr;
+
+      setFbSuccess(true);
+      setFbSubject(''); setFbMessage(''); setFbCategory('general');
+      setTimeout(() => { setFbSuccess(false); setShowFeedback(false); }, 3000);
+    } catch (e: unknown) {
+      setFbError(e instanceof Error ? e.message : 'सबमिट नहीं हो पाया — Could not submit');
+    }
+    setFbSending(false);
+  };
+
   return (
     <div className="max-w-lg mx-auto px-4 py-6">
       <h2 className="font-heading text-2xl text-brown mb-1">सेटिंग्स</h2>
@@ -74,8 +125,8 @@ export default function SettingsPage() {
         <p className="font-body text-sm text-brown-light mt-2">फ़ोटो बदलें — Change Photo</p>
       </div>
 
-      {error && <div className="bg-red-50 border border-error rounded-lg px-4 py-3 mb-4"><p className="font-body text-sm text-error">{error}</p></div>}
-      {success && <div className="bg-green-50 border border-mehndi-green rounded-lg px-4 py-3 mb-4"><p className="font-body text-sm text-mehndi-green">✓ प्रोफाइल सेव हो गई — Profile saved!</p></div>}
+      {error && <div className="bg-red-50 border border-error rounded-lg px-4 py-3 mb-4"><p className="font-body text-base text-error">{error}</p></div>}
+      {success && <div className="bg-green-50 border border-mehndi-green rounded-lg px-4 py-3 mb-4"><p className="font-body text-base text-mehndi-green">✓ प्रोफाइल सेव हो गई — Profile saved!</p></div>}
 
       <InputField label="आपका नाम *" sublabel="Display Name" value={name} onChange={(e) => setName(e.target.value)} />
       <InputField label="हिंदी में नाम" sublabel="Hindi Name" value={nameHindi} onChange={(e) => setNameHindi(e.target.value)} />
@@ -93,7 +144,7 @@ export default function SettingsPage() {
       </GoldButton>
 
       {/* Account Info */}
-      <div className="bg-cream-dark rounded-2xl p-4 mb-4 space-y-2 font-body text-sm text-brown-light">
+      <div className="bg-cream-dark rounded-2xl p-4 mb-4 space-y-2 font-body text-base text-brown-light">
         {user?.email && <p>📧 {user.email}</p>}
         {user?.phone_number && <p>📱 {user.phone_number}</p>}
       </div>
@@ -132,6 +183,97 @@ export default function SettingsPage() {
             </div>
           </li>
         </ul>
+      </div>
+
+      {/* ─── Feedback Section ─── */}
+      <div className="bg-white rounded-2xl p-5 mb-4 border border-haldi-gold/20 shadow-sm">
+        <div className="flex items-center justify-between mb-3">
+          <div>
+            <h3 className="font-heading text-lg text-brown">💬 सुझाव / शिकायत</h3>
+            <p className="font-body text-sm text-brown-light">Feedback & Support</p>
+          </div>
+          <button
+            onClick={() => setShowFeedback(!showFeedback)}
+            aria-label="फीडबैक लिखें — Write Feedback"
+            className="px-4 py-2 bg-haldi-gold text-white font-body font-semibold text-base rounded-xl min-h-dadi hover:bg-haldi-gold-dark transition-colors"
+          >
+            {showFeedback ? 'बंद करें' : 'लिखें — Write'}
+          </button>
+        </div>
+
+        {showFeedback && (
+          <div className="space-y-4 pt-3 border-t border-cream-dark">
+            {fbSuccess && (
+              <div className="bg-green-50 border border-mehndi-green rounded-xl px-4 py-3">
+                <p className="font-body text-base text-mehndi-green">✅ आपका सुझाव भेज दिया गया — Feedback submitted! धन्यवाद 🙏</p>
+              </div>
+            )}
+            {fbError && (
+              <div className="bg-red-50 border border-error/30 rounded-xl px-4 py-3">
+                <p className="font-body text-base text-error">{fbError}</p>
+              </div>
+            )}
+
+            {/* Category */}
+            <div>
+              <label className="block font-body font-semibold text-brown mb-2">श्रेणी — Category</label>
+              <div className="grid grid-cols-2 gap-2">
+                {FEEDBACK_CATEGORIES.map((cat) => (
+                  <button
+                    key={cat.value}
+                    onClick={() => setFbCategory(cat.value)}
+                    aria-label={cat.label}
+                    className={`flex items-center gap-2 px-3 py-3 rounded-xl border-2 font-body text-base transition-colors min-h-dadi ${
+                      fbCategory === cat.value
+                        ? 'border-haldi-gold bg-haldi-gold/10 text-haldi-gold-dark'
+                        : 'border-cream-dark bg-white text-brown-light hover:border-haldi-gold/50'
+                    }`}
+                  >
+                    <span className="text-lg">{cat.emoji}</span>
+                    <span className="text-left leading-tight">{cat.label}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Subject */}
+            <div>
+              <label htmlFor="fb-subject" className="block font-body font-semibold text-brown mb-1">
+                विषय <span className="text-brown-light text-sm font-normal">Subject (optional)</span>
+              </label>
+              <input
+                id="fb-subject"
+                type="text"
+                value={fbSubject}
+                onChange={(e) => setFbSubject(e.target.value)}
+                placeholder="संक्षेप में बताएं..."
+                maxLength={100}
+                className="w-full border-2 border-gray-300 rounded-xl px-4 py-3 font-body text-base text-brown focus:border-haldi-gold focus:outline-none placeholder-gray-400"
+              />
+            </div>
+
+            {/* Message */}
+            <div>
+              <label htmlFor="fb-message" className="block font-body font-semibold text-brown mb-1">
+                संदेश * <span className="text-brown-light text-sm font-normal">Message</span>
+              </label>
+              <textarea
+                id="fb-message"
+                value={fbMessage}
+                onChange={(e) => setFbMessage(e.target.value)}
+                placeholder="अपना सुझाव या शिकायत यहाँ लिखें... Write your feedback here..."
+                rows={4}
+                maxLength={1000}
+                className="w-full border-2 border-gray-300 rounded-xl px-4 py-3 font-body text-base text-brown focus:border-haldi-gold focus:outline-none resize-none placeholder-gray-400"
+              />
+              <p className="text-sm text-brown-light text-right font-body mt-1">{fbMessage.length}/1000</p>
+            </div>
+
+            <GoldButton className="w-full" loading={fbSending} onClick={handleFeedbackSubmit} disabled={!fbMessage.trim()}>
+              भेजें — Submit Feedback
+            </GoldButton>
+          </div>
+        )}
       </div>
 
       <GoldButton variant="danger" className="w-full" onClick={handleSignOut}>

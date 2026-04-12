@@ -236,10 +236,10 @@ export default function AdminUsersPage() {
                     )}
                   </td>
                   <td className="px-4 py-3 text-brown-light text-xs hidden sm:table-cell">
-                    {user.last_seen_at ? new Date(user.last_seen_at).toLocaleDateString() : 'Never'}
+                    {user.last_seen_at ? new Date(user.last_seen_at).toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata' }) : 'Never'}
                   </td>
                   <td className="px-4 py-3 text-brown-light text-xs hidden md:table-cell">
-                    {new Date(user.created_at).toLocaleDateString()}
+                    {new Date(user.created_at).toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata' })}
                   </td>
                 </tr>
               ))

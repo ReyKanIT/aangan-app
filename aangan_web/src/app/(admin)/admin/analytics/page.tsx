@@ -103,7 +103,7 @@ export default function AnalyticsPage() {
         const { count } = await supabase.from('users').select('*', { count: 'exact', head: true })
           .gte('created_at', start).lt('created_at', end);
         signupsByDay.push({
-          date: d.toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric' }),
+          date: d.toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', timeZone: 'Asia/Kolkata' }),
           count: count ?? 0,
         });
       }

@@ -58,7 +58,7 @@ export default function NotificationsPage() {
                   </p>
                 )}
               </div>
-              <span className="font-body text-xs text-brown-light flex-shrink-0 mt-0.5">
+              <span className="font-body text-sm text-brown-light flex-shrink-0 mt-0.5">
                 {timeAgo(notif.created_at)}
               </span>
             </button>

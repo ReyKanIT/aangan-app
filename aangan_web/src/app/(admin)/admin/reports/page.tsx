@@ -161,7 +161,7 @@ export default function AdminReportsPage() {
                     {report.status}
                   </span>
                   <span className="ml-2 text-xs text-brown-light">
-                    {report.content_type} &middot; {new Date(report.created_at).toLocaleString()}
+                    {report.content_type} &middot; {new Date(report.created_at).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}
                   </span>
                 </div>
                 <span className="text-xs text-brown-light">

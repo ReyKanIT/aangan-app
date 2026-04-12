@@ -10,7 +10,7 @@ function formatDateHindi(d: Date): string {
 }
 
 function formatDateEnglish(d: Date): string {
-  return d.toLocaleDateString('en-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+  return d.toLocaleDateString('en-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: 'Asia/Kolkata' });
 }
 
 export async function generateMetadata(): Promise<Metadata> {

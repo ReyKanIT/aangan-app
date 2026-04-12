@@ -92,7 +92,7 @@ function RsvpBadge({ status }: { status: string }) {
   }[status] ?? { label: status, bg: 'bg-gray-100 text-gray-600' };
 
   return (
-    <span className={`font-body text-xs font-semibold px-2 py-1 rounded-full whitespace-nowrap ${map.bg}`}>
+    <span className={`font-body text-sm font-semibold px-2 py-1 rounded-full whitespace-nowrap ${map.bg}`}>
       {map.label}
     </span>
   );

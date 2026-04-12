@@ -75,7 +75,7 @@ export default function ProfileSetupPage() {
           </div>
           <input type="file" accept="image/*" onChange={handleAvatarChange} className="hidden" />
         </label>
-        <p className="font-body text-xs text-brown-light mt-2">फ़ोटो जोड़ें — Add Photo</p>
+        <p className="font-body text-sm text-brown-light mt-2">फ़ोटो जोड़ें — Add Photo</p>
       </div>
 
       {error && (
@@ -101,7 +101,7 @@ export default function ProfileSetupPage() {
           rows={3}
           className="w-full border-2 border-gray-300 rounded-lg px-4 py-3 font-body text-base text-brown bg-white focus:border-haldi-gold focus:outline-none placeholder-gray-400 resize-none"
         />
-        <p className="text-xs text-brown-light text-right font-body">{bio.length}/200</p>
+        <p className="text-sm text-brown-light text-right font-body">{bio.length}/200</p>
       </div>
 
       <GoldButton className="w-full mt-4" loading={isSaving} onClick={handleSave}>

@@ -246,7 +246,7 @@ export default function AdminDashboard() {
         <div>
           <h1 className="font-heading text-2xl text-brown">Admin Dashboard</h1>
           <p className="text-brown-light text-sm mt-1">
-            Last refreshed: {lastRefresh.toLocaleString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true })}
+            Last refreshed: {lastRefresh.toLocaleString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true, timeZone: 'Asia/Kolkata' })}
           </p>
         </div>
         <button
@@ -337,7 +337,7 @@ export default function AdminDashboard() {
                       <p className="text-xs text-brown-light whitespace-nowrap">{timeAgo(a.timestamp)}</p>
                       <p className="text-[10px] text-brown-light/50 whitespace-nowrap">
                         {new Date(a.timestamp).toLocaleString('en-IN', {
-                          day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', hour12: true,
+                          day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', hour12: true, timeZone: 'Asia/Kolkata',
                         })}
                       </p>
                     </div>

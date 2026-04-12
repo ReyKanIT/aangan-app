@@ -1,6 +1,6 @@
 'use client';
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { Suspense, useState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuthStore } from '@/stores/authStore';
 import GoldButton from '@/components/ui/GoldButton';
 import InputField from '@/components/ui/InputField';
@@ -27,7 +27,7 @@ function PasswordStrength({ password }: { password: string }) {
           <div key={i} className={`h-1 flex-1 rounded-full ${i < score ? colors[score] : 'bg-gray-200'}`} />
         ))}
       </div>
-      <p className={`font-body text-xs ${score <= 1 ? 'text-red-500' : score === 2 ? 'text-yellow-600' : 'text-mehndi-green'}`}>
+      <p className={`font-body text-sm ${score <= 1 ? 'text-red-500' : score === 2 ? 'text-yellow-600' : 'text-mehndi-green'}`}>
         {labels[score]}
       </p>
     </div>
@@ -35,7 +35,18 @@ function PasswordStrength({ password }: { password: string }) {
 }
 
 export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="flex justify-center py-20"><div className="w-8 h-8 border-4 border-haldi-gold border-t-transparent rounded-full animate-spin" /></div>}>
+      <LoginContent />
+    </Suspense>
+  );
+}
+
+function LoginContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectTo = searchParams.get('redirect') || '/feed';
+  const authError = searchParams.get('error');
   const { sendOtp, sendEmailOtp, signInWithEmail, signUpWithEmail, signInWithGoogle, signInWithApple, session, isNewUser, isLoading, initialize, error, setError } = useAuthStore();
   const [tab, setTab] = useState<AuthTab>('login');
   const [mode, setMode] = useState<AuthMode>('email');
@@ -52,7 +63,7 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (session && !isLoading) {
-      router.replace(isNewUser ? '/profile-setup' : '/feed');
+      router.replace(isNewUser ? '/profile-setup' : redirectTo);
     }
   }, [session, isNewUser, isLoading, router]);
 
@@ -154,7 +165,7 @@ export default function LoginPage() {
       {/* Divider */}
       <div className="flex items-center gap-3 my-5">
         <div className="flex-1 h-px bg-gray-200" />
-        <span className="font-body text-xs text-brown-light uppercase tracking-wider">या / or</span>
+        <span className="font-body text-sm text-brown-light uppercase tracking-wider">या / or</span>
         <div className="flex-1 h-px bg-gray-200" />
       </div>
 
@@ -179,6 +190,18 @@ export default function LoginPage() {
           <span className="block text-sm font-normal opacity-60 mt-0.5">Sign Up</span>
         </button>
       </div>
+
+      {/* Auth callback error */}
+      {authError && (
+        <div className="bg-red-50 border border-error/30 rounded-xl px-4 py-3 mb-4 flex items-start gap-2">
+          <span className="text-error mt-0.5">⚠️</span>
+          <p className="font-body text-base text-error">
+            {authError === 'auth_failed'
+              ? 'लॉगिन विफल हो गया। कृपया पुनः प्रयास करें — Login failed. Please try again.'
+              : `कुछ गलत हो गया — Something went wrong (${authError})`}
+          </p>
+        </div>
+      )}
 
       {/* Error Message */}
       {error && (
@@ -388,7 +411,7 @@ export default function LoginPage() {
 
               {/* Password match feedback */}
               {confirmPassword.length > 0 && (
-                <p className={`font-body text-xs ${passwordsMatch ? 'text-mehndi-green' : 'text-error'}`}>
+                <p className={`font-body text-sm ${passwordsMatch ? 'text-mehndi-green' : 'text-error'}`}>
                   {passwordsMatch ? 'पासवर्ड मेल खा रहे हैं ✓' : 'पासवर्ड मेल नहीं खा रहे — Passwords do not match'}
                 </p>
               )}

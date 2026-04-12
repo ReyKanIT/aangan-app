@@ -168,7 +168,7 @@ export default function SupportPage() {
   });
 
   function formatDate(iso: string) {
-    return new Date(iso).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+    return new Date(iso).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Kolkata' });
   }
 
   return (
@@ -348,7 +348,7 @@ export default function SupportPage() {
                 </p>
                 <p className={cn('text-xs mt-1.5',
                   msg.is_from_support && !msg.is_internal_note ? 'text-cream/60 text-right' : 'text-brown-light/60')}>
-                  {new Date(msg.created_at).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
+                  {new Date(msg.created_at).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Kolkata' })}
                 </p>
               </div>
             ))}

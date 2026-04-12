@@ -72,7 +72,7 @@ export default function PanchangWidget() {
         } overflow-hidden`}
       >
         <div className="px-5 pb-5 pt-1 border-t border-haldi-gold/10">
-          <p className="text-xs text-brown-light mb-3 font-heading">आज का पंचांग &middot; Today&apos;s Panchang</p>
+          <p className="text-sm text-brown-light mb-3 font-heading">आज का पंचांग &middot; Today&apos;s Panchang</p>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
             <PanchangRow label="तिथि / Tithi" value={panchang.tithi} />
             <PanchangRow label="पक्ष / Paksha" value={panchang.paksha} />

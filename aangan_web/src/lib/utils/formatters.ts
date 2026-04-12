@@ -1,3 +1,6 @@
+/** IST timezone — all timestamps show Indian Standard Time */
+const IST = 'Asia/Kolkata';
+
 export function timeAgo(iso: string): string {
   const now = Date.now();
   const then = new Date(iso).getTime();
@@ -12,6 +15,7 @@ export function timeAgo(iso: string): string {
     day: 'numeric',
     month: 'short',
     year: 'numeric',
+    timeZone: IST,
   }).format(new Date(iso));
 }
 
@@ -21,6 +25,7 @@ export function formatEventDate(iso: string): string {
     day: 'numeric',
     month: 'long',
     year: 'numeric',
+    timeZone: IST,
   }).format(new Date(iso));
 }
 
@@ -29,6 +34,20 @@ export function formatEventTime(iso: string): string {
     hour: 'numeric',
     minute: '2-digit',
     hour12: true,
+    timeZone: IST,
+  }).format(new Date(iso));
+}
+
+/** Format a date as "12 अप्रैल 2026, 10:35 PM" in IST */
+export function formatDateTimeIST(iso: string): string {
+  return new Intl.DateTimeFormat('hi-IN', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true,
+    timeZone: IST,
   }).format(new Date(iso));
 }
 

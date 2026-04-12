@@ -143,7 +143,7 @@ export default function AdminSettingsPage() {
                   <div>
                     <h3 className="text-sm font-medium text-brown font-mono">{setting.key}</h3>
                     <p className="text-xs text-brown-light mt-0.5">
-                      Last updated: {new Date(setting.updated_at).toLocaleString()}
+                      Last updated: {new Date(setting.updated_at).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}
                       {setting.updater?.display_name && (
                         <> by <span className="font-medium">{setting.updater.display_name}</span></>
                       )}

@@ -192,15 +192,14 @@ export default function TermsOfServicePage() {
               </a>
             </p>
             <p>
-              <span className="font-semibold">कंपनी / Company:</span> Aangan
-              Family, India
+              <span className="font-semibold">कंपनी / Company:</span> ReyKan IT, India
             </p>
           </div>
         </section>
 
         {/* Footer */}
         <footer className="text-center text-sm text-gray-400 pt-6 border-t border-[#C8A84B]/10">
-          <p>&copy; 2026 Aangan Family. All rights reserved.</p>
+          <p>&copy; 2026 ReyKan IT. All rights reserved.</p>
           <p className="mt-1">सर्वाधिकार सुरक्षित।</p>
         </footer>
       </div>

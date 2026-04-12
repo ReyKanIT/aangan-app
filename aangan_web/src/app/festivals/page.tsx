@@ -137,7 +137,7 @@ export default function FestivalsPage() {
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-1">
                             <span className="font-heading text-base font-semibold text-brown">{f.nameHindi}</span>
-                            <span className={`px-2 py-0.5 rounded-full text-xs ${typeInfo.color}`}>{typeInfo.label}</span>
+                            <span className={`px-2 py-0.5 rounded-full text-sm ${typeInfo.color}`}>{typeInfo.label}</span>
                           </div>
                           <p className="text-sm text-brown-light">{f.name}</p>
                           <p className="text-sm text-brown-light/70 mt-1">{f.desc}</p>

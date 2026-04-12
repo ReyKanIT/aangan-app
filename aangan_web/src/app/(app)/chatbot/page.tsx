@@ -26,7 +26,7 @@ function getBotResponse(input: string): string {
   // Panchang
   if (q.includes('पंचांग') || q.includes('panchang') || q.includes('tithi') || q.includes('तिथि')) {
     const today = new Date();
-    const options: Intl.DateTimeFormatOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+    const options: Intl.DateTimeFormatOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: 'Asia/Kolkata' };
     const dateStr = today.toLocaleDateString('hi-IN', options);
     return `🪔 आज ${dateStr} है।\n\nविस्तृत पंचांग देखने के लिए "पंचांग" पेज पर जाएं — वहाँ तिथि, नक्षत्र, योग, करण सब मिलेगा!\n\n📱 मेनू में "पंचांग" पर टैप करें।`;
   }
@@ -161,8 +161,8 @@ export default function ChatbotPage() {
                 }`}
               >
                 <p className="font-body text-base whitespace-pre-line">{msg.text}</p>
-                <p className={`font-body text-xs mt-1 ${msg.role === 'user' ? 'text-white/70' : 'text-brown-light'}`}>
-                  {msg.timestamp.toLocaleTimeString('hi-IN', { hour: '2-digit', minute: '2-digit', hour12: true })}
+                <p className={`font-body text-sm mt-1 ${msg.role === 'user' ? 'text-white/70' : 'text-brown-light'}`}>
+                  {msg.timestamp.toLocaleTimeString('hi-IN', { hour: '2-digit', minute: '2-digit', hour12: true, timeZone: 'Asia/Kolkata' })}
                 </p>
               </div>
             </div>

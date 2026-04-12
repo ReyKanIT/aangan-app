@@ -33,7 +33,7 @@ const ALLOWED_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'im
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('hi-IN', {
-    day: 'numeric', month: 'long', year: 'numeric',
+    day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Asia/Kolkata',
   });
 }
 
@@ -236,7 +236,7 @@ export default function GuestUploadPage({ params }: { params: Promise<{ eventId:
           <p className="font-body text-[#5C4033] text-sm mt-3">
             आपके फ़ोटो/वीडियो होस्ट को समीक्षा के लिए भेज दिए गए हैं।
           </p>
-          <p className="font-body text-[#8D6E63] text-xs mt-1">
+          <p className="font-body text-[#8D6E63] text-sm mt-1">
             Your photos/videos have been sent to the event host for review.
           </p>
           <button
@@ -256,7 +256,7 @@ export default function GuestUploadPage({ params }: { params: Promise<{ eventId:
       {/* Header */}
       <div className="bg-white border-b border-gray-200 px-4 py-5">
         <div className="max-w-lg mx-auto">
-          <p className="text-[#C8A84B] text-xs font-body font-semibold mb-1">AANGAN आँगन</p>
+          <p className="text-[#C8A84B] text-sm font-body font-semibold mb-1">AANGAN आँगन</p>
           <h1 className="font-heading text-xl text-[#3E2723] font-bold leading-tight">
             {event.title_hindi ?? event.title}
           </h1>
@@ -309,7 +309,7 @@ export default function GuestUploadPage({ params }: { params: Promise<{ eventId:
             <p className="font-body text-sm text-[#8D6E63] mt-1">
               Drag files here or tap to select
             </p>
-            <p className="font-body text-xs text-gray-400 mt-2">
+            <p className="font-body text-sm text-gray-400 mt-2">
               JPEG, PNG, HEIC, MP4, MOV · Max {MAX_FILE_SIZE_MB}MB each · Up to {MAX_FILES} files
             </p>
             <input
@@ -332,7 +332,7 @@ export default function GuestUploadPage({ params }: { params: Promise<{ eventId:
                 {uf.isVideo ? (
                   <div className="w-full h-full flex flex-col items-center justify-center bg-gray-800">
                     <span className="text-3xl">🎬</span>
-                    <span className="text-white text-xs mt-1 px-1 text-center truncate w-full px-2">
+                    <span className="text-white text-sm mt-1 px-1 text-center truncate w-full px-2">
                       {uf.file.name}
                     </span>
                   </div>
@@ -346,7 +346,7 @@ export default function GuestUploadPage({ params }: { params: Promise<{ eventId:
                     <div
                       className="w-10 h-10 rounded-full border-4 border-white border-t-[#C8A84B] animate-spin"
                     />
-                    <span className="text-white text-xs mt-1">{uf.progress}%</span>
+                    <span className="text-white text-sm mt-1">{uf.progress}%</span>
                   </div>
                 )}
                 {uf.status === 'done' && (
@@ -356,7 +356,7 @@ export default function GuestUploadPage({ params }: { params: Promise<{ eventId:
                 )}
                 {uf.status === 'error' && (
                   <div className="absolute inset-0 bg-red-500/70 flex items-center justify-center p-1">
-                    <span className="text-white text-xs text-center">अपलोड नहीं हुआ</span>
+                    <span className="text-white text-sm text-center">अपलोड नहीं हुआ</span>
                   </div>
                 )}
 
@@ -364,7 +364,7 @@ export default function GuestUploadPage({ params }: { params: Promise<{ eventId:
                 {uf.status === 'pending' && !uploading && (
                   <button
                     onClick={() => removeFile(uf.id)}
-                    className="absolute top-1 right-1 w-6 h-6 bg-black/60 rounded-full text-white text-xs flex items-center justify-center"
+                    className="absolute top-1 right-1 w-6 h-6 bg-black/60 rounded-full text-white text-sm flex items-center justify-center"
                     aria-label="Remove file"
                   >
                     ✕
@@ -401,7 +401,7 @@ export default function GuestUploadPage({ params }: { params: Promise<{ eventId:
         </button>
 
         {/* Footer note */}
-        <p className="font-body text-xs text-gray-400 text-center pb-8">
+        <p className="font-body text-sm text-gray-400 text-center pb-8">
           अपलोड की गई सामग्री होस्ट की समीक्षा के बाद दिखाई देगी।
           <br />
           Uploads are visible after host review.

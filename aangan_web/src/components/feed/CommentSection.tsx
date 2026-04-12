@@ -80,7 +80,7 @@ export default function CommentSection({ postId }: { postId: string }) {
                     <span className="font-body font-semibold text-base text-brown leading-tight truncate">
                       {authorName}
                     </span>
-                    <span className="font-body text-xs text-brown-light flex-shrink-0">
+                    <span className="font-body text-sm text-brown-light flex-shrink-0">
                       {timeAgo(c.created_at)}
                     </span>
                   </div>
@@ -128,7 +128,7 @@ export default function CommentSection({ postId }: { postId: string }) {
         </GoldButton>
       </div>
       {text.length > 0 && (
-        <p className="font-body text-xs text-brown-light text-right mt-1">
+        <p className="font-body text-sm text-brown-light text-right mt-1">
           {text.length}/{VALIDATION.maxCommentLength}
         </p>
       )}

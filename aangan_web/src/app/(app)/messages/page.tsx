@@ -212,7 +212,7 @@ export default function MessagesPage() {
                       <p className="font-body text-base text-brown font-semibold truncate">
                         {conv.displayNameHindi || conv.displayName}
                       </p>
-                      <span className="font-body text-xs text-brown-light flex-shrink-0 ml-2">
+                      <span className="font-body text-sm text-brown-light flex-shrink-0 ml-2">
                         {timeAgo(conv.lastMessageAt)}
                       </span>
                     </div>
@@ -298,7 +298,7 @@ export default function MessagesPage() {
                         </p>
                         <p
                           className={cn(
-                            'font-body text-xs mt-1',
+                            'font-body text-sm mt-1',
                             isSent ? 'text-white/70 text-right' : 'text-brown-light text-right'
                           )}
                         >
@@ -338,7 +338,7 @@ export default function MessagesPage() {
                 </GoldButton>
               </div>
               {messageText.length > VALIDATION.maxMessageLength * 0.9 && (
-                <p className="font-body text-xs text-brown-light mt-1 text-right">
+                <p className="font-body text-sm text-brown-light mt-1 text-right">
                   {messageText.length}/{VALIDATION.maxMessageLength}
                 </p>
               )}

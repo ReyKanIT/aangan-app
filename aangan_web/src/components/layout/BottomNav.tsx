@@ -31,7 +31,7 @@ export default function BottomNav() {
                 )}
               >
                 <span className="text-xl">{tab.emoji}</span>
-                <span className="font-body text-xs mt-0.5">{tab.label}</span>
+                <span className="font-body text-sm mt-0.5">{tab.label}</span>
                 {tab.href === '/notifications' && unreadCount > 0 && (
                   <span className="absolute top-1.5 right-1/4 bg-error text-white text-xs font-bold rounded-full min-w-[16px] h-4 flex items-center justify-center px-1">
                     {unreadCount > 9 ? '9+' : unreadCount}

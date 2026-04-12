@@ -41,11 +41,11 @@ export default function PostCard({ post }: { post: Post }) {
             <p className="font-body font-semibold text-brown text-base leading-tight">
               {post.author?.display_name_hindi ?? post.author?.display_name}
             </p>
-            <p className="font-body text-xs text-brown-light">{timeAgo(post.created_at)}</p>
+            <p className="font-body text-sm text-brown-light">{timeAgo(post.created_at)}</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <span className="bg-cream-dark text-brown-light font-body text-xs px-2 py-1 rounded-full">
+          <span className="bg-cream-dark text-brown-light font-body text-sm px-2 py-1 rounded-full">
             {post.audience_type === 'all' ? 'सभी' : `L${post.audience_level}`}
           </span>
           {isOwn && (

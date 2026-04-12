@@ -173,7 +173,7 @@ export default function AdminAuditPage() {
               logs.map((log) => (
                 <tr key={log.id} className="border-b border-cream-dark hover:bg-cream/50 transition-colors">
                   <td className="px-4 py-3 text-brown-light text-xs whitespace-nowrap">
-                    {new Date(log.created_at).toLocaleString()}
+                    {new Date(log.created_at).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}
                   </td>
                   <td className="px-4 py-3 text-brown font-medium">
                     {log.actor?.display_name ?? log.actor_id.slice(0, 8)}

@@ -129,7 +129,7 @@ export default function EventDetailPage() {
                 <AvatarCircle src={r.user?.avatar_url} name={r.user?.display_name_hindi ?? r.user?.display_name} size={40} />
                 <div>
                   <p className="font-body text-base font-semibold text-brown">{r.user?.display_name_hindi ?? r.user?.display_name}</p>
-                  {r.user?.village_city && <p className="font-body text-xs text-brown-light">📍 {r.user.village_city}</p>}
+                  {r.user?.village_city && <p className="font-body text-sm text-brown-light">📍 {r.user.village_city}</p>}
                 </div>
               </div>
             ))}

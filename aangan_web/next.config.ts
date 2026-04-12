@@ -4,6 +4,18 @@ import { withSentryConfig } from '@sentry/nextjs';
 const nextConfig: NextConfig = {
   // Note: Remove 'output: standalone' for Vercel deployment (Vercel handles this natively).
   // Use 'standalone' only for Docker/self-hosted deployments.
+  async redirects() {
+    return [
+      // Google Play / common URL variants → actual pages
+      { source: '/terms-of-service', destination: '/terms', permanent: true },
+      { source: '/tos', destination: '/terms', permanent: true },
+      { source: '/privacy-policy', destination: '/privacy', permanent: true },
+      // Old paths that might be bookmarked
+      { source: '/signup', destination: '/login', permanent: true },
+      { source: '/register', destination: '/login', permanent: true },
+      { source: '/signin', destination: '/login', permanent: true },
+    ];
+  },
   images: {
     remotePatterns: [
       { hostname: '*.supabase.co' },

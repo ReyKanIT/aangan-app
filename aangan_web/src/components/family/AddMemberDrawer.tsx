@@ -74,7 +74,7 @@ export default function AddMemberDrawer({ onClose }: Props) {
                 <AvatarCircle src={user.avatar_url} name={user.display_name_hindi ?? user.display_name} size={44} />
                 <div>
                   <p className="font-body font-semibold text-brown">{user.display_name_hindi ?? user.display_name}</p>
-                  {user.village_city && <p className="font-body text-xs text-brown-light">📍 {user.village_city}</p>}
+                  {user.village_city && <p className="font-body text-sm text-brown-light">📍 {user.village_city}</p>}
                 </div>
               </button>
             ))}
