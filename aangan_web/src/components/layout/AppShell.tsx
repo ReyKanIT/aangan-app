@@ -2,6 +2,7 @@
 import SideNav from './SideNav';
 import BottomNav from './BottomNav';
 import TopBar from './TopBar';
+import FeedbackWidget from './FeedbackWidget';
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   return (
@@ -21,6 +22,9 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
       {/* Mobile Bottom Nav */}
       <BottomNav />
+
+      {/* Floating Feedback Button */}
+      <FeedbackWidget />
     </div>
   );
 }
