@@ -76,7 +76,7 @@ const FEATURES = [
   },
 ];
 
-const APK_URL = 'https://expo.dev/artifacts/eas/tyN4QSvsv4EuahXmGC9Nfy.apk';
+const APK_URL = 'https://media.aangan.app/releases/Aangan-v0.8.0.apk';
 
 export default function LandingPage() {
   const router = useRouter();
