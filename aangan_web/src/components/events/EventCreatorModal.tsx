@@ -41,7 +41,7 @@ export default function EventCreatorModal({ onClose }: Props) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end lg:items-center justify-center bg-black/40" onClick={onClose}>
+    <div className="fixed inset-0 z-[60] flex items-end lg:items-center justify-center bg-black/40" onClick={onClose}>
       <div className="w-full max-w-lg bg-white rounded-t-3xl lg:rounded-2xl p-6 max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
         <div className="flex justify-between items-center mb-4">
           <h3 className="font-heading text-xl text-brown">

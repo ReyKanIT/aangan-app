@@ -43,7 +43,7 @@ export default function PostComposer({ onClose }: PostComposerProps) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end lg:items-center justify-center bg-black/40" onClick={onClose}>
+    <div className="fixed inset-0 z-[60] flex items-end lg:items-center justify-center bg-black/40" onClick={onClose}>
       <div
         className="w-full max-w-lg bg-white rounded-t-3xl lg:rounded-2xl p-6 shadow-xl"
         onClick={(e) => e.stopPropagation()}

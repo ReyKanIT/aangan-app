@@ -25,9 +25,13 @@ export const useFamilyStore = create<FamilyState>((set) => ({
   fetchMembers: async () => {
     set({ isLoading: true, error: null });
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user) { set({ isLoading: false, error: 'Not authenticated' }); return; }
+
       const { data, error } = await supabase
         .from('family_members')
-        .select('*, member:users!family_member_id(*)')
+        .select('*, member:users!family_members_family_member_id_fkey(*)')
+        .eq('user_id', session.user.id)
         .order('connection_level', { ascending: true });
 
       if (error) { set({ error: error.message, isLoading: false }); return; }
