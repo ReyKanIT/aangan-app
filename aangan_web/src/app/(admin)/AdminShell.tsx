@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils/cn';
 import { useState } from 'react';
+import { Toaster } from 'react-hot-toast';
 
 const navItems = [
   { href: '/admin', label: 'Dashboard', icon: DashboardIcon, roles: ['super_admin','admin','manager'] },
@@ -114,6 +115,9 @@ export default function AdminShell({ children, adminRole }: AdminShellProps) {
           </div>
         </main>
       </div>
+
+      {/* Toast Notifications */}
+      <Toaster position="top-center" toastOptions={{ className: 'font-body' }} />
     </div>
   );
 }

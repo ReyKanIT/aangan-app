@@ -3,6 +3,7 @@ import SideNav from './SideNav';
 import BottomNav from './BottomNav';
 import TopBar from './TopBar';
 import FeedbackWidget from './FeedbackWidget';
+import { Toaster } from 'react-hot-toast';
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   return (
@@ -25,6 +26,9 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
       {/* Floating Feedback Button */}
       <FeedbackWidget />
+
+      {/* Toast Notifications */}
+      <Toaster position="top-center" toastOptions={{ className: 'font-body' }} />
     </div>
   );
 }

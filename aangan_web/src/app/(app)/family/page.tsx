@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useState, useCallback } from 'react';
 import { useFamilyStore } from '@/stores/familyStore';
+import { toastError } from '@/lib/toast';
 import AvatarCircle from '@/components/ui/AvatarCircle';
 import GoldButton from '@/components/ui/GoldButton';
 import EmptyState from '@/components/ui/EmptyState';
@@ -29,9 +30,9 @@ export default function FamilyPage() {
     if (!confirm(`${m.member?.display_name_hindi ?? m.member?.display_name} को हटाएं?`)) return;
     try {
       const success = await removeMember(m.family_member_id);
-      if (!success) alert('सदस्य हटाने में समस्या हुई — Member removal failed');
+      if (!success) toastError('सदस्य हटाने में समस्या हुई', 'Member removal failed');
     } catch {
-      alert('सदस्य हटाने में समस्या हुई — Member removal failed');
+      toastError('सदस्य हटाने में समस्या हुई', 'Member removal failed');
     }
   }, [removeMember]);
 

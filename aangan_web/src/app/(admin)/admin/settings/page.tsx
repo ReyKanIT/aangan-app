@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { createBrowserClient } from '@supabase/ssr';
+import { toastError } from '@/lib/toast';
 
 interface AppSetting {
   id: string;
@@ -89,7 +90,7 @@ export default function AdminSettingsPage() {
       // Refresh to get updated_by name
       fetchSettings();
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Failed to save setting');
+      toastError('सेटिंग सेव नहीं हो सकी', err instanceof Error ? err.message : 'Failed to save setting');
     } finally {
       setSaving(null);
     }

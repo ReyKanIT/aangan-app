@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { createBrowserClient } from '@supabase/ssr';
+import { toastError } from '@/lib/toast';
 
 type AdminRole = 'super_admin' | 'admin' | 'manager' | null;
 
@@ -98,7 +99,7 @@ export default function AdminUsersPage() {
         prev.map((u) => (u.id === userId ? { ...u, is_active: !currentValue } : u))
       );
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Update failed');
+      toastError('अपडेट नहीं हो सका', err instanceof Error ? err.message : 'Update failed');
     } finally {
       setUpdating(null);
     }
@@ -122,7 +123,7 @@ export default function AdminUsersPage() {
         )
       );
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Role update failed');
+      toastError('रोल अपडेट नहीं हो सका', err instanceof Error ? err.message : 'Role update failed');
     } finally {
       setUpdating(null);
     }

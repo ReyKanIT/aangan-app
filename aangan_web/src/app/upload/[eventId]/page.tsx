@@ -2,6 +2,8 @@
 
 import { useState, useRef, useCallback, useEffect, use } from 'react';
 import { createBrowserClient } from '@supabase/ssr';
+import { Toaster } from 'react-hot-toast';
+import { toastError } from '@/lib/toast';
 
 // ─── Types ─────────────────────────────────────────────────────
 
@@ -92,15 +94,15 @@ export default function GuestUploadPage({ params }: { params: Promise<{ eventId:
       const f = newFiles[i];
 
       if (!ALLOWED_TYPES.includes(f.type)) {
-        alert(`${f.name} — यह फ़ाइल प्रकार समर्थित नहीं है। / Unsupported file type.`);
+        toastError(`${f.name} — यह फ़ाइल प्रकार समर्थित नहीं है`, 'Unsupported file type');
         continue;
       }
       if (f.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
-        alert(`${f.name} — फ़ाइल ${MAX_FILE_SIZE_MB}MB से बड़ी नहीं होनी चाहिए। / File too large (max ${MAX_FILE_SIZE_MB}MB).`);
+        toastError(`${f.name} — फ़ाइल ${MAX_FILE_SIZE_MB}MB से बड़ी नहीं होनी चाहिए`, `File too large (max ${MAX_FILE_SIZE_MB}MB)`);
         continue;
       }
       if (files.length + added.length >= MAX_FILES) {
-        alert(`अधिकतम ${MAX_FILES} फ़ाइलें एक साथ अपलोड कर सकते हैं। / Max ${MAX_FILES} files at once.`);
+        toastError(`अधिकतम ${MAX_FILES} फ़ाइलें एक साथ अपलोड कर सकते हैं`, `Max ${MAX_FILES} files at once`);
         break;
       }
 
@@ -130,11 +132,11 @@ export default function GuestUploadPage({ params }: { params: Promise<{ eventId:
   // ── Upload ───────────────────────────────────────────────────
   const handleUpload = async () => {
     if (!guestName.trim()) {
-      alert('कृपया अपना नाम लिखें। / Please enter your name.');
+      toastError('कृपया अपना नाम लिखें', 'Please enter your name');
       return;
     }
     if (files.length === 0) {
-      alert('कम से कम एक फ़ोटो या वीडियो चुनें। / Please select at least one photo or video.');
+      toastError('कम से कम एक फ़ोटो या वीडियो चुनें', 'Please select at least one photo or video');
       return;
     }
 
@@ -253,6 +255,7 @@ export default function GuestUploadPage({ params }: { params: Promise<{ eventId:
   // ─── Main Upload Page ────────────────────────────────────────
   return (
     <div className="min-h-screen bg-[#FDFAF0]">
+      <Toaster position="top-center" toastOptions={{ className: 'font-body' }} />
       {/* Header */}
       <div className="bg-white border-b border-gray-200 px-4 py-5">
         <div className="max-w-lg mx-auto">

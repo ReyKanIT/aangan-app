@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { createBrowserClient } from '@supabase/ssr';
+import { toastError } from '@/lib/toast';
 
 type ReportStatus = 'pending' | 'reviewing' | 'resolved' | 'dismissed';
 
@@ -90,7 +91,7 @@ export default function AdminReportsPage() {
       setShowNoteModal(null);
       setResolutionNote('');
     } catch (err) {
-      alert('अपडेट नहीं हो सका। पुनः प्रयास करें।');
+      toastError('अपडेट नहीं हो सका', 'Could not update. Please try again.');
     } finally {
       setActionTarget(null);
     }
