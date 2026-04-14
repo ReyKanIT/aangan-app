@@ -1,5 +1,20 @@
 import type { Metadata, Viewport } from 'next';
+import { Poppins, Tiro_Devanagari_Hindi } from 'next/font/google';
 import './globals.css';
+
+const poppins = Poppins({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700'],
+  variable: '--font-poppins',
+  display: 'swap',
+});
+
+const tiro = Tiro_Devanagari_Hindi({
+  subsets: ['devanagari'],
+  weight: ['400'],
+  variable: '--font-tiro',
+  display: 'swap',
+});
 
 const APP_URL = 'https://aangan.app';
 const APP_NAME = 'Aangan आँगन';
@@ -110,14 +125,15 @@ const jsonLd = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="hi">
+    <html lang="hi" className={`${poppins.variable} ${tiro.variable}`}>
       <head>
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
       </head>
-      <body>{children}</body>
+      <body className={poppins.className}>{children}</body>
     </html>
   );
 }
+

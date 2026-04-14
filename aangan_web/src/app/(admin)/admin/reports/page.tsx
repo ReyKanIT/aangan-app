@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { createBrowserClient } from '@supabase/ssr';
+import { supabase } from '@/lib/supabase/client';
 import { toastError } from '@/lib/toast';
 
 type ReportStatus = 'pending' | 'reviewing' | 'resolved' | 'dismissed';
@@ -38,11 +38,6 @@ export default function AdminReportsPage() {
   const [resolutionNote, setResolutionNote] = useState('');
   const [showNoteModal, setShowNoteModal] = useState<{ id: string; status: ReportStatus } | null>(null);
 
-  const supabase = createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
-
   const fetchReports = useCallback(async () => {
     try {
       setLoading(true);
@@ -65,7 +60,7 @@ export default function AdminReportsPage() {
     } finally {
       setLoading(false);
     }
-  }, [statusFilter, supabase]);
+  }, [statusFilter]);
 
   useEffect(() => {
     fetchReports();

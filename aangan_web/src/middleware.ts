@@ -12,6 +12,7 @@ const PROTECTED_ROUTES = [
   '/notifications',
   '/kuldevi',
   '/chatbot',
+  '/admin',
 ];
 
 // Routes that should redirect to /feed if already authenticated

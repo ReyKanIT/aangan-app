@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { createBrowserClient } from '@supabase/ssr';
+import { supabase } from '@/lib/supabase/client';
 import Link from 'next/link';
 
 interface DashboardStats {
@@ -56,11 +56,6 @@ export default function AdminDashboard() {
     try {
       setLoading(true);
       setError(null);
-      const supabase = createBrowserClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-      );
-
       const now = new Date();
       const d7 = new Date(now); d7.setDate(d7.getDate() - 7);
       const d14 = new Date(now); d14.setDate(d14.getDate() - 14);

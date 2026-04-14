@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { createBrowserClient } from '@supabase/ssr';
+import { supabase } from '@/lib/supabase/client';
 import { cn } from '@/lib/utils/cn';
 
 type TicketStatus = 'open' | 'assigned' | 'in_progress' | 'waiting_for_user' | 'resolved' | 'closed';
@@ -73,11 +73,6 @@ const CATEGORY_LABELS: Record<TicketCategory, string> = {
 const ALL_STATUSES: TicketStatus[] = ['open', 'assigned', 'in_progress', 'waiting_for_user', 'resolved', 'closed'];
 
 export default function SupportPage() {
-  const supabase = createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
-
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<TicketStatus | 'all'>('all');

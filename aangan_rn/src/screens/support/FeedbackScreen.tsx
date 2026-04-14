@@ -6,9 +6,9 @@ import {
   TouchableOpacity,
   ScrollView,
   StyleSheet,
-  Linking,
   Alert,
   Image,
+  ActivityIndicator,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -17,21 +17,23 @@ import { Colors } from '../../theme/colors';
 import { Typography, DADI_MIN_BUTTON_HEIGHT, DADI_MIN_TAP_TARGET } from '../../theme/typography';
 import { Spacing, BorderRadius, Shadow } from '../../theme/spacing';
 import { useLanguageStore } from '../../stores/languageStore';
+import { useSupport } from '../../stores/supportStore';
 import { secureLog } from '../../utils/security';
+import type { SupportTicketCategory } from '../../types/database';
 
 type Props = NativeStackScreenProps<any, 'Feedback'>;
 
 interface CategoryOption {
-  value: string;
+  value: SupportTicketCategory;
   labelHi: string;
   labelEn: string;
 }
 
 const CATEGORIES: CategoryOption[] = [
-  { value: 'bug', labelHi: 'बग रिपोर्ट', labelEn: 'Bug Report' },
-  { value: 'feature', labelHi: 'नई सुविधा अनुरोध', labelEn: 'Feature Request' },
+  { value: 'bug_report', labelHi: 'बग रिपोर्ट', labelEn: 'Bug Report' },
+  { value: 'feature_request', labelHi: 'नई सुविधा अनुरोध', labelEn: 'Feature Request' },
   { value: 'general', labelHi: 'सामान्य फ़ीडबैक', labelEn: 'General Feedback' },
-  { value: 'other', labelHi: 'अन्य', labelEn: 'Other' },
+  { value: 'complaint', labelHi: 'शिकायत', labelEn: 'Complaint' },
 ];
 
 const MAX_MESSAGE_LENGTH = 500;
@@ -39,11 +41,13 @@ const MAX_MESSAGE_LENGTH = 500;
 export default function FeedbackScreen({ navigation }: Props) {
   const insets = useSafeAreaInsets();
   const { isHindi } = useLanguageStore();
+  const { createTicket } = useSupport();
 
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<SupportTicketCategory | null>(null);
   const [message, setMessage] = useState('');
   const [screenshotUri, setScreenshotUri] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
   const handlePickImage = async () => {
     try {
@@ -76,7 +80,7 @@ export default function FeedbackScreen({ navigation }: Props) {
     setScreenshotUri(null);
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!selectedCategory) {
       Alert.alert(
         isHindi ? 'श्रेणी चुनें' : 'Select Category',
@@ -93,29 +97,35 @@ export default function FeedbackScreen({ navigation }: Props) {
       return;
     }
 
+    setSubmitting(true);
+
     const categoryLabel = CATEGORIES.find((c) => c.value === selectedCategory);
-    const categoryText = categoryLabel
-      ? `${categoryLabel.labelEn} (${categoryLabel.labelHi})`
-      : selectedCategory;
+    const subject = `Aangan Feedback: ${categoryLabel?.labelEn || 'General'}`;
 
-    const subject = encodeURIComponent(`Aangan Feedback: ${categoryLabel?.labelEn || 'General'}`);
-    const body = encodeURIComponent(
-      `Category: ${categoryText}\n\nFeedback:\n${message.trim()}\n\n---\nSent from Aangan App`,
-    );
+    try {
+      const ticket = await createTicket({
+        category: selectedCategory,
+        subject,
+        message: message.trim(),
+      });
 
-    const mailtoUrl = `mailto:support@aangan.app?subject=${subject}&body=${body}`;
+      if (!ticket) {
+        throw new Error('Ticket creation failed');
+      }
 
-    Linking.openURL(mailtoUrl).catch(() => {
+      setSubmitted(true);
+      secureLog.info('[Feedback] Submitted ticket:', ticket.id);
+    } catch (err: any) {
+      secureLog.error('[Feedback] Submit error:', err.message);
       Alert.alert(
-        isHindi ? 'ईमेल ऐप नहीं मिला' : 'No Email App',
+        isHindi ? 'भेज नहीं पाए' : 'Could Not Submit',
         isHindi
-          ? 'कृपया support@aangan.app पर ईमेल करें।'
-          : 'Please email support@aangan.app directly.',
+          ? 'फ़ीडबैक भेजने में समस्या हुई। कृपया दोबारा कोशिश करें।'
+          : 'There was a problem sending your feedback. Please try again.',
       );
-    });
-
-    setSubmitted(true);
-    secureLog.info('[Feedback] Submitted:', selectedCategory);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   if (submitted) {
@@ -273,17 +283,23 @@ export default function FeedbackScreen({ navigation }: Props) {
         <TouchableOpacity
           style={[
             styles.submitButton,
-            (!selectedCategory || !message.trim()) && styles.submitButtonDisabled,
+            (!selectedCategory || !message.trim() || submitting) && styles.submitButtonDisabled,
           ]}
           onPress={handleSubmit}
           activeOpacity={0.8}
-          disabled={!selectedCategory || !message.trim()}
+          disabled={!selectedCategory || !message.trim() || submitting}
         >
-          <Text style={styles.submitButtonText}>
-            {isHindi ? 'फ़ीडबैक भेजें' : 'Send Feedback'}
-          </Text>
-          {isHindi && (
-            <Text style={styles.submitButtonSub}>Send Feedback</Text>
+          {submitting ? (
+            <ActivityIndicator color={Colors.white} />
+          ) : (
+            <>
+              <Text style={styles.submitButtonText}>
+                {isHindi ? 'फ़ीडबैक भेजें' : 'Send Feedback'}
+              </Text>
+              {isHindi && (
+                <Text style={styles.submitButtonSub}>Send Feedback</Text>
+              )}
+            </>
           )}
         </TouchableOpacity>
 

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { createBrowserClient } from '@supabase/ssr';
+import { supabase } from '@/lib/supabase/client';
 import { toastError } from '@/lib/toast';
 
 type AdminRole = 'super_admin' | 'admin' | 'manager' | null;
@@ -37,11 +37,6 @@ export default function AdminUsersPage() {
   const [error, setError] = useState<string | null>(null);
   const [myRole, setMyRole] = useState<AdminRole>(null);
 
-  const supabase = createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
-
   // Fetch current user's role
   useEffect(() => {
     (async () => {
@@ -51,7 +46,7 @@ export default function AdminUsersPage() {
         setMyRole(data?.admin_role ?? null);
       }
     })();
-  }, [supabase]);
+  }, []);
 
   const fetchUsers = useCallback(async () => {
     try {
@@ -80,7 +75,7 @@ export default function AdminUsersPage() {
     } finally {
       setLoading(false);
     }
-  }, [page, search, supabase]);
+  }, [page, search]);
 
   useEffect(() => {
     fetchUsers();

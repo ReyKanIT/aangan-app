@@ -28,6 +28,7 @@ export default function PostComposer({ onClose }: PostComposerProps) {
   };
 
   const removeFile = (i: number) => {
+    URL.revokeObjectURL(previews[i]);
     setFiles((prev) => prev.filter((_, idx) => idx !== i));
     setPreviews((prev) => prev.filter((_, idx) => idx !== i));
   };

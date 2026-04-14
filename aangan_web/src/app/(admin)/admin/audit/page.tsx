@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { createBrowserClient } from '@supabase/ssr';
+import { supabase } from '@/lib/supabase/client';
 
 interface AuditLog {
   id: string;
@@ -26,11 +26,6 @@ export default function AdminAuditPage() {
   const [actorSearch, setActorSearch] = useState('');
   const [actionTypes, setActionTypes] = useState<string[]>([]);
 
-  const supabase = createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
-
   // Fetch distinct action types for the filter dropdown
   useEffect(() => {
     async function loadActionTypes() {
@@ -45,7 +40,7 @@ export default function AdminAuditPage() {
       }
     }
     loadActionTypes();
-  }, [supabase]);
+  }, []);
 
   const fetchLogs = useCallback(async () => {
     try {
@@ -81,7 +76,7 @@ export default function AdminAuditPage() {
     } finally {
       setLoading(false);
     }
-  }, [page, actionFilter, actorSearch, supabase]);
+  }, [page, actionFilter, actorSearch]);
 
   useEffect(() => {
     fetchLogs();

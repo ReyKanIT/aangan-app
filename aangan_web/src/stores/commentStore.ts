@@ -95,6 +95,9 @@ export const useCommentStore = create<CommentState>((set, get) => ({
   deleteComment: async (commentId, postId) => {
     set({ error: null });
 
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.user) return;
+
     // Optimistic: remove immediately
     const prev = get().commentsByPost[postId] ?? [];
     set((s) => ({
@@ -108,7 +111,8 @@ export const useCommentStore = create<CommentState>((set, get) => ({
       const { error } = await supabase
         .from('post_comments')
         .delete()
-        .eq('id', commentId);
+        .eq('id', commentId)
+        .eq('author_id', session.user.id);
 
       if (error) {
         // Rollback
