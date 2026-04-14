@@ -28,7 +28,14 @@ export default function PostCard({ post }: { post: Post }) {
   const handleDelete = async () => {
     if (!confirm('यह पोस्ट हटाएं? Delete this post?')) return;
     setDeleting(true);
-    await deletePost(post.id);
+    try {
+      const ok = await deletePost(post.id);
+      // On success the card unmounts; on failure we must re-enable the button
+      // so the user can retry instead of being stuck with a disabled trash icon.
+      if (!ok) setDeleting(false);
+    } catch {
+      setDeleting(false);
+    }
   };
 
   return (

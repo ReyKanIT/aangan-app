@@ -1,6 +1,19 @@
 import { create } from 'zustand';
 import { supabase } from '@/lib/supabase/client';
 import type { PostComment } from '@/types/database';
+import { usePostStore } from './postStore';
+
+// Adjust the comment_count on a post in the post store so the UI stays in sync
+// with optimistic comment add/delete operations.
+function bumpCommentCount(postId: string, delta: number) {
+  usePostStore.setState((state) => ({
+    posts: state.posts.map((p) =>
+      p.id === postId
+        ? { ...p, comment_count: Math.max(0, (p.comment_count ?? 0) + delta) }
+        : p
+    ),
+  }));
+}
 
 interface CommentState {
   commentsByPost: Record<string, PostComment[]>;
@@ -84,6 +97,7 @@ export const useCommentStore = create<CommentState>((set, get) => ({
           [postId]: [...(s.commentsByPost[postId] ?? []), data as PostComment],
         },
       }));
+      bumpCommentCount(postId, 1);
 
       return true;
     } catch {
@@ -100,12 +114,15 @@ export const useCommentStore = create<CommentState>((set, get) => ({
 
     // Optimistic: remove immediately
     const prev = get().commentsByPost[postId] ?? [];
+    const filtered = prev.filter((c) => c.id !== commentId);
+    const removed = filtered.length !== prev.length;
     set((s) => ({
       commentsByPost: {
         ...s.commentsByPost,
-        [postId]: prev.filter((c) => c.id !== commentId),
+        [postId]: filtered,
       },
     }));
+    if (removed) bumpCommentCount(postId, -1);
 
     try {
       const { error } = await supabase
@@ -120,6 +137,7 @@ export const useCommentStore = create<CommentState>((set, get) => ({
           commentsByPost: { ...s.commentsByPost, [postId]: prev },
           error: 'टिप्पणी हटाई नहीं जा सकी।',
         }));
+        if (removed) bumpCommentCount(postId, 1);
       }
     } catch {
       // Rollback
@@ -127,6 +145,7 @@ export const useCommentStore = create<CommentState>((set, get) => ({
         commentsByPost: { ...s.commentsByPost, [postId]: prev },
         error: 'टिप्पणी हटाई नहीं जा सकी।',
       }));
+      if (removed) bumpCommentCount(postId, 1);
     }
   },
 

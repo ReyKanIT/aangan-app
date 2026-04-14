@@ -83,7 +83,7 @@ export default function PanchangPage() {
           </a>
           <a
             href="/login"
-            className="px-5 py-2 rounded-full bg-haldi-gold text-white font-semibold text-sm hover:bg-haldi-gold-dark transition-colors"
+            className="px-5 py-2 min-h-dadi inline-flex items-center justify-center rounded-full bg-haldi-gold text-white font-semibold text-base hover:bg-haldi-gold-dark transition-colors"
           >
             Login / Sign Up
           </a>
@@ -99,7 +99,7 @@ export default function PanchangPage() {
           </h1>
           <p className="text-lg text-brown-light mt-2">Today&rsquo;s Hindu Panchang</p>
           <p className="font-heading text-xl text-haldi-gold-dark mt-3">{dateHindi}</p>
-          <p className="text-sm text-brown-light">{dateEnglish}</p>
+          <p className="text-base text-brown-light">{dateEnglish}</p>
         </div>
 
         {/* Panchang Table */}
@@ -111,7 +111,7 @@ export default function PanchangPage() {
                 i < rows.length - 1 ? 'border-b border-cream-dark' : ''
               }`}
             >
-              <span className="text-brown-light text-sm md:text-base">{row.label}</span>
+              <span className="text-brown-light text-base">{row.label}</span>
               <span className="font-heading text-brown font-semibold text-base md:text-lg text-right">
                 {row.value}
               </span>

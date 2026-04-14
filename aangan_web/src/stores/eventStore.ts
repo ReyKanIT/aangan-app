@@ -18,7 +18,7 @@ interface EventState {
   setError: (error: string | null) => void;
 }
 
-export const useEventStore = create<EventState>((set) => ({
+export const useEventStore = create<EventState>((set, get) => ({
   events: [],
   currentEvent: null,
   rsvps: [],
@@ -87,6 +87,9 @@ export const useEventStore = create<EventState>((set) => ({
           ? { ...state.currentEvent, my_rsvp: status }
           : state.currentEvent,
       }));
+      // Refresh the RSVP list so the attendees section + summary counts include
+      // the user's new/updated response without needing a manual reload.
+      await get().fetchRsvps(eventId);
       return true;
     } catch (e: unknown) {
       set({ error: friendlyError(e instanceof Error ? e.message : 'RSVP failed') });

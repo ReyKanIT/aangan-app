@@ -100,27 +100,57 @@ export const metadata: Metadata = {
   },
 };
 
-// JSON-LD structured data for the app
+// JSON-LD structured data — multiple schemas for richer SEO snippets
 const jsonLd = {
   '@context': 'https://schema.org',
-  '@type': 'MobileApplication',
-  name: APP_NAME,
-  description: APP_DESCRIPTION,
-  url: APP_URL,
-  applicationCategory: 'SocialNetworkingApplication',
-  operatingSystem: 'Android',
-  inLanguage: ['hi', 'en'],
-  offers: {
-    '@type': 'Offer',
-    price: '0',
-    priceCurrency: 'INR',
-  },
-  author: {
-    '@type': 'Organization',
-    name: 'ReyKan IT',
-    url: APP_URL,
-  },
-  // aggregateRating: add when ratings are available
+  '@graph': [
+    {
+      '@type': 'Organization',
+      '@id': `${APP_URL}/#organization`,
+      name: 'ReyKan IT',
+      url: APP_URL,
+      logo: `${APP_URL}/icons/icon-512x512.png`,
+      sameAs: [APP_URL],
+    },
+    {
+      '@type': 'WebSite',
+      '@id': `${APP_URL}/#website`,
+      url: APP_URL,
+      name: APP_NAME,
+      description: APP_DESCRIPTION,
+      inLanguage: ['hi-IN', 'en-IN'],
+      publisher: { '@id': `${APP_URL}/#organization` },
+      potentialAction: {
+        '@type': 'SearchAction',
+        target: `${APP_URL}/festivals?q={search_term_string}`,
+        'query-input': 'required name=search_term_string',
+      },
+    },
+    {
+      '@type': 'MobileApplication',
+      '@id': `${APP_URL}/#app`,
+      name: APP_NAME,
+      description: APP_DESCRIPTION,
+      url: APP_URL,
+      applicationCategory: 'SocialNetworkingApplication',
+      operatingSystem: 'Android',
+      inLanguage: ['hi', 'en'],
+      offers: {
+        '@type': 'Offer',
+        price: '0',
+        priceCurrency: 'INR',
+      },
+      author: { '@id': `${APP_URL}/#organization` },
+      featureList: [
+        'Hindi voice-to-text posts',
+        'Family tree (3 levels)',
+        'Hindu Panchang & festival calendar',
+        'Voice messages',
+        'Events with RSVP',
+        'Kuldevi tradition tracking',
+      ],
+    },
+  ],
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

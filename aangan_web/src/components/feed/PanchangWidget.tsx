@@ -52,15 +52,15 @@ export default function PanchangWidget() {
               </p>
             </div>
           </div>
-          <span className="text-brown-light text-sm">{expanded ? '▲' : '▼'}</span>
+          <span className="text-brown-light text-base">{expanded ? '▲' : '▼'}</span>
         </div>
 
         {/* Tithi highlight bar */}
-        <div className="flex items-center gap-2 bg-cream rounded-xl px-4 py-2 mt-1">
-          <span className="text-sm text-brown-light font-heading">तिथि:</span>
+        <div className="flex flex-wrap items-center gap-2 bg-cream rounded-xl px-4 py-2 mt-1">
+          <span className="text-base text-brown-light font-heading">तिथि:</span>
           <span className="text-base font-semibold text-haldi-gold font-heading">{panchang.tithi}</span>
           <span className="text-brown-light mx-1">&middot;</span>
-          <span className="text-sm text-brown-light font-heading">नक्षत्र:</span>
+          <span className="text-base text-brown-light font-heading">नक्षत्र:</span>
           <span className="text-base font-semibold text-haldi-gold font-heading">{panchang.nakshatra}</span>
         </div>
       </button>
@@ -72,7 +72,7 @@ export default function PanchangWidget() {
         } overflow-hidden`}
       >
         <div className="px-5 pb-5 pt-1 border-t border-haldi-gold/10">
-          <p className="text-sm text-brown-light mb-3 font-heading">आज का पंचांग &middot; Today&apos;s Panchang</p>
+          <p className="text-base text-brown-light mb-3 font-heading">आज का पंचांग &middot; Today&apos;s Panchang</p>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
             <PanchangRow label="तिथि / Tithi" value={panchang.tithi} />
             <PanchangRow label="पक्ष / Paksha" value={panchang.paksha} />
@@ -82,12 +82,12 @@ export default function PanchangWidget() {
             <PanchangRow label="सूर्यास्त / Sunset" value={`🌇 ${panchang.sunset}`} />
           </div>
           <div className="mt-4 pt-3 border-t border-haldi-gold/10 flex items-center justify-between">
-            <span className="text-sm text-brown-light font-heading">योग / Yoga</span>
-            <span className={`text-sm font-semibold ${yogaColor}`}>
+            <span className="text-base text-brown-light font-heading">योग / Yoga</span>
+            <span className={`text-base font-semibold ${yogaColor}`}>
               {panchang.yoga} ({yogaDesc})
             </span>
           </div>
-          <p className="text-[10px] text-brown-light/50 mt-3 text-right">
+          <p className="text-xs text-brown-light/60 mt-3 text-right">
             Location: Delhi, India &middot; Drik Ganita based calculation
           </p>
         </div>
@@ -99,8 +99,8 @@ export default function PanchangWidget() {
 function PanchangRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex flex-col bg-cream/50 rounded-lg px-3 py-2">
-      <span className="text-[11px] text-brown-light">{label}</span>
-      <span className="text-sm text-brown font-semibold mt-0.5">{value}</span>
+      <span className="text-xs text-brown-light">{label}</span>
+      <span className="text-base text-brown font-semibold mt-0.5">{value}</span>
     </div>
   );
 }

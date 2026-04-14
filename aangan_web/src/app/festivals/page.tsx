@@ -114,7 +114,7 @@ export default function FestivalsPage() {
         {/* Legend */}
         <div className="flex flex-wrap gap-3 justify-center mb-8">
           {Object.entries(TYPE_LABELS).map(([key, { label, color }]) => (
-            <span key={key} className={`px-3 py-1 rounded-full text-sm font-semibold ${color}`}>
+            <span key={key} className={`px-3 py-1 rounded-full text-base font-semibold ${color}`}>
               {label}
             </span>
           ))}
@@ -135,14 +135,14 @@ export default function FestivalsPage() {
                     <div key={i} className="bg-white rounded-xl border border-haldi-gold/10 p-4 hover:shadow-sm transition-shadow">
                       <div className="flex items-start justify-between gap-3">
                         <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-1">
+                          <div className="flex flex-wrap items-center gap-2 mb-1">
                             <span className="font-heading text-base font-semibold text-brown">{f.nameHindi}</span>
-                            <span className={`px-2 py-0.5 rounded-full text-sm ${typeInfo.color}`}>{typeInfo.label}</span>
+                            <span className={`px-2 py-0.5 rounded-full text-xs ${typeInfo.color}`}>{typeInfo.label}</span>
                           </div>
-                          <p className="text-sm text-brown-light">{f.name}</p>
-                          <p className="text-sm text-brown-light/70 mt-1">{f.desc}</p>
+                          <p className="text-base text-brown-light">{f.name}</p>
+                          <p className="text-base text-brown-light/70 mt-1">{f.desc}</p>
                         </div>
-                        <span className="font-heading text-sm text-haldi-gold whitespace-nowrap">{f.date}</span>
+                        <span className="font-heading text-base text-haldi-gold whitespace-nowrap">{f.date}</span>
                       </div>
                     </div>
                   );

@@ -46,6 +46,24 @@ export default function FamilyPage() {
         <GoldButton size="sm" onClick={() => setDrawerOpen(true)}>+ जोड़ें</GoldButton>
       </div>
 
+      {/* Invite Family CTA — viral loop */}
+      <a
+        href={`https://wa.me/?text=${encodeURIComponent('नमस्ते! 🙏 मैं आपको Aangan आँगन पर बुलाना चाहता/चाहती हूँ — हमारा परिवार सोशल नेटवर्क।\nअभी डाउनलोड करें: https://aangan.app')}`}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="flex items-center justify-between gap-3 mb-6 px-4 py-3 min-h-dadi rounded-2xl bg-[#25D366]/10 border border-[#25D366]/30 hover:bg-[#25D366]/15 transition-colors"
+        aria-label="परिवार को WhatsApp पर आमंत्रित करें"
+      >
+        <div className="flex items-center gap-3">
+          <span className="text-2xl" aria-hidden>💚</span>
+          <div className="text-left">
+            <p className="font-body font-semibold text-brown text-base">परिवार को बुलाएं</p>
+            <p className="font-body text-sm text-brown-light">Invite family on WhatsApp</p>
+          </div>
+        </div>
+        <span className="font-body text-sm text-[#1DA851] font-semibold whitespace-nowrap">भेजें →</span>
+      </a>
+
       {/* Level Tabs */}
       <div className="flex gap-1 bg-cream-dark rounded-xl p-1 mb-6">
         {LEVELS.map((level) => (

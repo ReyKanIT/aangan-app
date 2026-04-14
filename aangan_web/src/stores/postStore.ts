@@ -30,10 +30,15 @@ export const usePostStore = create<PostState>((set, get) => ({
   error: null,
 
   fetchPosts: async (reset = false) => {
-    const { isFetching, cursor, hasMore } = get();
+    const { isFetching, cursor, hasMore, posts } = get();
     if (isFetching || (!hasMore && !reset)) return;
 
-    set({ isFetching: true, error: null });
+    // Show the full-page loading spinner only when we have nothing to display
+    // yet (initial load or a reset with an empty list). Otherwise the feed page
+    // briefly renders the "no posts" empty state while the first fetch is in
+    // flight.
+    const showLoading = reset || posts.length === 0;
+    set({ isFetching: true, error: null, ...(showLoading ? { isLoading: true } : {}) });
     if (reset) set({ posts: [], cursor: null, hasMore: true });
 
     try {
@@ -47,7 +52,7 @@ export const usePostStore = create<PostState>((set, get) => ({
       if (effectiveCursor) query = query.lt('created_at', effectiveCursor);
 
       const { data, error } = await query;
-      if (error) { set({ error: friendlyError(error.message), isFetching: false }); return; }
+      if (error) { set({ error: friendlyError(error.message), isFetching: false, isLoading: false }); return; }
 
       // Check which posts the current user has liked
       const { data: { user } } = await supabase.auth.getUser();
@@ -74,7 +79,7 @@ export const usePostStore = create<PostState>((set, get) => ({
         isLoading: false,
       }));
     } catch (e: unknown) {
-      set({ error: friendlyError(e instanceof Error ? e.message : 'Failed to fetch posts'), isFetching: false });
+      set({ error: friendlyError(e instanceof Error ? e.message : 'Failed to fetch posts'), isFetching: false, isLoading: false });
     }
   },
 

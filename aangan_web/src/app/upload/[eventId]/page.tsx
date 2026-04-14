@@ -363,12 +363,12 @@ export default function GuestUploadPage({ params }: { params: Promise<{ eventId:
                   </div>
                 )}
 
-                {/* Remove button */}
+                {/* Remove button — uses inset hit area for tap target */}
                 {uf.status === 'pending' && !uploading && (
                   <button
                     onClick={() => removeFile(uf.id)}
-                    className="absolute top-1 right-1 w-6 h-6 bg-black/60 rounded-full text-white text-sm flex items-center justify-center"
-                    aria-label="Remove file"
+                    className="absolute -top-1 -right-1 w-9 h-9 bg-black/70 hover:bg-black rounded-full text-white text-base flex items-center justify-center shadow"
+                    aria-label="हटाएं — Remove file"
                   >
                     ✕
                   </button>

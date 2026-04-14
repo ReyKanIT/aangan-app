@@ -1,5 +1,5 @@
 'use client';
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { usePostStore } from '@/stores/postStore';
 import { useAuthStore } from '@/stores/authStore';
 import GoldButton from '@/components/ui/GoldButton';
@@ -21,7 +21,20 @@ export default function PostComposer({ onClose }: PostComposerProps) {
   const [isPosting, setIsPosting] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
+  // Track latest previews in a ref so the unmount cleanup sees the current list.
+  const previewsRef = useRef<string[]>([]);
+  useEffect(() => { previewsRef.current = previews; }, [previews]);
+
+  // Revoke any leftover blob URLs when the composer unmounts to prevent memory leaks.
+  useEffect(() => {
+    return () => {
+      previewsRef.current.forEach((url) => URL.revokeObjectURL(url));
+    };
+  }, []);
+
   const handleFiles = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // Revoke previously-selected previews before replacing them.
+    previews.forEach((url) => URL.revokeObjectURL(url));
     const selected = Array.from(e.target.files ?? []).slice(0, VALIDATION.maxPhotosPerUpload);
     setFiles(selected);
     setPreviews(selected.map((f) => URL.createObjectURL(f)));

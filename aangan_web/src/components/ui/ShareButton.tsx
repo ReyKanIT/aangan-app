@@ -30,7 +30,7 @@ export default function ShareButton({ title, text, url, className = '' }: ShareB
   return (
     <button
       onClick={handleShare}
-      className={`flex items-center gap-1.5 font-body text-base text-brown-light hover:text-mehndi-green hover:bg-green-50 rounded-lg transition-colors ${className}`}
+      className={`flex items-center gap-1.5 min-h-dadi px-3 font-body text-base text-brown-light hover:text-mehndi-green hover:bg-green-50 rounded-lg transition-colors ${className}`}
       aria-label="शेयर करें — Share"
     >
       <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>

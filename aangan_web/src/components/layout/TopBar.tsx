@@ -21,18 +21,26 @@ export default function TopBar() {
 
       <div className="flex items-center gap-3">
         {/* Notification bell (mobile) */}
-        <Link href="/notifications" className="relative lg:hidden p-2">
+        <Link
+          href="/notifications"
+          className="relative lg:hidden min-h-dadi min-w-dadi flex items-center justify-center"
+          aria-label="सूचनाएं — Notifications"
+        >
           <span className="text-2xl">🔔</span>
           {unreadCount > 0 && (
-            <span className="absolute top-1 right-1 bg-error text-white text-xs font-bold rounded-full min-w-[16px] h-4 flex items-center justify-center px-1">
+            <span className="absolute top-1 right-1 bg-error text-white text-xs font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1">
               {unreadCount > 9 ? '9+' : unreadCount}
             </span>
           )}
         </Link>
 
         {/* Avatar */}
-        <Link href="/settings">
-          <AvatarCircle src={user?.avatar_url} name={user?.display_name} size={36} />
+        <Link
+          href="/settings"
+          className="min-h-dadi min-w-dadi flex items-center justify-center"
+          aria-label="सेटिंग्स — Settings"
+        >
+          <AvatarCircle src={user?.avatar_url} name={user?.display_name} size={40} />
         </Link>
       </div>
     </header>

@@ -39,14 +39,21 @@ export default function AdminShell({ children, adminRole }: AdminShellProps) {
   return (
     <div className="min-h-screen bg-cream font-body">
       {/* Mobile header */}
-      <div className="lg:hidden flex items-center justify-between bg-brown text-cream px-4 py-3">
-        <button onClick={() => setSidebarOpen(!sidebarOpen)} className="p-1">
+      <div className="lg:hidden flex items-center justify-between bg-brown text-cream px-4 py-2">
+        <button
+          onClick={() => setSidebarOpen(!sidebarOpen)}
+          className="min-w-dadi min-h-dadi flex items-center justify-center"
+          aria-label="Open menu"
+        >
           <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
           </svg>
         </button>
         <span className="font-heading text-lg text-haldi-gold">Aangan Admin</span>
-        <Link href="/feed" className="text-sm text-haldi-gold-light hover:text-haldi-gold">
+        <Link
+          href="/feed"
+          className="min-h-dadi inline-flex items-center px-3 text-base text-haldi-gold-light hover:text-haldi-gold"
+        >
           Exit
         </Link>
       </div>
