@@ -1,5 +1,6 @@
 import type { NextConfig } from 'next';
 import { withSentryConfig } from '@sentry/nextjs';
+import withPWA from '@ducanh2912/next-pwa';
 
 const nextConfig: NextConfig = {
   // Note: Remove 'output: standalone' for Vercel deployment (Vercel handles this natively).
@@ -56,7 +57,13 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default withSentryConfig(nextConfig, {
+const withPWAConfig = withPWA({
+  dest: 'public',
+  disable: process.env.NODE_ENV === 'development',
+  register: true,
+});
+
+export default withSentryConfig(withPWAConfig(nextConfig), {
   silent: true,
   disableLogger: true,
 });

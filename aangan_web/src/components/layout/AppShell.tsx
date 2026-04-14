@@ -3,6 +3,7 @@ import SideNav from './SideNav';
 import BottomNav from './BottomNav';
 import TopBar from './TopBar';
 import FeedbackWidget from './FeedbackWidget';
+import PWAInstallPrompt from '@/components/ui/PWAInstallPrompt';
 import { Toaster } from 'react-hot-toast';
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
@@ -26,6 +27,9 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
       {/* Floating Feedback Button */}
       <FeedbackWidget />
+
+      {/* PWA Install Prompt */}
+      <PWAInstallPrompt />
 
       {/* Toast Notifications */}
       <Toaster position="top-center" toastOptions={{ className: 'font-body' }} />
