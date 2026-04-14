@@ -381,7 +381,7 @@ export default function GuestUploadPage({ params }: { params: Promise<{ eventId:
         {/* Error message */}
         {uploadError && (
           <div className="bg-red-50 border border-red-300 rounded-xl px-4 py-3">
-            <p className="font-body text-sm text-red-700">{uploadError}</p>
+            <p className="font-body text-base text-red-700">{uploadError}</p>
           </div>
         )}
 

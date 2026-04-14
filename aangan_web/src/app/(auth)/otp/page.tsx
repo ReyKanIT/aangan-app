@@ -104,7 +104,7 @@ function OtpForm() {
 
       {error && (
         <div className="bg-red-50 border border-error rounded-lg px-4 py-3 mb-4">
-          <p className="font-body text-sm text-error">{error}</p>
+          <p className="font-body text-base text-error">{error}</p>
         </div>
       )}
 

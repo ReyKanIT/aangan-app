@@ -108,7 +108,7 @@ export default function AddMemberDrawer({ onClose }: Props) {
               <button onClick={() => setLevel((l) => Math.min(3, l + 1))} className="w-12 h-12 rounded-xl bg-cream-dark text-brown font-bold text-xl">+</button>
             </div>
 
-            {error && <p className="font-body text-sm text-error mb-3">{error}</p>}
+            {error && <p className="font-body text-base text-error mb-3">{error}</p>}
             <GoldButton className="w-full" loading={isAdding} onClick={handleAdd}>
               परिवार में जोड़ें — Add to Family
             </GoldButton>

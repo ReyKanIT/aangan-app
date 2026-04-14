@@ -130,7 +130,7 @@ export default function AdminReportsPage() {
       </div>
 
       {error && (
-        <div className="bg-error/10 text-error px-4 py-3 rounded-lg text-sm mb-4">
+        <div className="bg-error/10 text-error px-4 py-3 rounded-lg text-base mb-4">
           {error}
           <button onClick={fetchReports} className="ml-2 underline">Retry</button>
         </div>

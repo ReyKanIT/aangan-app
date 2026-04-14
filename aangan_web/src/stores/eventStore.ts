@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { supabase } from '@/lib/supabase/client';
 import type { AanganEvent, EventRsvp, RsvpStatus } from '@/types/database';
+import { friendlyError } from '@/lib/errorMessages';
 
 interface EventState {
   events: AanganEvent[];
@@ -33,10 +34,10 @@ export const useEventStore = create<EventState>((set) => ({
         .gte('start_datetime', new Date(Date.now() - 86400000 * 7).toISOString())
         .order('start_datetime', { ascending: true });
 
-      if (error) { set({ error: error.message, isLoading: false }); return; }
+      if (error) { set({ error: friendlyError(error.message), isLoading: false }); return; }
       set({ events: data as unknown as AanganEvent[], isLoading: false });
     } catch (e: unknown) {
-      set({ error: e instanceof Error ? e.message : 'Failed to fetch events', isLoading: false });
+      set({ error: friendlyError(e instanceof Error ? e.message : 'Failed to fetch events'), isLoading: false });
     }
   },
 
@@ -49,10 +50,10 @@ export const useEventStore = create<EventState>((set) => ({
         .eq('id', eventId)
         .single();
 
-      if (error) { set({ error: error.message, isLoading: false }); return; }
+      if (error) { set({ error: friendlyError(error.message), isLoading: false }); return; }
       set({ currentEvent: data as unknown as AanganEvent, isLoading: false });
     } catch (e: unknown) {
-      set({ error: e instanceof Error ? e.message : 'Failed to fetch event', isLoading: false });
+      set({ error: friendlyError(e instanceof Error ? e.message : 'Failed to fetch event'), isLoading: false });
     }
   },
 
@@ -65,10 +66,10 @@ export const useEventStore = create<EventState>((set) => ({
         .insert({ ...data, creator_id: user.id })
         .select('id')
         .single();
-      if (error) { set({ error: error.message }); return null; }
+      if (error) { set({ error: friendlyError(error.message) }); return null; }
       return created.id;
     } catch (e: unknown) {
-      set({ error: e instanceof Error ? e.message : 'Failed to create event' });
+      set({ error: friendlyError(e instanceof Error ? e.message : 'Failed to create event') });
       return null;
     }
   },
@@ -80,7 +81,7 @@ export const useEventStore = create<EventState>((set) => ({
     try {
       const { error } = await supabase.from('event_rsvps')
         .upsert({ event_id: eventId, user_id: user.id, status }, { onConflict: 'event_id,user_id' });
-      if (error) { set({ error: error.message }); return false; }
+      if (error) { set({ error: friendlyError(error.message) }); return false; }
       set((state) => ({
         currentEvent: state.currentEvent?.id === eventId
           ? { ...state.currentEvent, my_rsvp: status }
@@ -88,7 +89,7 @@ export const useEventStore = create<EventState>((set) => ({
       }));
       return true;
     } catch (e: unknown) {
-      set({ error: e instanceof Error ? e.message : 'RSVP failed' });
+      set({ error: friendlyError(e instanceof Error ? e.message : 'RSVP failed') });
       return false;
     }
   },
@@ -100,10 +101,10 @@ export const useEventStore = create<EventState>((set) => ({
         .select('*, user:users(*)')
         .eq('event_id', eventId)
         .order('created_at', { ascending: true });
-      if (error) { set({ error: error.message }); return; }
+      if (error) { set({ error: friendlyError(error.message) }); return; }
       set({ rsvps: data as unknown as EventRsvp[] });
     } catch (e: unknown) {
-      set({ error: e instanceof Error ? e.message : 'Failed to fetch RSVPs' });
+      set({ error: friendlyError(e instanceof Error ? e.message : 'Failed to fetch RSVPs') });
     }
   },
 

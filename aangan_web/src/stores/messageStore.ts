@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { supabase } from '@/lib/supabase/client';
 import type { DirectMessage, ConversationSummary } from '@/types/database';
+import { friendlyError } from '@/lib/errorMessages';
 
 interface MessageState {
   messages: Record<string, DirectMessage[]>;
@@ -44,7 +45,7 @@ export const useMessageStore = create<MessageState>((set, get) => ({
         .limit(200);
 
       if (sentErr || recvErr) {
-        set({ error: (sentErr || recvErr)!.message, isLoading: false });
+        set({ error: friendlyError((sentErr || recvErr)!.message), isLoading: false });
         return;
       }
 
@@ -110,7 +111,7 @@ export const useMessageStore = create<MessageState>((set, get) => ({
 
       set({ conversations, totalUnread, isLoading: false });
     } catch (e: unknown) {
-      set({ error: e instanceof Error ? e.message : 'Failed to fetch conversations', isLoading: false });
+      set({ error: friendlyError(e instanceof Error ? e.message : 'Failed to fetch conversations'), isLoading: false });
     }
   },
 
@@ -128,14 +129,14 @@ export const useMessageStore = create<MessageState>((set, get) => ({
         .order('created_at', { ascending: true })
         .limit(50);
 
-      if (error) { set({ error: error.message, isLoading: false }); return; }
+      if (error) { set({ error: friendlyError(error.message), isLoading: false }); return; }
 
       set((state) => ({
         messages: { ...state.messages, [otherUserId]: (data || []) as DirectMessage[] },
         isLoading: false,
       }));
     } catch (e: unknown) {
-      set({ error: e instanceof Error ? e.message : 'Failed to fetch messages', isLoading: false });
+      set({ error: friendlyError(e instanceof Error ? e.message : 'Failed to fetch messages'), isLoading: false });
     }
   },
 
@@ -183,7 +184,7 @@ export const useMessageStore = create<MessageState>((set, get) => ({
             ...state.messages,
             [otherUserId]: (state.messages[otherUserId] || []).filter((m) => m.id !== optimisticMsg.id),
           },
-          error: error.message,
+          error: friendlyError(error.message),
         }));
         return false;
       }
@@ -200,7 +201,7 @@ export const useMessageStore = create<MessageState>((set, get) => ({
 
       return true;
     } catch (e: unknown) {
-      set({ error: e instanceof Error ? e.message : 'Failed to send message' });
+      set({ error: friendlyError(e instanceof Error ? e.message : 'Failed to send message') });
       return false;
     }
   },
@@ -233,7 +234,7 @@ export const useMessageStore = create<MessageState>((set, get) => ({
         totalUnread: Math.max(0, state.totalUnread - (state.conversations.find((c) => c.userId === otherUserId)?.unreadCount ?? 0)),
       }));
     } catch (e: unknown) {
-      set({ error: e instanceof Error ? e.message : 'Failed to mark as read' });
+      set({ error: friendlyError(e instanceof Error ? e.message : 'Failed to mark as read') });
     }
   },
 }));

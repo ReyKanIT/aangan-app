@@ -153,7 +153,7 @@ export default function AnalyticsPage() {
   if (loading) return <AnalyticsSkeleton />;
   if (error) return (
     <div className="text-center py-12">
-      <p className="text-red-500 text-sm mb-4">{error}</p>
+      <p className="text-red-500 text-base mb-4">{error}</p>
       <button onClick={fetchAnalytics} className="px-4 py-2 bg-haldi-gold text-brown rounded-lg text-sm font-medium">Retry</button>
     </div>
   );

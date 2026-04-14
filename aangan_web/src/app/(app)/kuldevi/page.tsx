@@ -100,12 +100,12 @@ export default function KuldeviPage() {
 
       {error && (
         <div className="bg-red-50 border border-error rounded-lg px-4 py-3 mb-4">
-          <p className="font-body text-sm text-error">{error}</p>
+          <p className="font-body text-base text-error">{error}</p>
         </div>
       )}
       {success && (
         <div className="bg-green-50 border border-mehndi-green rounded-lg px-4 py-3 mb-4">
-          <p className="font-body text-sm text-mehndi-green">✓ जानकारी सेव हो गई — Information saved!</p>
+          <p className="font-body text-base text-mehndi-green">✓ जानकारी सेव हो गई — Information saved!</p>
         </div>
       )}
 

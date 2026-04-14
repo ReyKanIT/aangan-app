@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { supabase } from '@/lib/supabase/client';
 import type { FamilyMember, User } from '@/types/database';
+import { friendlyError } from '@/lib/errorMessages';
 
 interface FamilyState {
   members: FamilyMember[];
@@ -26,7 +27,7 @@ export const useFamilyStore = create<FamilyState>((set) => ({
     set({ isLoading: true, error: null });
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.user) { set({ isLoading: false, error: 'Not authenticated' }); return; }
+      if (!session?.user) { set({ isLoading: false, error: friendlyError('Not authenticated') }); return; }
 
       const { data, error } = await supabase
         .from('family_members')
@@ -34,10 +35,10 @@ export const useFamilyStore = create<FamilyState>((set) => ({
         .eq('user_id', session.user.id)
         .order('connection_level', { ascending: true });
 
-      if (error) { set({ error: error.message, isLoading: false }); return; }
+      if (error) { set({ error: friendlyError(error.message), isLoading: false }); return; }
       set({ members: data as unknown as FamilyMember[], isLoading: false });
     } catch (e: unknown) {
-      set({ error: e instanceof Error ? e.message : 'Failed to fetch family', isLoading: false });
+      set({ error: friendlyError(e instanceof Error ? e.message : 'Failed to fetch family'), isLoading: false });
     }
   },
 
@@ -50,10 +51,10 @@ export const useFamilyStore = create<FamilyState>((set) => ({
         .or(`display_name.ilike.%${query.replace(/[%_,.()\\']/g, '\\$&')}%,display_name_hindi.ilike.%${query.replace(/[%_,.()\\']/g, '\\$&')}%`)
         .limit(20);
 
-      if (error) { set({ error: error.message }); return; }
+      if (error) { set({ error: friendlyError(error.message) }); return; }
       set({ searchResults: data as User[] });
     } catch (e: unknown) {
-      set({ error: e instanceof Error ? e.message : 'Search failed' });
+      set({ error: friendlyError(e instanceof Error ? e.message : 'Search failed') });
     }
   },
 
@@ -67,10 +68,10 @@ export const useFamilyStore = create<FamilyState>((set) => ({
         p_level: level,
         p_reverse_type: reverseType,
       });
-      if (error) { set({ error: error.message }); return false; }
+      if (error) { set({ error: friendlyError(error.message) }); return false; }
       return true;
     } catch (e: unknown) {
-      set({ error: e instanceof Error ? e.message : 'Failed to add member' });
+      set({ error: friendlyError(e instanceof Error ? e.message : 'Failed to add member') });
       return false;
     }
   },
@@ -81,13 +82,13 @@ export const useFamilyStore = create<FamilyState>((set) => ({
       const { error } = await supabase.rpc('remove_family_member_bidirectional', {
         p_member_id: memberId,
       });
-      if (error) { set({ error: error.message }); return false; }
+      if (error) { set({ error: friendlyError(error.message) }); return false; }
       set((state) => ({
         members: state.members.filter((m) => m.family_member_id !== memberId),
       }));
       return true;
     } catch (e: unknown) {
-      set({ error: e instanceof Error ? e.message : 'Failed to remove member' });
+      set({ error: friendlyError(e instanceof Error ? e.message : 'Failed to remove member') });
       return false;
     }
   },

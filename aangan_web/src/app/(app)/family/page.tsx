@@ -63,7 +63,7 @@ export default function FamilyPage() {
       {error && (
         <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 mb-4 font-body text-base">
           <p className="font-semibold">कुछ गड़बड़ हुई — Something went wrong</p>
-          <p className="text-sm mt-1">{error}</p>
+          <p className="text-base mt-1">{error}</p>
         </div>
       )}
 

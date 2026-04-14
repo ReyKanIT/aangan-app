@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { supabase } from '@/lib/supabase/client';
 import type { Notification } from '@/types/database';
 import type { RealtimeChannel } from '@supabase/supabase-js';
+import { friendlyError } from '@/lib/errorMessages';
 
 interface NotificationState {
   notifications: Notification[];
@@ -32,7 +33,7 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
         .select('*')
         .order('created_at', { ascending: false })
         .limit(50);
-      if (error) { set({ error: error.message, isLoading: false }); return; }
+      if (error) { set({ error: friendlyError(error.message), isLoading: false }); return; }
       const notifs = data as Notification[];
       set({
         notifications: notifs,
@@ -40,20 +41,20 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
         isLoading: false,
       });
     } catch (e: unknown) {
-      set({ error: e instanceof Error ? e.message : 'Failed to fetch notifications', isLoading: false });
+      set({ error: friendlyError(e instanceof Error ? e.message : 'Failed to fetch notifications'), isLoading: false });
     }
   },
 
   markAsRead: async (id) => {
     try {
       const { error } = await supabase.from('notifications').update({ is_read: true }).eq('id', id);
-      if (error) { set({ error: error.message }); return; }
+      if (error) { set({ error: friendlyError(error.message) }); return; }
       set((state) => ({
         notifications: state.notifications.map((n) => n.id === id ? { ...n, is_read: true } : n),
         unreadCount: Math.max(0, state.unreadCount - 1),
       }));
     } catch (e: unknown) {
-      set({ error: e instanceof Error ? e.message : 'Failed to mark as read' });
+      set({ error: friendlyError(e instanceof Error ? e.message : 'Failed to mark as read') });
     }
   },
 
@@ -62,13 +63,13 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
     if (!user) return;
     try {
       const { error } = await supabase.from('notifications').update({ is_read: true }).eq('user_id', user.id).eq('is_read', false);
-      if (error) { set({ error: error.message }); return; }
+      if (error) { set({ error: friendlyError(error.message) }); return; }
       set((state) => ({
         notifications: state.notifications.map((n) => ({ ...n, is_read: true })),
         unreadCount: 0,
       }));
     } catch (e: unknown) {
-      set({ error: e instanceof Error ? e.message : 'Failed to mark all as read' });
+      set({ error: friendlyError(e instanceof Error ? e.message : 'Failed to mark all as read') });
     }
   },
 

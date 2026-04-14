@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { supabase } from '@/lib/supabase/client';
 import type { Post } from '@/types/database';
 import { uploadPostMedia } from '@/lib/utils/uploadMedia';
+import { friendlyError } from '@/lib/errorMessages';
 
 interface PostState {
   posts: Post[];
@@ -46,7 +47,7 @@ export const usePostStore = create<PostState>((set, get) => ({
       if (effectiveCursor) query = query.lt('created_at', effectiveCursor);
 
       const { data, error } = await query;
-      if (error) { set({ error: error.message, isFetching: false }); return; }
+      if (error) { set({ error: friendlyError(error.message), isFetching: false }); return; }
 
       // Check which posts the current user has liked
       const { data: { user } } = await supabase.auth.getUser();
@@ -73,7 +74,7 @@ export const usePostStore = create<PostState>((set, get) => ({
         isLoading: false,
       }));
     } catch (e: unknown) {
-      set({ error: e instanceof Error ? e.message : 'Failed to fetch posts', isFetching: false });
+      set({ error: friendlyError(e instanceof Error ? e.message : 'Failed to fetch posts'), isFetching: false });
     }
   },
 
@@ -100,11 +101,11 @@ export const usePostStore = create<PostState>((set, get) => ({
         is_pinned: false,
       });
 
-      if (error) { set({ error: error.message }); return false; }
+      if (error) { set({ error: friendlyError(error.message) }); return false; }
       await get().fetchPosts(true);
       return true;
     } catch (e: unknown) {
-      set({ error: e instanceof Error ? e.message : 'Failed to create post' });
+      set({ error: friendlyError(e instanceof Error ? e.message : 'Failed to create post') });
       return false;
     }
   },
@@ -135,7 +136,7 @@ export const usePostStore = create<PostState>((set, get) => ({
     } catch (e: unknown) {
       // Rollback on error + show error
       set((state) => ({
-        error: e instanceof Error ? e.message : 'Like failed',
+        error: friendlyError(e instanceof Error ? e.message : 'Like failed'),
         posts: state.posts.map((p) =>
           p.id === postId
             ? { ...p, like_count: wasLiked ? p.like_count + 1 : p.like_count - 1, is_liked: wasLiked }
@@ -149,7 +150,7 @@ export const usePostStore = create<PostState>((set, get) => ({
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return false;
     const { error } = await supabase.from('posts').delete().eq('id', postId).eq('author_id', user.id);
-    if (error) { set({ error: error.message }); return false; }
+    if (error) { set({ error: friendlyError(error.message) }); return false; }
     set((state) => ({ posts: state.posts.filter((p) => p.id !== postId) }));
     return true;
   },

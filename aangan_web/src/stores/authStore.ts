@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { supabase } from '@/lib/supabase/client';
+import { friendlyError } from '@/lib/errorMessages';
 import type { User } from '@/types/database';
 import type { Session } from '@supabase/supabase-js';
 
@@ -52,7 +53,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       });
       _subscription = subscription;
     } catch {
-      set({ isLoading: false, error: 'Failed to initialize' });
+      set({ isLoading: false, error: friendlyError('Failed to initialize') });
     }
   },
 
@@ -60,10 +61,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     set({ error: null });
     try {
       const { error } = await supabase.auth.signInWithOtp({ phone: `+91${phone}` });
-      if (error) { set({ error: error.message }); return false; }
+      if (error) { set({ error: friendlyError(error.message) }); return false; }
       return true;
     } catch (e: unknown) {
-      set({ error: e instanceof Error ? e.message : 'Failed to send OTP' });
+      set({ error: friendlyError(e instanceof Error ? e.message : 'Failed to send OTP') });
       return false;
     }
   },
@@ -72,11 +73,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     set({ error: null });
     try {
       const { data, error } = await supabase.auth.verifyOtp({ phone: `+91${phone}`, token, type: 'sms' });
-      if (error) { set({ error: error.message }); return false; }
+      if (error) { set({ error: friendlyError(error.message) }); return false; }
       if (data.session) { set({ session: data.session }); await get().fetchProfile(); return true; }
       return false;
     } catch (e: unknown) {
-      set({ error: e instanceof Error ? e.message : 'Verification failed' });
+      set({ error: friendlyError(e instanceof Error ? e.message : 'Verification failed') });
       return false;
     }
   },
@@ -85,10 +86,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     set({ error: null });
     try {
       const { error } = await supabase.auth.signInWithOtp({ email });
-      if (error) { set({ error: error.message }); return false; }
+      if (error) { set({ error: friendlyError(error.message) }); return false; }
       return true;
     } catch (e: unknown) {
-      set({ error: e instanceof Error ? e.message : 'Failed to send OTP' });
+      set({ error: friendlyError(e instanceof Error ? e.message : 'Failed to send OTP') });
       return false;
     }
   },
@@ -97,11 +98,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     set({ error: null });
     try {
       const { data, error } = await supabase.auth.verifyOtp({ email, token, type: 'email' });
-      if (error) { set({ error: error.message }); return false; }
+      if (error) { set({ error: friendlyError(error.message) }); return false; }
       if (data.session) { set({ session: data.session }); await get().fetchProfile(); return true; }
       return false;
     } catch (e: unknown) {
-      set({ error: e instanceof Error ? e.message : 'Verification failed' });
+      set({ error: friendlyError(e instanceof Error ? e.message : 'Verification failed') });
       return false;
     }
   },
@@ -117,14 +118,14 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         } else if (msg.includes('invalid login credentials') || msg.includes('invalid')) {
           set({ error: 'ईमेल या पासवर्ड गलत है।' });
         } else {
-          set({ error: error.message });
+          set({ error: friendlyError(error.message) });
         }
         return false;
       }
       if (data.session) { set({ session: data.session }); await get().fetchProfile(); return true; }
       return false;
     } catch (e: unknown) {
-      set({ error: e instanceof Error ? e.message : 'Sign in failed' });
+      set({ error: friendlyError(e instanceof Error ? e.message : 'Sign in failed') });
       return false;
     }
   },
@@ -133,17 +134,17 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     set({ error: null });
     try {
       const { data, error } = await supabase.auth.signUp({ email, password });
-      if (error) { set({ error: error.message }); return false; }
+      if (error) { set({ error: friendlyError(error.message) }); return false; }
       if (data.session) { set({ session: data.session }); await get().fetchProfile(); return true; }
       if (data.user) {
         // Account created, now send email OTP for verification
         const { error: otpError } = await supabase.auth.signInWithOtp({ email });
-        if (otpError) { set({ error: otpError.message }); return false; }
+        if (otpError) { set({ error: friendlyError(otpError.message) }); return false; }
         return true;
       }
       return false;
     } catch (e: unknown) {
-      set({ error: e instanceof Error ? e.message : 'Sign up failed' });
+      set({ error: friendlyError(e instanceof Error ? e.message : 'Sign up failed') });
       return false;
     }
   },
@@ -155,9 +156,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         provider: 'google',
         options: { redirectTo: window.location.origin + '/auth/callback' },
       });
-      if (error) set({ error: error.message });
+      if (error) set({ error: friendlyError(error.message) });
     } catch (e: unknown) {
-      set({ error: e instanceof Error ? e.message : 'Google sign-in failed' });
+      set({ error: friendlyError(e instanceof Error ? e.message : 'Google sign-in failed') });
     }
   },
 
@@ -168,9 +169,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         provider: 'apple',
         options: { redirectTo: window.location.origin + '/auth/callback' },
       });
-      if (error) set({ error: error.message });
+      if (error) set({ error: friendlyError(error.message) });
     } catch (e: unknown) {
-      set({ error: e instanceof Error ? e.message : 'Apple sign-in failed' });
+      set({ error: friendlyError(e instanceof Error ? e.message : 'Apple sign-in failed') });
     }
   },
 
@@ -187,7 +188,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       const { data, error } = await supabase.from('users').select('*').eq('id', session.user.id).single();
       if (error) {
         if (error.code === 'PGRST116') { set({ user: null, isNewUser: true, isLoading: false }); return; }
-        set({ error: error.message, isLoading: false }); return;
+        set({ error: friendlyError(error.message), isLoading: false }); return;
       }
       const isNewUser = !data.display_name ||
         data.display_name === data.phone_number ||
@@ -196,7 +197,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       // Update last_seen_at (fire-and-forget)
       supabase.from('users').update({ last_seen_at: new Date().toISOString() }).eq('id', session.user.id).then(() => {}, () => {});
     } catch (e: unknown) {
-      set({ error: e instanceof Error ? e.message : 'Failed to fetch profile', isLoading: false });
+      set({ error: friendlyError(e instanceof Error ? e.message : 'Failed to fetch profile'), isLoading: false });
     }
   },
 
@@ -207,12 +208,12 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       const { error } = await supabase.from('users')
         .update({ ...data, updated_at: new Date().toISOString() })
         .eq('id', session.user.id);
-      if (error) { set({ error: error.message }); return false; }
+      if (error) { set({ error: friendlyError(error.message) }); return false; }
       await get().fetchProfile();
       set({ isNewUser: false });
       return true;
     } catch (e: unknown) {
-      set({ error: e instanceof Error ? e.message : 'Update failed' });
+      set({ error: friendlyError(e instanceof Error ? e.message : 'Update failed') });
       return false;
     }
   },

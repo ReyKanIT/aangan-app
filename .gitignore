@@ -25,6 +25,10 @@ aangan_rn/android/
 # Temp files
 *.log
 /tmp/
+~$*
+
+# Sensitive files
+CREDENTIALS.md
 
 # Claude
 .claude/
