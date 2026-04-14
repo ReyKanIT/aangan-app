@@ -1,6 +1,5 @@
 'use client';
 import { useState } from 'react';
-import { supabase } from '@/lib/supabase/client';
 import { useAuthStore } from '@/stores/authStore';
 import GoldButton from '@/components/ui/GoldButton';
 
@@ -28,27 +27,20 @@ export default function FeedbackWidget() {
     setSending(true);
     setError('');
     try {
-      const { data: ticket, error: ticketErr } = await supabase
-        .from('support_tickets')
-        .insert({
-          user_id: session.user.id,
-          subject: `${CATEGORIES.find((c) => c.value === category)?.label ?? 'Feedback'}`,
-          category,
-          priority: category === 'bug_report' ? 'high' : 'medium',
-          status: 'open',
-        })
-        .select('id')
-        .single();
-      if (ticketErr) throw ticketErr;
-      if (!ticket) throw new Error('Ticket creation failed');
-
-      const { error: msgErr } = await supabase.from('support_messages').insert({
-        ticket_id: ticket.id,
-        sender_id: session.user.id,
-        message: message.trim(),
-        is_from_support: false,
+      const res = await fetch('/api/feedback', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'same-origin',
+        body: JSON.stringify({ category, message: message.trim() }),
       });
-      if (msgErr) throw msgErr;
+      const json = (await res.json().catch(() => ({}))) as {
+        ok?: boolean;
+        error?: string;
+        details?: string;
+      };
+      if (!res.ok || !json.ok) {
+        throw new Error(json.error ?? json.details ?? 'भेज नहीं पाए — Could not submit');
+      }
 
       setDone(true);
       setMessage('');
