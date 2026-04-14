@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>आँगन — परिवार वृक्ष (Family Tree)</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Poppins', sans-serif; background: #1a1a2e; min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 20px 0; }
+
+  :root {
+    --haldi: #C8A84B; --haldi-dark: #B8963A; --haldi-light: #DBBA4E;
+    --mehndi: #7A9A3A; --cream: #FDFAF0; --brown: #5C3D1E;
+    --white: #FFFFFF; --grey: #8B8680; --light-grey: #E8E4DD;
+    --text: #2D1F0E; --text-light: #6B5E4F; --danger: #D4382C;
+    --male: #5B9BD5; --female: #F2A0B0; --elder: #EDCAAE;
+    --child-m: #8FC4E8; --child-f: #F7C4CC;
+    --line-color: #C8A84B55; --line-hover: #C8A84B;
+  }
+
+  .phone { width: 375px; height: 812px; border-radius: 40px; overflow: hidden; border: 4px solid #333; box-shadow: 0 20px 60px rgba(0,0,0,0.5); background: var(--cream); position: relative; display: flex; flex-direction: column; }
+  .notch { position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 150px; height: 28px; background: #000; border-radius: 0 0 16px 16px; z-index: 20; }
+  .statusbar { position: absolute; top: 0; left: 0; right: 0; z-index: 15; padding: 6px 24px; display: flex; justify-content: space-between; font-size: 12px; font-weight: 600; color: #FFF; }
+
+  /* Header */
+  .tree-header { background: linear-gradient(135deg, var(--haldi-light), var(--haldi-dark)); padding: 12px 16px; padding-top: 34px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+  .tree-header .left { display: flex; align-items: center; gap: 10px; }
+  .tree-header .left button { background: none; border: none; color: white; font-size: 20px; cursor: pointer; }
+  .tree-header .title { color: white; font-size: 20px; font-weight: 700; font-family: serif; }
+  .tree-header .right { display: flex; gap: 10px; align-items: center; }
+  .tree-header .right span { color: white; font-size: 14px; cursor: pointer; background: rgba(255,255,255,0.2); padding: 6px 12px; border-radius: 16px; }
+
+  /* View Toggle */
+  .view-toggle { display: flex; background: var(--white); border-bottom: 1px solid var(--light-grey); flex-shrink: 0; }
+  .view-toggle button { flex: 1; padding: 10px; font-size: 13px; font-weight: 600; border: none; cursor: pointer; background: transparent; color: var(--grey); transition: all 0.2s; font-family: 'Poppins'; }
+  .view-toggle button.active { color: var(--haldi); border-bottom: 2px solid var(--haldi); background: rgba(200,168,75,0.05); }
+
+  /* Tree Container */
+  .tree-scroll { flex: 1; overflow: auto; position: relative; }
+  .tree-container { min-height: 100%; padding: 20px 8px; position: relative; }
+
+  /* ===== THE TREE ===== */
+  .family-tree { display: flex; flex-direction: column; align-items: center; position: relative; }
+
+  /* Generation Row */
+  .generation { display: flex; flex-direction: column; align-items: center; margin-bottom: 0; position: relative; }
+  .gen-label { font-size: 10px; font-weight: 700; color: var(--grey); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; background: var(--cream); padding: 2px 10px; border-radius: 10px; border: 1px solid var(--light-grey); }
+  .gen-row { display: flex; justify-content: center; gap: 8px; position: relative; }
+
+  /* Couple Container */
+  .couple { display: flex; align-items: center; gap: 4px; position: relative; }
+  .couple-bond { width: 16px; height: 2px; background: var(--danger); border-radius: 1px; position: relative; }
+  .couple-bond::after { content: '❤'; font-size: 8px; position: absolute; top: -8px; left: 50%; transform: translateX(-50%); }
+
+  /* Person Node */
+  .person { display: flex; flex-direction: column; align-items: center; cursor: pointer; transition: transform 0.2s; position: relative; z-index: 2; }
+  .person:hover { transform: scale(1.08); }
+  .person:hover .person-ring { box-shadow: 0 4px 20px rgba(200,168,75,0.5); }
+
+  .person-ring { width: 56px; height: 56px; border-radius: 50%; padding: 3px; background: linear-gradient(135deg, var(--haldi-light), var(--haldi-dark)); box-shadow: 0 2px 10px rgba(0,0,0,0.1); transition: box-shadow 0.2s; position: relative; }
+  .person-ring.self { background: linear-gradient(135deg, #FFD700, #FF8C00); box-shadow: 0 0 0 3px rgba(255,215,0,0.3); }
+  .person-avatar { width: 100%; height: 100%; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 26px; border: 2px solid var(--white); }
+
+  .person-name { font-size: 10px; font-weight: 600; color: var(--text); margin-top: 4px; text-align: center; max-width: 64px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .person-role { font-size: 8px; color: var(--grey); margin-top: 1px; }
+
+  /* Online Indicator */
+  .online-dot { position: absolute; bottom: 2px; right: 2px; width: 12px; height: 12px; border-radius: 50%; background: #2E8B57; border: 2px solid var(--white); z-index: 3; }
+
+  /* Badge */
+  .badge { position: absolute; top: -2px; right: -2px; font-size: 12px; z-index: 3; }
+
+  /* Connector Lines via SVG */
+  .connectors { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1; }
+  .connectors path, .connectors line { stroke: var(--haldi); stroke-width: 2; fill: none; opacity: 0.45; stroke-linecap: round; }
+  .connectors .parent-line { stroke-dasharray: none; }
+  .connectors .child-line { stroke-width: 1.5; }
+
+  /* Grid View */
+  .grid-view { display: none; padding: 12px; }
+  .grid-view.active { display: block; }
+  .tree-view { display: block; }
+  .tree-view.hidden { display: none; }
+
+  .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .grid-member { background: var(--white); border-radius: 14px; padding: 10px; text-align: center; box-shadow: 0 2px 6px rgba(0,0,0,0.05); }
+  .grid-member .avatar-sm { width: 48px; height: 48px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 22px; }
+
+  /* Add Member */
+  .add-node { width: 48px; height: 48px; border-radius: 50%; border: 2px dashed var(--haldi); display: flex; align-items: center; justify-content: center; cursor: pointer; background: rgba(200,168,75,0.08); }
+  .add-node span { font-size: 20px; color: var(--haldi); }
+
+  /* Invite Banner */
+  .invite-banner { background: linear-gradient(135deg, rgba(122,154,58,0.12), rgba(122,154,58,0.04)); border-radius: 14px; padding: 14px; margin: 16px 12px; text-align: center; border: 1px solid rgba(122,154,58,0.2); }
+
+  /* Bottom Nav */
+  .bottom-nav { display: flex; justify-content: space-around; padding: 10px 0 14px; background: white; border-top: 1px solid var(--light-grey); box-shadow: 0 -2px 8px rgba(0,0,0,0.04); flex-shrink: 0; }
+  .nav-item { text-align: center; cursor: pointer; min-width: 48px; }
+  .nav-item .icon { font-size: 22px; }
+  .nav-item p { font-size: 10px; margin-top: 2px; }
+  .nav-item.active p { color: var(--haldi); font-weight: 700; }
+  .nav-item:not(.active) p { color: var(--grey); }
+  .fab { width: 48px; height: 48px; border-radius: 50%; background: linear-gradient(135deg, var(--haldi-light), var(--haldi-dark)); display: flex; align-items: center; justify-content: center; margin-top: -20px; box-shadow: 0 4px 12px rgba(200,168,75,0.4); }
+
+  /* Legend */
+  .legend { display: flex; gap: 8px; padding: 8px 12px; flex-wrap: wrap; justify-content: center; }
+  .legend-item { display: flex; align-items: center; gap: 4px; font-size: 9px; color: var(--grey); }
+  .legend-dot { width: 10px; height: 10px; border-radius: 50%; }
+
+  /* Animations */
+  @keyframes fadeSlideUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+  .gen-0 { animation: fadeSlideUp 0.4s ease-out 0s both; }
+  .gen-1 { animation: fadeSlideUp 0.4s ease-out 0.15s both; }
+  .gen-2 { animation: fadeSlideUp 0.4s ease-out 0.3s both; }
+  .gen-3 { animation: fadeSlideUp 0.4s ease-out 0.45s both; }
+
+  /* Pinch-zoom hint */
+  .zoom-hint { font-size: 10px; color: var(--grey); text-align: center; padding: 4px; }
+
+  /* Tooltip on tap */
+  .tooltip { display: none; position: absolute; background: var(--white); border-radius: 12px; padding: 10px 14px; box-shadow: 0 4px 20px rgba(0,0,0,0.15); z-index: 100; min-width: 140px; border: 1px solid var(--light-grey); }
+  .tooltip.show { display: block; animation: fadeSlideUp 0.2s ease-out; }
+  .tooltip h4 { font-size: 14px; color: var(--text); margin-bottom: 2px; }
+  .tooltip p { font-size: 11px; color: var(--grey); }
+  .tooltip .actions { display: flex; gap: 8px; margin-top: 8px; }
+  .tooltip .actions button { padding: 4px 12px; font-size: 11px; border-radius: 8px; cursor: pointer; font-weight: 600; font-family: 'Poppins'; }
+
+  p.footer { color: #666; font-size: 12px; margin-top: 16px; font-weight: 500; }
+</style>
+</head>
+<body>
+
+<div style="display:flex;align-items:center;gap:12px;margin-bottom:4px">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="32" height="32">
+    <defs><linearGradient id="ig" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#DBBA4E"/><stop offset="100%" stop-color="#B8963A"/></linearGradient></defs>
+    <rect width="200" height="200" rx="44" fill="url(#ig)"/><polygon points="100,28 26,76 26,178 174,178 174,76" fill="#FFF"/>
+    <circle cx="100" cy="56" r="16" fill="#EDCAAE" stroke="#5C3D1E" stroke-width="2"/>
+    <circle cx="72" cy="107" r="14" fill="#5B9BD5"/><circle cx="128" cy="107" r="14" fill="#F2A0B0"/>
+    <line x1="100" y1="28" x2="20" y2="76" stroke="#5C3D1E" stroke-width="4" stroke-linecap="round"/>
+    <line x1="100" y1="28" x2="180" y2="76" stroke="#5C3D1E" stroke-width="4" stroke-linecap="round"/>
+  </svg>
+  <h2 style="color:#DBBA4E;font-family:serif;font-size:26px">आँगन — परिवार वृक्ष</h2>
+</div>
+<p style="color:#888;font-size:13px;margin-bottom:14px">Family Tree v3.0 — Interactive Hierarchical View</p>
+
+<div class="phone">
+  <div class="notch"></div>
+  <div class="statusbar"><span>9:41</span><span></span><span>📶 🔋</span></div>
+
+  <!-- Header -->
+  <div class="tree-header">
+    <div class="left">
+      <button>←</button>
+      <span class="title">परिवार वृक्ष</span>
+    </div>
+    <div class="right">
+      <span>🔍</span>
+      <span>+ जोड़ें</span>
+    </div>
+  </div>
+
+  <!-- View Toggle -->
+  <div class="view-toggle">
+    <button class="active" onclick="switchView('tree')">🌳 वृक्ष दृश्य</button>
+    <button onclick="switchView('grid')">⊞ ग्रिड दृश्य</button>
+    <button onclick="switchView('list')">☰ सूची</button>
+  </div>
+
+  <!-- Tree Scroll Area -->
+  <div class="tree-scroll" id="treeScroll">
+
+    <!-- === TREE VIEW === -->
+    <div class="tree-view" id="treeView">
+      <div class="tree-container" id="treeContainer">
+
+        <!-- Legend -->
+        <div class="legend">
+          <div class="legend-item"><div class="legend-dot" style="background:var(--elder)"></div> बड़े</div>
+          <div class="legend-item"><div class="legend-dot" style="background:var(--male)"></div> पुरुष</div>
+          <div class="legend-item"><div class="legend-dot" style="background:var(--female)"></div> महिला</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#2E8B57"></div> ऑनलाइन</div>
+          <div class="legend-item"><span style="font-size:8px">❤</span> विवाहित</div>
+        </div>
+
+        <!-- SVG Connector Lines -->
+        <svg class="connectors" id="connectorSvg" width="100%" height="600" style="position:absolute;top:0;left:0">
+          <!-- Lines drawn by JS -->
+        </svg>
+
+        <div class="family-tree" id="familyTree">
+
+          <!-- GENERATION 0: Great Grandparents / Elders -->
+          <div class="generation gen-0">
+            <div class="gen-label">बड़े बुज़ुर्ग</div>
+            <div class="gen-row">
+              <div class="couple">
+                <div class="person" data-id="pardada" data-name="पर-दादा जी" data-role="परदादा" data-gen="0">
+                  <div class="person-ring">
+                    <div class="person-avatar" style="background:var(--elder)">🧓</div>
+                  </div>
+                  <div class="person-name">पर-दादा जी</div>
+                  <div class="person-role">परदादा</div>
+                </div>
+                <div class="couple-bond"></div>
+                <div class="person" data-id="pardadi" data-name="पर-दादी जी" data-role="परदादी" data-gen="0">
+                  <div class="person-ring">
+                    <div class="person-avatar" style="background:var(--elder)">👵</div>
+                  </div>
+                  <div class="person-name">पर-दादी जी</div>
+                  <div class="person-role">परदादी</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Vertical connector gen 0→1 -->
+          <svg width="20" height="32" style="display:block;margin:0 auto;overflow:visible">
+            <defs><marker id="arrowGen01" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#C8A84B" opacity="0.7"/></marker></defs>
+            <line x1="10" y1="0" x2="10" y2="28" stroke="#C8A84B" stroke-width="2" opacity="0.5" marker-end="url(#arrowGen01)"/>
+          </svg>
+
+          <!-- GENERATION 1: Grandparents -->
+          <div class="generation gen-1">
+            <div class="gen-label">दादा-दादी पीढ़ी</div>
+            <div class="gen-row">
+              <div class="couple">
+                <div class="person" data-id="dada" data-name="दादा जी" data-role="दादा" data-gen="1">
+                  <div class="person-ring">
+                    <div class="person-avatar" style="background:var(--elder)">🧓</div>
+                    <div class="badge">👑</div>
+                    <div class="online-dot"></div>
+                  </div>
+                  <div class="person-name">दादा जी</div>
+                  <div class="person-role">दादा</div>
+                </div>
+                <div class="couple-bond"></div>
+                <div class="person" data-id="dadi" data-name="दादी जी" data-role="दादी" data-gen="1">
+                  <div class="person-ring">
+                    <div class="person-avatar" style="background:var(--elder)">👵</div>
+                    <div class="badge">🙏</div>
+                    <div class="online-dot"></div>
+                  </div>
+                  <div class="person-name">दादी जी</div>
+                  <div class="person-role">दादी</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Branch connector gen 1→2 (splits into Papa & Chacha) with arrows -->
+          <svg width="300" height="42" style="display:block;margin:0 auto;overflow:visible" viewBox="0 0 300 42">
+            <defs><marker id="arrowDown" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#C8A84B" opacity="0.7"/></marker></defs>
+            <line x1="150" y1="0" x2="150" y2="16" stroke="#C8A84B" stroke-width="2" opacity="0.45"/>
+            <line x1="75" y1="16" x2="225" y2="16" stroke="#C8A84B" stroke-width="2" opacity="0.45"/>
+            <line x1="75" y1="16" x2="75" y2="36" stroke="#C8A84B" stroke-width="2" opacity="0.45" marker-end="url(#arrowDown)"/>
+            <line x1="225" y1="16" x2="225" y2="36" stroke="#C8A84B" stroke-width="2" opacity="0.45" marker-end="url(#arrowDown)"/>
+            <circle cx="150" cy="16" r="3.5" fill="#C8A84B" opacity="0.55"/>
+            <circle cx="75" cy="16" r="3" fill="#C8A84B" opacity="0.55"/>
+            <circle cx="225" cy="16" r="3" fill="#C8A84B" opacity="0.55"/>
+          </svg>
+
+          <!-- GENERATION 2: Parents -->
+          <div class="generation gen-2">
+            <div class="gen-label">माता-पिता पीढ़ी</div>
+            <div class="gen-row" style="gap:24px">
+              <!-- Papa + Mummy -->
+              <div class="couple">
+                <div class="person" data-id="papa" data-name="पापा" data-role="पिता" data-gen="2">
+                  <div class="person-ring">
+                    <div class="person-avatar" style="background:var(--male)">👨</div>
+                    <div class="online-dot"></div>
+                  </div>
+                  <div class="person-name">पापा</div>
+                  <div class="person-role">पिता</div>
+                </div>
+                <div class="couple-bond"></div>
+                <div class="person" data-id="mummy" data-name="मम्मी" data-role="माँ" data-gen="2">
+                  <div class="person-ring">
+                    <div class="person-avatar" style="background:var(--female)">👩</div>
+                  </div>
+                  <div class="person-name">मम्मी</div>
+                  <div class="person-role">माँ</div>
+                </div>
+              </div>
+              <!-- Chacha + Chachi -->
+              <div class="couple">
+                <div class="person" data-id="chacha" data-name="चाचा जी" data-role="चाचा" data-gen="2">
+                  <div class="person-ring">
+                    <div class="person-avatar" style="background:var(--male)">👨</div>
+                  </div>
+                  <div class="person-name">चाचा जी</div>
+                  <div class="person-role">चाचा</div>
+                </div>
+                <div class="couple-bond"></div>
+                <div class="person" data-id="chachi" data-name="चाची जी" data-role="चाची" data-gen="2">
+                  <div class="person-ring">
+                    <div class="person-avatar" style="background:var(--female)">👩</div>
+                    <div class="online-dot"></div>
+                  </div>
+                  <div class="person-name">चाची जी</div>
+                  <div class="person-role">चाची</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Branch connector gen 2→3 (Papa's children) -->
+          <svg width="340" height="42" style="display:block;margin:0 auto;overflow:visible" viewBox="0 0 340 42">
+            <defs><marker id="arrowSm" markerWidth="7" markerHeight="7" refX="3.5" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7 Z" fill="#C8A84B" opacity="0.65"/></marker></defs>
+            <!-- Papa family branch -->
+            <line x1="85" y1="0" x2="85" y2="14" stroke="#C8A84B" stroke-width="2" opacity="0.45"/>
+            <line x1="30" y1="14" x2="140" y2="14" stroke="#C8A84B" stroke-width="1.5" opacity="0.4"/>
+            <circle cx="85" cy="14" r="3" fill="#C8A84B" opacity="0.5"/>
+            <line x1="30" y1="14" x2="30" y2="36" stroke="#C8A84B" stroke-width="1.5" opacity="0.4" marker-end="url(#arrowSm)"/>
+            <line x1="85" y1="14" x2="85" y2="36" stroke="#C8A84B" stroke-width="1.5" opacity="0.4" marker-end="url(#arrowSm)"/>
+            <line x1="140" y1="14" x2="140" y2="36" stroke="#C8A84B" stroke-width="1.5" opacity="0.4" marker-end="url(#arrowSm)"/>
+            <!-- Chacha family branch -->
+            <line x1="255" y1="0" x2="255" y2="14" stroke="#C8A84B" stroke-width="2" opacity="0.45"/>
+            <line x1="220" y1="14" x2="290" y2="14" stroke="#C8A84B" stroke-width="1.5" opacity="0.4"/>
+            <circle cx="255" cy="14" r="3" fill="#C8A84B" opacity="0.5"/>
+            <line x1="220" y1="14" x2="220" y2="36" stroke="#C8A84B" stroke-width="1.5" opacity="0.4" marker-end="url(#arrowSm)"/>
+            <line x1="290" y1="14" x2="290" y2="36" stroke="#C8A84B" stroke-width="1.5" opacity="0.4" marker-end="url(#arrowSm)"/>
+          </svg>
+
+          <!-- GENERATION 3: Children -->
+          <div class="generation gen-3">
+            <div class="gen-label">हमारी पीढ़ी</div>
+            <div class="gen-row" style="gap:6px">
+              <!-- Papa's children -->
+              <div class="person" data-id="bhai" data-name="भाई" data-role="बड़ा भाई" data-gen="3">
+                <div class="person-ring">
+                  <div class="person-avatar" style="background:var(--child-m)">😎</div>
+                  <div class="online-dot"></div>
+                </div>
+                <div class="person-name">भाई</div>
+                <div class="person-role">बड़ा भाई</div>
+              </div>
+
+              <div class="person" data-id="me" data-name="Kumar" data-role="मैं" data-gen="3">
+                <div class="person-ring self">
+                  <div class="person-avatar" style="background:var(--haldi)">
+                    <span style="font-size:20px;color:white;font-weight:700">K</span>
+                  </div>
+                  <div class="online-dot"></div>
+                </div>
+                <div class="person-name" style="color:var(--haldi);font-weight:700">आप ★</div>
+                <div class="person-role">मैं</div>
+              </div>
+
+              <div class="person" data-id="behen" data-name="बहन" data-role="छोटी बहन" data-gen="3">
+                <div class="person-ring">
+                  <div class="person-avatar" style="background:var(--child-f)">🥰</div>
+                </div>
+                <div class="person-name">बहन</div>
+                <div class="person-role">छोटी बहन</div>
+              </div>
+
+              <!-- Small gap between families -->
+              <div style="width:14px"></div>
+
+              <!-- Chacha's children -->
+              <div class="person" data-id="cousin1" data-name="अनुज" data-role="चचेरा भाई" data-gen="3">
+                <div class="person-ring">
+                  <div class="person-avatar" style="background:var(--child-m)">😊</div>
+                </div>
+                <div class="person-name">अनुज</div>
+                <div class="person-role">चचेरा भाई</div>
+              </div>
+
+              <div class="person" data-id="cousin2" data-name="प्रिया" data-role="चचेरी बहन" data-gen="3">
+                <div class="person-ring">
+                  <div class="person-avatar" style="background:var(--child-f)">😊</div>
+                </div>
+                <div class="person-name">प्रिया</div>
+                <div class="person-role">चचेरी बहन</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Add more section -->
+          <div style="margin-top:20px;display:flex;flex-direction:column;align-items:center;gap:8px">
+            <div class="add-node"><span>+</span></div>
+            <p style="font-size:11px;color:var(--grey)">और सदस्य जोड़ें</p>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Invite Banner -->
+      <div class="invite-banner">
+        <p style="font-size:14px;font-weight:600;color:var(--mehndi);margin-bottom:4px">🌿 परिवार को बढ़ाएं</p>
+        <p style="font-size:12px;color:var(--grey);margin-bottom:10px">WhatsApp या SMS से निमंत्रण भेजें</p>
+        <div style="display:flex;gap:8px;justify-content:center">
+          <button style="padding:8px 18px;font-size:13px;font-weight:600;background:var(--mehndi);color:white;border:none;border-radius:10px;cursor:pointer;font-family:'Poppins'">📩 WhatsApp</button>
+          <button style="padding:8px 18px;font-size:13px;font-weight:600;background:white;color:var(--mehndi);border:1px solid var(--mehndi);border-radius:10px;cursor:pointer;font-family:'Poppins'">💬 SMS</button>
+        </div>
+      </div>
+
+      <div class="zoom-hint">↕ स्क्रॉल करें • सदस्य पर टैप करें</div>
+    </div>
+
+    <!-- === GRID VIEW === -->
+    <div class="grid-view" id="gridView">
+      <p style="font-size:13px;color:var(--grey);margin-bottom:10px;padding:0 4px">14 सदस्य • 3 निमंत्रण भेजे</p>
+      <div class="grid" id="gridContainer"></div>
+    </div>
+
+    <!-- === LIST VIEW === -->
+    <div class="grid-view" id="listView" style="display:none">
+      <div id="listContainer"></div>
+    </div>
+
+  </div>
+
+  <!-- Bottom Nav -->
+  <div class="bottom-nav">
+    <div class="nav-item"><span class="icon">🏠</span><p>होम</p></div>
+    <div class="nav-item active"><span class="icon">🌳</span><p>परिवार</p></div>
+    <div class="nav-item"><div class="fab"><span style="font-size:24px;color:white">➕</span></div></div>
+    <div class="nav-item"><span class="icon">🔔</span><p>सूचना</p></div>
+    <div class="nav-item"><span class="icon">👤</span><p>प्रोफ़ाइल</p></div>
+  </div>
+
+  <!-- Tooltip (for tapping on members) -->
+  <div class="tooltip" id="tooltip">
+    <h4 id="ttName"></h4>
+    <p id="ttRole"></p>
+    <p id="ttStatus" style="color:#2E8B57;font-size:10px;margin-top:2px"></p>
+    <div class="actions">
+      <button style="background:var(--haldi);color:white;border:none">💬 संदेश</button>
+      <button style="background:white;color:var(--text);border:1px solid var(--light-grey)">👤 प्रोफ़ाइल</button>
+    </div>
+  </div>
+</div>
+
+<p class="footer">Milestone v3.0 — Family Tree with Hierarchical View</p>
+
+<script>
+// ===== DATA =====
+const members = [
+  { id:'pardada', name:'पर-दादा जी', role:'परदादा', gen:0, gender:'M', emoji:'🧓', color:'#EDCAAE', online:false },
+  { id:'pardadi', name:'पर-दादी जी', role:'परदादी', gen:0, gender:'F', emoji:'👵', color:'#EDCAAE', online:false },
+  { id:'dada', name:'दादा जी', role:'दादा', gen:1, gender:'M', emoji:'🧓', color:'#EDCAAE', online:true, badge:'👑' },
+  { id:'dadi', name:'दादी जी', role:'दादी', gen:1, gender:'F', emoji:'👵', color:'#EDCAAE', online:true, badge:'🙏' },
+  { id:'papa', name:'पापा', role:'पिता', gen:2, gender:'M', emoji:'👨', color:'#5B9BD5', online:true },
+  { id:'mummy', name:'मम्मी', role:'माँ', gen:2, gender:'F', emoji:'👩', color:'#F2A0B0', online:false },
+  { id:'chacha', name:'चाचा जी', role:'चाचा', gen:2, gender:'M', emoji:'👨', color:'#5B9BD5', online:false },
+  { id:'chachi', name:'चाची जी', role:'चाची', gen:2, gender:'F', emoji:'👩', color:'#F2A0B0', online:true },
+  { id:'bhai', name:'भाई', role:'बड़ा भाई', gen:3, gender:'M', emoji:'😎', color:'#8FC4E8', online:true },
+  { id:'me', name:'Kumar', role:'मैं (आप)', gen:3, gender:'M', emoji:'K', color:'#C8A84B', online:true, self:true },
+  { id:'behen', name:'बहन', role:'छोटी बहन', gen:3, gender:'F', emoji:'🥰', color:'#F7C4CC', online:false },
+  { id:'cousin1', name:'अनुज', role:'चचेरा भाई', gen:3, gender:'M', emoji:'😊', color:'#8FC4E8', online:false },
+  { id:'cousin2', name:'प्रिया', role:'चचेरी बहन', gen:3, gender:'F', emoji:'😊', color:'#F7C4CC', online:false },
+];
+
+// ===== VIEW SWITCHING =====
+function switchView(view) {
+  document.querySelectorAll('.view-toggle button').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+
+  document.getElementById('treeView').style.display = view === 'tree' ? 'block' : 'none';
+  document.getElementById('gridView').style.display = view === 'grid' ? 'block' : 'none';
+  document.getElementById('listView').style.display = view === 'list' ? 'block' : 'none';
+}
+
+// ===== GRID VIEW =====
+function buildGrid() {
+  const grid = document.getElementById('gridContainer');
+  grid.innerHTML = '';
+  members.forEach(m => {
+    const div = document.createElement('div');
+    div.className = 'grid-member';
+    if (m.self) div.style.border = '2px solid var(--haldi)';
+    div.innerHTML = `
+      <div style="position:relative;display:inline-block">
+        <div class="avatar-sm" style="background:${m.color}">${m.self ? '<span style="color:white;font-weight:700;font-size:18px">K</span>' : m.emoji}</div>
+        ${m.online ? '<div style="position:absolute;bottom:0;right:0;width:10px;height:10px;border-radius:50%;background:#2E8B57;border:2px solid white"></div>' : ''}
+        ${m.badge ? '<span style="position:absolute;top:-4px;right:-4px;font-size:10px">'+m.badge+'</span>' : ''}
+      </div>
+      <p style="font-size:11px;font-weight:600;color:var(--text);margin:4px 0 1px">${m.name}</p>
+      <p style="font-size:9px;color:var(--grey)">${m.role}</p>
+    `;
+    grid.appendChild(div);
+  });
+}
+
+// ===== LIST VIEW =====
+function buildList() {
+  const list = document.getElementById('listContainer');
+  list.innerHTML = '';
+  const gens = ['बड़े बुज़ुर्ग', 'दादा-दादी पीढ़ी', 'माता-पिता पीढ़ी', 'हमारी पीढ़ी'];
+  for (let g = 0; g < 4; g++) {
+    const genMembers = members.filter(m => m.gen === g);
+    if (!genMembers.length) continue;
+    const section = document.createElement('div');
+    section.style.marginBottom = '16px';
+    section.innerHTML = `<p style="font-size:11px;font-weight:700;color:var(--grey);text-transform:uppercase;margin-bottom:8px;padding-left:4px">${gens[g]}</p>`;
+    const card = document.createElement('div');
+    card.style.cssText = 'background:white;border-radius:14px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.05)';
+    genMembers.forEach((m, i) => {
+      const row = document.createElement('div');
+      row.style.cssText = `display:flex;align-items:center;gap:12px;padding:12px 14px;${i < genMembers.length-1 ? 'border-bottom:1px solid var(--light-grey)' : ''}`;
+      row.innerHTML = `
+        <div style="position:relative">
+          <div style="width:40px;height:40px;border-radius:50%;background:${m.color};display:flex;align-items:center;justify-content:center;font-size:20px">${m.self ? '<span style="color:white;font-weight:700;font-size:16px">K</span>' : m.emoji}</div>
+          ${m.online ? '<div style="position:absolute;bottom:0;right:0;width:10px;height:10px;border-radius:50%;background:#2E8B57;border:2px solid white"></div>' : ''}
+        </div>
+        <div style="flex:1">
+          <p style="font-size:14px;font-weight:600;color:var(--text)">${m.name} ${m.self ? '★' : ''} ${m.badge||''}</p>
+          <p style="font-size:11px;color:var(--grey)">${m.role}</p>
+        </div>
+        <span style="color:var(--haldi);font-size:13px;cursor:pointer">💬</span>
+      `;
+      card.appendChild(row);
+    });
+    section.appendChild(card);
+    list.appendChild(section);
+  }
+}
+
+// ===== TOOLTIP ON TAP =====
+document.querySelectorAll('.person').forEach(p => {
+  p.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const tt = document.getElementById('tooltip');
+    const name = p.dataset.name;
+    const role = p.dataset.role;
+    document.getElementById('ttName').textContent = name;
+    document.getElementById('ttRole').textContent = role;
+    const m = members.find(x => x.id === p.dataset.id);
+    document.getElementById('ttStatus').textContent = m && m.online ? '🟢 ऑनलाइन' : '⚪ ऑफ़लाइन';
+
+    const rect = p.getBoundingClientRect();
+    const phoneRect = document.querySelector('.phone').getBoundingClientRect();
+    tt.style.left = Math.min(Math.max(rect.left - phoneRect.left - 40, 10), 200) + 'px';
+    tt.style.top = (rect.bottom - phoneRect.top + 8) + 'px';
+    tt.classList.add('show');
+  });
+});
+
+document.addEventListener('click', () => {
+  document.getElementById('tooltip').classList.remove('show');
+});
+
+// Init
+buildGrid();
+buildList();
+</script>
+</body>
+</html>

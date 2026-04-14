@@ -37,3 +37,12 @@ CREDENTIALS.md
 aangan_web/node_modules/
 aangan_web/.next/
 aangan_web/.env.local
+aangan_web/tsconfig.tsbuildinfo
+
+# Supabase CLI local state
+supabase/.temp/
+supabase/.branches/
+
+# Root-level build artifacts (historical clutter — see archive/ for preserved versions)
+/*.apk
+/*.apk.idsig

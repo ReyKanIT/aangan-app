@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aangan Promo</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Poppins', sans-serif;
+    background: #FDFAF0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    overflow: hidden;
+  }
+
+  .phone-frame {
+    width: 390px;
+    height: 844px;
+    background: #FDFAF0;
+    border-radius: 40px;
+    border: 8px solid #333;
+    overflow: hidden;
+    position: relative;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+  }
+
+  .notch {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 120px;
+    height: 28px;
+    background: #333;
+    border-radius: 0 0 16px 16px;
+    z-index: 100;
+  }
+
+  .slide {
+    position: absolute;
+    inset: 0;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 30px 40px;
+    text-align: center;
+  }
+
+  .slide.active {
+    display: flex;
+    animation: fadeIn 0.5s ease;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
+  }
+
+  /* Slide 1: WhatsApp Problem */
+  .slide-1 { background: linear-gradient(135deg, #DCF8C6 0%, #c5e1a5 100%); }
+  .slide-1 .emoji { font-size: 80px; margin-bottom: 20px; }
+  .slide-1 h2 { font-size: 28px; color: #075E54; font-weight: 800; line-height: 1.3; }
+  .slide-1 .problems {
+    margin-top: 24px;
+    text-align: left;
+    font-size: 18px;
+    color: #333;
+    line-height: 2;
+  }
+  .slide-1 .problems span { color: #e53e3e; font-weight: 600; }
+
+  /* Slide 2: Aangan Intro */
+  .slide-2 { background: linear-gradient(135deg, #FDFAF0 0%, #f5e6c8 100%); }
+  .slide-2 .logo { font-size: 64px; font-weight: 800; color: #C8A84B; }
+  .slide-2 .hindi { font-size: 48px; color: #a08030; margin-top: -5px; }
+  .slide-2 .tagline { font-size: 22px; color: #5a4a2a; margin-top: 16px; font-weight: 600; }
+  .slide-2 .sub { font-size: 18px; color: #8a7a5a; margin-top: 8px; }
+
+  /* Slide 3: Features */
+  .slide-3 { background: #FDFAF0; justify-content: flex-start; padding-top: 70px; }
+  .slide-3 h2 { font-size: 24px; color: #C8A84B; margin-bottom: 20px; }
+  .features-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    width: 100%;
+  }
+  .feature-card {
+    background: white;
+    border-radius: 16px;
+    padding: 16px 12px;
+    border: 1.5px solid rgba(200,168,75,0.2);
+    text-align: center;
+    opacity: 0;
+    transform: scale(0.8);
+    animation: popIn 0.4s ease forwards;
+  }
+  .feature-card .icon { font-size: 36px; margin-bottom: 6px; }
+  .feature-card .name { font-size: 13px; font-weight: 700; color: #5a4a2a; }
+  .feature-card .hindi-name { font-size: 12px; color: #C8A84B; }
+
+  @keyframes popIn {
+    to { opacity: 1; transform: scale(1); }
+  }
+
+  /* Slide 4: Voice */
+  .slide-4 { background: linear-gradient(135deg, #FDFAF0 0%, #e8f5e9 100%); }
+  .slide-4 .mic { font-size: 100px; animation: pulse 1.5s ease-in-out infinite; }
+  .slide-4 h2 { font-size: 32px; color: #5a4a2a; margin-top: 20px; }
+  .slide-4 .demo-text {
+    margin-top: 20px;
+    background: white;
+    border-radius: 20px;
+    padding: 20px;
+    font-size: 18px;
+    color: #333;
+    border: 2px solid #7A9A3A;
+    position: relative;
+  }
+  .slide-4 .demo-text::before {
+    content: '🎤';
+    position: absolute;
+    top: -15px;
+    left: 20px;
+    font-size: 24px;
+  }
+  .typing-text {
+    overflow: hidden;
+    white-space: nowrap;
+    border-right: 3px solid #C8A84B;
+    animation: typing 2s steps(20) forwards, blink 0.7s step-end infinite;
+    width: 0;
+    display: inline-block;
+  }
+  @keyframes typing { to { width: 100%; } }
+  @keyframes blink { 50% { border-color: transparent; } }
+
+  /* Slide 5: Dadi Test */
+  .slide-5 { background: linear-gradient(135deg, #fff8e1 0%, #FDFAF0 100%); }
+  .slide-5 .dadi { font-size: 100px; margin-bottom: 10px; }
+  .slide-5 h2 { font-size: 28px; color: #C8A84B; }
+  .slide-5 .check-list {
+    margin-top: 24px;
+    text-align: left;
+    font-size: 20px;
+    line-height: 2.2;
+    color: #5a4a2a;
+  }
+  .slide-5 .check-list .check { color: #7A9A3A; font-weight: 700; }
+
+  /* Slide 6: Free + CTA */
+  .slide-6 { background: linear-gradient(135deg, #C8A84B 0%, #a08030 100%); }
+  .slide-6 .free-badge {
+    background: white;
+    color: #7A9A3A;
+    font-size: 36px;
+    font-weight: 800;
+    padding: 16px 40px;
+    border-radius: 20px;
+    margin-bottom: 24px;
+    animation: bounceIn 0.6s ease;
+  }
+  .slide-6 h2 { font-size: 28px; color: white; }
+  .slide-6 .url {
+    margin-top: 24px;
+    background: white;
+    color: #C8A84B;
+    font-size: 24px;
+    font-weight: 700;
+    padding: 16px 32px;
+    border-radius: 16px;
+  }
+  .slide-6 .arrow { font-size: 48px; color: white; margin-top: 16px; animation: bounce 1s ease infinite; }
+
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+  }
+  @keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+  }
+  @keyframes bounceIn {
+    0% { transform: scale(0); }
+    50% { transform: scale(1.2); }
+    100% { transform: scale(1); }
+  }
+
+  /* Progress bar */
+  .progress {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 4px;
+    background: #C8A84B;
+    z-index: 99;
+    transition: width 0.3s ease;
+  }
+
+  /* Controls */
+  .controls {
+    position: fixed;
+    bottom: 20px;
+    display: flex;
+    gap: 12px;
+    z-index: 200;
+  }
+  .controls button {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: 'Poppins', sans-serif;
+  }
+  .btn-play { background: #C8A84B; color: white; }
+  .btn-play:hover { background: #a08030; }
+  .btn-record { background: #e53e3e; color: white; }
+  .btn-record:hover { background: #c53030; }
+  .btn-record.recording { animation: recPulse 1s ease infinite; }
+  @keyframes recPulse { 50% { opacity: 0.7; } }
+  .btn-reset { background: #eee; color: #333; }
+
+  .instructions {
+    position: fixed;
+    top: 20px;
+    font-size: 14px;
+    color: #888;
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+
+<div class="instructions">
+  Point your phone camera at this screen and record a video.<br>
+  Click ▶ Play to start the animation (30 seconds).
+</div>
+
+<div class="phone-frame">
+  <div class="notch"></div>
+
+  <!-- Slide 1: WhatsApp Problem -->
+  <div class="slide slide-1 active" data-duration="4000">
+    <div class="emoji">😫</div>
+    <h2>आपका Family<br>WhatsApp Group...</h2>
+    <div class="problems">
+      <span>❌</span> Photos खो जाते हैं<br>
+      <span>❌</span> 99+ unread messages<br>
+      <span>❌</span> Good morning forwards 😅<br>
+      <span>❌</span> Events का पता नहीं चलता<br>
+      <span>❌</span> दादी को use करना मुश्किल
+    </div>
+  </div>
+
+  <!-- Slide 2: Aangan Intro -->
+  <div class="slide slide-2" data-duration="4000">
+    <div class="logo">Aangan</div>
+    <div class="hindi">आँगन</div>
+    <div class="tagline">परिवार का अपना ऐप!</div>
+    <div class="sub">Your Family's Digital Home 🏠</div>
+    <div style="margin-top: 32px; padding: 12px 24px; background: #7A9A3A; color: white; border-radius: 30px; font-size: 16px; font-weight: 600;">
+      WhatsApp Group नहीं — Family Network!
+    </div>
+  </div>
+
+  <!-- Slide 3: Features -->
+  <div class="slide slide-3" data-duration="5000">
+    <h2>सब कुछ एक जगह ✨</h2>
+    <div class="features-grid">
+      <div class="feature-card" style="animation-delay: 0.1s">
+        <div class="icon">👨‍👩‍👧‍👦</div>
+        <div class="name">Family Tree</div>
+        <div class="hindi-name">परिवार का पेड़</div>
+      </div>
+      <div class="feature-card" style="animation-delay: 0.3s">
+        <div class="icon">📸</div>
+        <div class="name">Posts & Photos</div>
+        <div class="hindi-name">पोस्ट और फोटो</div>
+      </div>
+      <div class="feature-card" style="animation-delay: 0.5s">
+        <div class="icon">🎉</div>
+        <div class="name">Events & RSVP</div>
+        <div class="hindi-name">कार्यक्रम</div>
+      </div>
+      <div class="feature-card" style="animation-delay: 0.7s">
+        <div class="icon">📅</div>
+        <div class="name">Panchang</div>
+        <div class="hindi-name">पंचांग और त्योहार</div>
+      </div>
+      <div class="feature-card" style="animation-delay: 0.9s">
+        <div class="icon">💬</div>
+        <div class="name">Messages</div>
+        <div class="hindi-name">संदेश भेजें</div>
+      </div>
+      <div class="feature-card" style="animation-delay: 1.1s">
+        <div class="icon">🛕</div>
+        <div class="name">Kuldevi</div>
+        <div class="hindi-name">कुलदेवी/कुलदेवता</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Slide 4: Voice -->
+  <div class="slide slide-4" data-duration="5000">
+    <div class="mic">🎤</div>
+    <h2>बोलो, ऐप लिखेगा!</h2>
+    <div class="demo-text">
+      <div class="typing-text">"कल शाम को पूजा है सबको आना है"</div>
+    </div>
+    <div style="margin-top: 20px; font-size: 16px; color: #7A9A3A; font-weight: 600;">
+      Hindi Voice-to-Text ✅
+    </div>
+  </div>
+
+  <!-- Slide 5: Dadi Test -->
+  <div class="slide slide-5" data-duration="5000">
+    <div class="dadi">👵</div>
+    <h2>दादी टेस्ट पास! ✅</h2>
+    <div class="check-list">
+      <span class="check">✅</span> बड़े बटन (52px+)<br>
+      <span class="check">✅</span> बड़े अक्षर (16px+)<br>
+      <span class="check">✅</span> Hindi में सब कुछ<br>
+      <span class="check">✅</span> बोलकर लिखें 🎤<br>
+      <span class="check">✅</span> आसान navigation
+    </div>
+  </div>
+
+  <!-- Slide 6: CTA -->
+  <div class="slide slide-6" data-duration="5000">
+    <div class="free-badge">100% FREE!</div>
+    <h2>अभी Download करें</h2>
+    <div class="url">📲 aangan.app</div>
+    <div class="arrow">👇</div>
+    <div style="margin-top: 8px; color: rgba(255,255,255,0.8); font-size: 14px;">
+      Android • iOS (Coming Soon) • Web
+    </div>
+  </div>
+
+  <div class="progress" id="progress"></div>
+</div>
+
+<div class="controls">
+  <button class="btn-record" id="recBtn" onclick="recordAndPlay()">⏺ Record + Play</button>
+  <button class="btn-play" onclick="startSlideshow()">▶ Play Only</button>
+  <button class="btn-reset" onclick="resetSlideshow()">↺ Reset</button>
+</div>
+
+<script>
+  const slides = document.querySelectorAll('.slide');
+  const progress = document.getElementById('progress');
+  let currentSlide = 0;
+  let timer = null;
+  let totalDuration = 0;
+  let elapsed = 0;
+
+  slides.forEach(s => totalDuration += parseInt(s.dataset.duration));
+
+  function showSlide(index) {
+    slides.forEach((s, i) => {
+      s.classList.remove('active');
+      if (i === index) s.classList.add('active');
+    });
+  }
+
+  function startSlideshow() {
+    currentSlide = 0;
+    elapsed = 0;
+    showSlide(0);
+
+    function nextSlide() {
+      const duration = parseInt(slides[currentSlide].dataset.duration);
+      elapsed += duration;
+      progress.style.width = (elapsed / totalDuration * 100) + '%';
+
+      currentSlide++;
+      if (currentSlide < slides.length) {
+        showSlide(currentSlide);
+        timer = setTimeout(nextSlide, parseInt(slides[currentSlide].dataset.duration));
+      }
+    }
+
+    timer = setTimeout(nextSlide, parseInt(slides[0].dataset.duration));
+  }
+
+  function resetSlideshow() {
+    clearTimeout(timer);
+    currentSlide = 0;
+    elapsed = 0;
+    progress.style.width = '0%';
+    showSlide(0);
+  }
+
+  // Self-recording using canvas + MediaRecorder
+  let mediaRecorder = null;
+  let recordedChunks = [];
+
+  async function recordAndPlay() {
+    const recBtn = document.getElementById('recBtn');
+    const phone = document.querySelector('.phone-frame');
+
+    // Hide controls and instructions during recording
+    document.querySelector('.controls').style.opacity = '0';
+    document.querySelector('.instructions').style.display = 'none';
+
+    // Reset first
+    resetSlideshow();
+    await new Promise(r => setTimeout(r, 500));
+
+    // Use html2canvas-like approach: capture the phone frame area via canvas
+    // Fallback: record the entire tab via getDisplayMedia
+    try {
+      // Create a canvas to render frames
+      const canvas = document.createElement('canvas');
+      canvas.width = 390 * 2; // 2x for retina quality
+      canvas.height = 844 * 2;
+      const ctx = canvas.getContext('2d');
+
+      const stream = canvas.captureStream(30); // 30 FPS
+      mediaRecorder = new MediaRecorder(stream, {
+        mimeType: 'video/webm;codecs=vp9',
+        videoBitsPerSecond: 5000000
+      });
+      recordedChunks = [];
+
+      mediaRecorder.ondataavailable = (e) => {
+        if (e.data.size > 0) recordedChunks.push(e.data);
+      };
+
+      mediaRecorder.onstop = () => {
+        const blob = new Blob(recordedChunks, { type: 'video/webm' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'aangan_promo_30sec.webm';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+
+        document.querySelector('.controls').style.opacity = '1';
+        document.querySelector('.instructions').style.display = '';
+        recBtn.textContent = '⏺ Record + Play';
+        recBtn.classList.remove('recording');
+      };
+
+      // Start recording
+      mediaRecorder.start(100);
+      recBtn.textContent = '⏺ Recording...';
+      recBtn.classList.add('recording');
+
+      // Render loop: capture phone frame to canvas
+      let recording = true;
+      function renderFrame() {
+        if (!recording) return;
+
+        // Use html-to-image approach by rendering the DOM element
+        // We'll use a foreignObject SVG trick
+        const data = new XMLSerializer().serializeToString(phone);
+        const svgStr = `<svg xmlns="http://www.w3.org/2000/svg" width="${phone.offsetWidth}" height="${phone.offsetHeight}">
+          <foreignObject width="100%" height="100%">
+            <div xmlns="http://www.w3.org/1999/xhtml">${data}</div>
+          </foreignObject>
+        </svg>`;
+
+        const img = new Image();
+        const svgBlob = new Blob([svgStr], { type: 'image/svg+xml;charset=utf-8' });
+        const svgUrl = URL.createObjectURL(svgBlob);
+        img.onload = () => {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          URL.revokeObjectURL(svgUrl);
+          if (recording) requestAnimationFrame(renderFrame);
+        };
+        img.onerror = () => {
+          // Fallback: draw solid frame
+          ctx.fillStyle = '#FDFAF0';
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          if (recording) requestAnimationFrame(renderFrame);
+        };
+        img.src = svgUrl;
+      }
+
+      renderFrame();
+
+      // Start slideshow
+      startSlideshow();
+
+      // Stop after total duration + 2s buffer
+      setTimeout(() => {
+        recording = false;
+        mediaRecorder.stop();
+      }, totalDuration + 2000);
+
+    } catch (err) {
+      console.error('Canvas recording failed, trying screen capture:', err);
+
+      // Fallback: use getDisplayMedia (will prompt user)
+      try {
+        const displayStream = await navigator.mediaDevices.getDisplayMedia({
+          video: { width: 1920, height: 1080 },
+          audio: false
+        });
+
+        mediaRecorder = new MediaRecorder(displayStream, {
+          mimeType: 'video/webm;codecs=vp9',
+          videoBitsPerSecond: 5000000
+        });
+        recordedChunks = [];
+
+        mediaRecorder.ondataavailable = (e) => {
+          if (e.data.size > 0) recordedChunks.push(e.data);
+        };
+
+        mediaRecorder.onstop = () => {
+          displayStream.getTracks().forEach(t => t.stop());
+          const blob = new Blob(recordedChunks, { type: 'video/webm' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = 'aangan_promo_30sec.webm';
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+
+          document.querySelector('.controls').style.opacity = '1';
+          document.querySelector('.instructions').style.display = '';
+          recBtn.textContent = '⏺ Record + Play';
+          recBtn.classList.remove('recording');
+        };
+
+        mediaRecorder.start(100);
+        recBtn.textContent = '⏺ Recording...';
+        recBtn.classList.add('recording');
+
+        // Start slideshow
+        await new Promise(r => setTimeout(r, 1000));
+        startSlideshow();
+
+        // Stop after total duration + 2s
+        setTimeout(() => {
+          mediaRecorder.stop();
+        }, totalDuration + 2000);
+
+      } catch (err2) {
+        console.error('All recording methods failed:', err2);
+        document.querySelector('.controls').style.opacity = '1';
+        document.querySelector('.instructions').style.display = '';
+        recBtn.textContent = '⏺ Record + Play';
+        alert('Recording failed. Please use screen recording on your phone instead.');
+      }
+    }
+  }
+</script>
+</body>
+</html>

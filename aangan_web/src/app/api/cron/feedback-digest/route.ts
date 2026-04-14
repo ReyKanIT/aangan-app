@@ -190,12 +190,29 @@ export async function GET(request: NextRequest) {
           )
           .join('\n');
         const text = `*Aangan Daily Feedback — ${istDateStr}*\n${summaryLine}\n\n${lines}`;
+
+        // Telegram expects { chat_id, text } in the body.
+        // Slack / Discord / generic use { text, content }.
+        const isTelegram = webhook.includes('api.telegram.org');
+        const body = isTelegram
+          ? JSON.stringify({
+              chat_id: new URL(webhook).searchParams.get('chat_id') ?? '',
+              text,
+              parse_mode: 'Markdown',
+              disable_web_page_preview: true,
+            })
+          : JSON.stringify({ text, content: text });
+
         const r = await fetch(webhook, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ text, content: text }),
+          body,
         });
         webhookSent = r.ok;
+        if (!r.ok) {
+          const errBody = await r.text().catch(() => '');
+          console.error('Webhook delivery non-OK:', r.status, errBody.slice(0, 200));
+        }
       } catch (e) {
         console.error('Webhook delivery failed:', e);
       }
