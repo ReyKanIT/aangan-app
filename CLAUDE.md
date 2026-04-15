@@ -26,7 +26,14 @@ Kumar — solo founder building Aangan. New to FlutterFlow and Supabase (needs s
 - Database schema already designed (8 tables in supabase_schema.sql)
 
 ## Hard Rules
-- **Timestamp every reply** — Start EVERY response with a timestamp in 12-hour IST format: `[10:35 PM IST]`. No exceptions. This applies to all messages, summaries, dashboards, and agent reports.
+- **Timestamp format** — Use this exact format: `[5:37pm - 15Apr26]`
+    - 12-hour time, lowercase am/pm, no space before am/pm
+    - Separator: space-hyphen-space (` - `)
+    - Date: day (no leading zero) + 3-letter month + 2-digit year, no spaces
+    - Time zone: IST (India Standard Time) implicit, never written
+    - Examples: `[9:05am - 1Jan27]`, `[11:45pm - 31Dec26]`
+- **Timestamp every reply** — Start EVERY response with a timestamp in the format above. No exceptions. Applies to all messages, summaries, dashboards, agent reports, and commit messages.
+- **Timestamp Kumar's messages too** — When quoting, echoing, referencing, or summarizing anything Kumar has typed (in memory notes, plan files, agent prompts, commit messages, dashboards), prefix his message with a timestamp in the same format.
 - **No regressions** — Never break working features. Before modifying any screen/flow, verify existing functionality is preserved. If restructuring a file, ensure every existing handler, navigation path, and feature is carried forward. Test build after every change.
 
 ---
