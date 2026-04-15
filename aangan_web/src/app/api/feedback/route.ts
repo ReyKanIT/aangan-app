@@ -17,7 +17,52 @@ interface FeedbackBody {
   message?: string;
 }
 
+// ─── In-memory rate limit: 5 feedback submits per user per hour ──
+// Prevents an authenticated user from spamming the support queue /
+// bloating the daily digest. Survives only within a single serverless
+// instance, which is acceptable for this abuse surface.
+const submitCounts = new Map<string, { count: number; resetAt: number }>();
+const SUBMIT_LIMIT = 5;
+const SUBMIT_WINDOW_MS = 60 * 60 * 1000;
+
+function checkSubmitRate(userId: string): boolean {
+  const now = Date.now();
+  const entry = submitCounts.get(userId);
+  if (!entry || entry.resetAt < now) {
+    submitCounts.set(userId, { count: 1, resetAt: now + SUBMIT_WINDOW_MS });
+    return true;
+  }
+  if (entry.count >= SUBMIT_LIMIT) return false;
+  entry.count++;
+  return true;
+}
+
+// ─── Same-origin guard for state-changing requests ────────
+// Defence in depth on top of SameSite=Lax cookies. We accept
+// same-origin, Vercel preview deployments, and requests with no
+// Origin header (native apps, server-to-server, curl).
+function isSameOrigin(request: Request): boolean {
+  const origin = request.headers.get('origin');
+  if (!origin) return true; // no Origin = not a browser CSRF vector
+  try {
+    const reqHost = new URL(request.url).host;
+    const originHost = new URL(origin).host;
+    if (reqHost === originHost) return true;
+    // Allow Vercel preview / production aliases (*.vercel.app, *.aangan.app)
+    if (/(^|\.)aangan\.app$/.test(originHost)) return true;
+    if (/(^|\.)vercel\.app$/.test(originHost)) return true;
+    return false;
+  } catch {
+    return false;
+  }
+}
+
 export async function POST(request: Request) {
+  // ─── 0. CSRF: reject cross-origin browser POSTs ──────────
+  if (!isSameOrigin(request)) {
+    return NextResponse.json({ error: 'Invalid origin' }, { status: 403 });
+  }
+
   // ─── 1. Verify user session (anon client w/ cookies) ──────
   const sb = await createSupabaseServer();
   const {
@@ -25,6 +70,14 @@ export async function POST(request: Request) {
   } = await sb.auth.getUser();
   if (!user) {
     return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+  }
+
+  // ─── 1b. Rate limit per user ─────────────────────────────
+  if (!checkSubmitRate(user.id)) {
+    return NextResponse.json(
+      { error: 'बहुत ज़्यादा फ़ीडबैक। एक घंटे बाद कोशिश करें। / Too many submissions. Try again in an hour.' },
+      { status: 429 },
+    );
   }
 
   // ─── 2. Validate body ─────────────────────────────────────
@@ -79,7 +132,7 @@ export async function POST(request: Request) {
     if (profileErr) {
       console.error('Profile auto-create failed:', profileErr);
       return NextResponse.json(
-        { error: 'Could not create profile', details: profileErr.message },
+        { error: 'Could not create profile' },
         { status: 500 },
       );
     }
@@ -101,7 +154,7 @@ export async function POST(request: Request) {
   if (ticketErr || !ticket) {
     console.error('Ticket insert failed:', ticketErr);
     return NextResponse.json(
-      { error: 'Could not create ticket', details: ticketErr?.message },
+      { error: 'Could not create ticket' },
       { status: 500 },
     );
   }
@@ -118,7 +171,7 @@ export async function POST(request: Request) {
   if (msgErr) {
     console.error('Message insert failed:', msgErr);
     return NextResponse.json(
-      { error: 'Could not save message', details: msgErr.message },
+      { error: 'Could not save message' },
       { status: 500 },
     );
   }

@@ -293,9 +293,11 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
+    // Log full error server-side; return generic message to caller so
+    // DB error details / stack traces don't leak through the response.
     console.error('Panchang nudge error:', error);
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Internal error' },
+      { error: 'Internal error' },
       { status: 500 },
     );
   }
