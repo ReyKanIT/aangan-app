@@ -179,6 +179,55 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     if (_subscription) { _subscription.unsubscribe(); _subscription = null; }
     await supabase.auth.signOut();
     set({ session: null, user: null, isNewUser: false });
+
+    // Clear every per-user cache so the next user signing in on the same
+    // browser does not briefly see the previous user's feed / family /
+    // messages / notifications. Dynamic import avoids circular deps at module
+    // load time, and each store is reset via its own setState.
+    try {
+      const [
+        { usePostStore },
+        { useCommentStore },
+        { useEventStore },
+        { useFamilyStore },
+        { useMessageStore },
+        { useNotificationStore },
+      ] = await Promise.all([
+        import('./postStore'),
+        import('./commentStore'),
+        import('./eventStore'),
+        import('./familyStore'),
+        import('./messageStore'),
+        import('./notificationStore'),
+      ]);
+
+      // Unsubscribe from the old user's realtime notifications channel
+      // before we wipe state; otherwise the next user would still receive
+      // inserts targeted at the previous user.
+      useNotificationStore.getState().unsubscribeFromRealtime();
+
+      usePostStore.setState({
+        posts: [], isLoading: false, isFetching: false, hasMore: true,
+        cursor: null, error: null,
+      });
+      useCommentStore.setState({
+        commentsByPost: {}, loadingPosts: new Set(), error: null,
+      });
+      useEventStore.setState({
+        events: [], currentEvent: null, rsvps: [], isLoading: false, error: null,
+      });
+      useFamilyStore.setState({
+        members: [], searchResults: [], isLoading: false, error: null,
+      });
+      useMessageStore.setState({
+        messages: {}, conversations: [], totalUnread: 0, isLoading: false, error: null,
+      });
+      useNotificationStore.setState({
+        notifications: [], unreadCount: 0, isLoading: false, error: null,
+      });
+    } catch (e) {
+      console.error('[signOut] Failed to clear caches:', e);
+    }
   },
 
   fetchProfile: async () => {

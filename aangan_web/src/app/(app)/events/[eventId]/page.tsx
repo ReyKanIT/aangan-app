@@ -1,5 +1,5 @@
 'use client';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { useEventStore } from '@/stores/eventStore';
@@ -20,11 +20,22 @@ export default function EventDetailPage() {
   const { eventId } = useParams<{ eventId: string }>();
   const { currentEvent, fetchEvent, submitRsvp, fetchRsvps, rsvps, isLoading } = useEventStore();
   const user = useAuthStore((s) => s.user);
+  const [submittingRsvp, setSubmittingRsvp] = useState<string | null>(null);
 
   useEffect(() => {
     fetchEvent(eventId);
     fetchRsvps(eventId);
   }, [eventId, fetchEvent, fetchRsvps]);
+
+  const handleRsvp = async (status: RsvpStatus) => {
+    if (submittingRsvp || !currentEvent) return;
+    setSubmittingRsvp(status);
+    try {
+      await submitRsvp(currentEvent.id, status);
+    } finally {
+      setSubmittingRsvp(null);
+    }
+  };
 
   if (isLoading || !currentEvent) return <LoadingSpinner fullPage />;
 
@@ -71,13 +82,16 @@ export default function EventDetailPage() {
         <div className="flex gap-2">
           {RSVP_OPTIONS.map((opt) => {
             const isActive = currentEvent.my_rsvp === opt.status;
+            const isSubmitting = submittingRsvp === opt.status;
             return (
               <button
                 key={opt.status}
-                onClick={() => submitRsvp(currentEvent.id, opt.status)}
-                className={`flex-1 min-h-dadi rounded-xl font-body font-semibold text-base border-2 transition-all ${isActive ? opt.bg + ' border-transparent' : opt.outline + ' bg-white'}`}
+                onClick={() => handleRsvp(opt.status)}
+                disabled={submittingRsvp !== null}
+                aria-busy={isSubmitting}
+                className={`flex-1 min-h-dadi rounded-xl font-body font-semibold text-base border-2 transition-all disabled:opacity-70 disabled:cursor-not-allowed ${isActive ? opt.bg + ' border-transparent' : opt.outline + ' bg-white'}`}
               >
-                {opt.label}
+                {isSubmitting ? '…' : opt.label}
               </button>
             );
           })}

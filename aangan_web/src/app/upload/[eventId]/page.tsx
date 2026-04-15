@@ -120,7 +120,29 @@ export default function GuestUploadPage({ params }: { params: Promise<{ eventId:
   }, [files.length]);
 
   const removeFile = useCallback((id: string) => {
-    setFiles((prev) => prev.filter((f) => f.id !== id));
+    setFiles((prev) => {
+      // Revoke the blob URL for the removed preview to release memory.
+      const removed = prev.find((f) => f.id === id);
+      if (removed?.preview?.startsWith('blob:')) {
+        URL.revokeObjectURL(removed.preview);
+      }
+      return prev.filter((f) => f.id !== id);
+    });
+  }, []);
+
+  // When the page unmounts (or the file list is replaced on "Upload More"),
+  // revoke every outstanding preview URL so we don't leak blobs.
+  useEffect(() => {
+    return () => {
+      for (const uf of files) {
+        if (uf.preview?.startsWith('blob:')) {
+          URL.revokeObjectURL(uf.preview);
+        }
+      }
+    };
+    // Intentionally only on unmount — mid-session revocation is handled in
+    // removeFile / the "Upload More" reset below.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // ── Drag & Drop ──────────────────────────────────────────────
@@ -242,7 +264,15 @@ export default function GuestUploadPage({ params }: { params: Promise<{ eventId:
             Your photos/videos have been sent to the event host for review.
           </p>
           <button
-            onClick={() => { setDone(false); setFiles([]); }}
+            onClick={() => {
+              // Revoke previous previews before replacing the list so blobs
+              // from the just-completed batch are freed.
+              for (const uf of files) {
+                if (uf.preview?.startsWith('blob:')) URL.revokeObjectURL(uf.preview);
+              }
+              setDone(false);
+              setFiles([]);
+            }}
             className="mt-6 w-full min-h-[52px] bg-[#C8A84B] text-white font-body font-semibold rounded-xl text-base"
           >
             और फ़ोटो अपलोड करें / Upload More

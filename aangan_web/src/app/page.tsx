@@ -113,13 +113,26 @@ export default function LandingPage() {
   };
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
-        router.replace('/feed');
-      } else {
+    let cancelled = false;
+    supabase.auth.getSession().then(
+      ({ data: { session } }) => {
+        if (cancelled) return;
+        if (session) {
+          router.replace('/feed');
+        } else {
+          setChecking(false);
+        }
+      },
+      // If the session call rejects (network blip, Supabase down),
+      // don't leave the user staring at a spinner forever — show the
+      // landing page; any actual protected nav will re-check auth.
+      (err) => {
+        if (cancelled) return;
+        console.error('[landing] getSession failed:', err);
         setChecking(false);
-      }
-    });
+      },
+    );
+    return () => { cancelled = true; };
   }, [router]);
 
   if (checking) {

@@ -1,12 +1,14 @@
 'use client';
 import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import AppShell from '@/components/layout/AppShell';
 import { useAuthStore } from '@/stores/authStore';
 import { useNotificationStore } from '@/stores/notificationStore';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
-  const { initialize, isLoading } = useAuthStore();
+  const router = useRouter();
+  const { initialize, isLoading, session, isNewUser } = useAuthStore();
   const { fetchNotifications, subscribeToRealtime, unsubscribeFromRealtime } = useNotificationStore();
 
   useEffect(() => {
@@ -18,6 +20,16 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     subscribeToRealtime();
     return () => unsubscribeFromRealtime();
   }, [fetchNotifications, subscribeToRealtime, unsubscribeFromRealtime]);
+
+  // A user who signed up via OAuth but closed the tab before finishing
+  // profile setup can deep-link straight into /feed, /family, etc. The
+  // middleware only checks "is there a session", not "does the profile
+  // exist". Force them back through profile setup here.
+  useEffect(() => {
+    if (!isLoading && session && isNewUser) {
+      router.replace('/profile-setup');
+    }
+  }, [isLoading, session, isNewUser, router]);
 
   if (isLoading) return <LoadingSpinner fullPage />;
 

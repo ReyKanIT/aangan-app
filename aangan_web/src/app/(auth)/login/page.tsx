@@ -44,6 +44,7 @@ function LoginContent() {
   const searchParams = useSearchParams();
   const redirectTo = searchParams.get('redirect') || '/feed';
   const authError = searchParams.get('error');
+  const authErrorReason = searchParams.get('reason');
   const { sendOtp, sendEmailOtp, signInWithEmail, signUpWithEmail, signInWithGoogle, signInWithApple, session, isNewUser, isLoading, initialize, error, setError } = useAuthStore();
 
   // State
@@ -64,7 +65,7 @@ function LoginContent() {
     if (session && !isLoading) {
       router.replace(isNewUser ? '/profile-setup' : redirectTo);
     }
-  }, [session, isNewUser, isLoading, router]);
+  }, [session, isNewUser, isLoading, router, redirectTo]);
 
   // Validation
   const isValidPhone = VALIDATION.phoneRegex.test(phone);
@@ -169,11 +170,16 @@ function LoginContent() {
       {authError && (
         <div className="bg-red-50 border border-error/30 rounded-xl px-4 py-3 mb-4 flex items-start gap-2">
           <span className="text-error mt-0.5">⚠️</span>
-          <p className="font-body text-base text-error">
-            {authError === 'auth_failed'
-              ? 'लॉगिन विफल हो गया। कृपया पुनः प्रयास करें — Login failed. Please try again.'
-              : `कुछ गलत हो गया — Something went wrong (${authError})`}
-          </p>
+          <div className="font-body text-base text-error">
+            <p>
+              {authError === 'auth_failed'
+                ? 'लॉगिन विफल हो गया। कृपया पुनः प्रयास करें — Login failed. Please try again.'
+                : `कुछ गलत हो गया — Something went wrong (${authError})`}
+            </p>
+            {authErrorReason && (
+              <p className="text-sm opacity-80 mt-1">({authErrorReason})</p>
+            )}
+          </div>
         </div>
       )}
 

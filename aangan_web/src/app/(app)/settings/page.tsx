@@ -25,6 +25,7 @@ export default function SettingsPage() {
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [isSigningOut, setIsSigningOut] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
 
@@ -49,9 +50,22 @@ export default function SettingsPage() {
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    // Revoke any previous blob URL so we don't leak it on repeat picks.
+    if (avatarPreview && avatarPreview.startsWith('blob:')) {
+      URL.revokeObjectURL(avatarPreview);
+    }
     setAvatarFile(file);
     setAvatarPreview(URL.createObjectURL(file));
   };
+
+  // Clean up the last preview URL when the page unmounts.
+  useEffect(() => {
+    return () => {
+      if (avatarPreview && avatarPreview.startsWith('blob:')) {
+        URL.revokeObjectURL(avatarPreview);
+      }
+    };
+  }, [avatarPreview]);
 
   const handleSave = async () => {
     if (!name.trim()) { setError('नाम ज़रूरी है'); return; }
@@ -70,8 +84,20 @@ export default function SettingsPage() {
   };
 
   const handleSignOut = async () => {
-    await signOut();
-    router.replace('/login');
+    if (isSigningOut) return;
+    // Dadi test: a grandma could tap this by mistake. Require one explicit
+    // confirmation so we don't silently drop her session.
+    if (!confirm('क्या आप वाकई साइन आउट करना चाहते हैं? — Are you sure you want to sign out?')) {
+      return;
+    }
+    setIsSigningOut(true);
+    try {
+      await signOut();
+      router.replace('/login');
+    } catch (e) {
+      console.error('[settings] signOut failed:', e);
+      setIsSigningOut(false);
+    }
   };
 
   const handleFeedbackSubmit = async () => {
@@ -276,7 +302,7 @@ export default function SettingsPage() {
         )}
       </div>
 
-      <GoldButton variant="danger" className="w-full" onClick={handleSignOut}>
+      <GoldButton variant="danger" className="w-full" loading={isSigningOut} disabled={isSigningOut} onClick={handleSignOut}>
         साइन आउट — Sign Out
       </GoldButton>
 
