@@ -1,20 +1,28 @@
 'use client';
 import { useEffect, useState, useCallback } from 'react';
 import dynamic from 'next/dynamic';
+import Link from 'next/link';
 import { usePostStore } from '@/stores/postStore';
+import { useFamilyStore } from '@/stores/familyStore';
 import PostCard from '@/components/feed/PostCard';
 import GoldButton from '@/components/ui/GoldButton';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import EmptyState from '@/components/ui/EmptyState';
-import PanchangWidget from '@/components/feed/PanchangWidget';
 
+// Panchang widget carries ~10KB of Vedic-calendar math (panchangService).
+// Split it off so the initial /feed paint on 3G doesn't block on it.
+const PanchangWidget = dynamic(() => import('@/components/feed/PanchangWidget'), { ssr: false });
 const PostComposer = dynamic(() => import('@/components/feed/PostComposer'), { ssr: false });
 
 export default function FeedPage() {
   const { posts, fetchPosts, isLoading, isFetching, hasMore } = usePostStore();
+  const { members, fetchMembers } = useFamilyStore();
   const [composerOpen, setComposerOpen] = useState(false);
 
-  useEffect(() => { fetchPosts(true); }, [fetchPosts]);
+  useEffect(() => {
+    fetchPosts(true);
+    fetchMembers();
+  }, [fetchPosts, fetchMembers]);
 
   const handleScroll = useCallback(() => {
     const near = window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 400;
@@ -45,16 +53,38 @@ export default function FeedPage() {
       {isLoading && posts.length === 0 ? (
         <div className="flex justify-center py-20"><LoadingSpinner /></div>
       ) : posts.length === 0 ? (
-        <EmptyState
-          emoji="📝"
-          title="अभी कोई पोस्ट नहीं"
-          subtitle="No posts yet — be the first!"
-          action={
-            <GoldButton size="sm" onClick={() => setComposerOpen(true)}>
-              पहली पोस्ट करें
-            </GoldButton>
-          }
-        />
+        members.length === 0 ? (
+          // Brand-new user — no family yet. Guide them there first.
+          <EmptyState
+            emoji="👨‍👩‍👧‍👦"
+            title="पहले परिवार जोड़ें"
+            subtitle="Add your family first so they can see your posts"
+            action={
+              <div className="flex flex-col sm:flex-row gap-3 items-center">
+                <Link href="/family">
+                  <GoldButton size="sm">परिवार जोड़ें — Add Family</GoldButton>
+                </Link>
+                <button
+                  onClick={() => setComposerOpen(true)}
+                  className="font-body text-base text-brown-light underline min-h-dadi px-3"
+                >
+                  या अभी पोस्ट करें — Or post now
+                </button>
+              </div>
+            }
+          />
+        ) : (
+          <EmptyState
+            emoji="📝"
+            title="अभी कोई पोस्ट नहीं"
+            subtitle="No posts yet — be the first!"
+            action={
+              <GoldButton size="sm" onClick={() => setComposerOpen(true)}>
+                पहली पोस्ट करें — Make First Post
+              </GoldButton>
+            }
+          />
+        )
       ) : (
         <>
           {posts.map((post) => (

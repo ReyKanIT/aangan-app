@@ -1,5 +1,6 @@
 'use client';
 import Image from 'next/image';
+import dynamic from 'next/dynamic';
 import AvatarCircle from '@/components/ui/AvatarCircle';
 import { useAuthStore } from '@/stores/authStore';
 import { usePostStore } from '@/stores/postStore';
@@ -7,7 +8,10 @@ import type { Post } from '@/types/database';
 import { timeAgo } from '@/lib/utils/formatters';
 import { useState } from 'react';
 import ShareButton from '@/components/ui/ShareButton';
-import CommentSection from '@/components/feed/CommentSection';
+
+// Comments only render after the user taps 💬 — keep commentStore and its
+// fetch logic out of the initial feed bundle.
+const CommentSection = dynamic(() => import('@/components/feed/CommentSection'), { ssr: false });
 
 const AUDIENCE_LABELS: Record<string, string> = {
   all: 'सभी',

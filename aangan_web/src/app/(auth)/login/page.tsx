@@ -186,22 +186,26 @@ function LoginContent() {
       )}
 
       {/* ===== 2. PHONE OTP — India's default (like WhatsApp/PhonePe) ===== */}
-      <div className="space-y-3">
+      <form
+        className="space-y-3"
+        onSubmit={(e) => { e.preventDefault(); handlePhoneOtp(); }}
+      >
         <InputField
           label="फ़ोन नंबर"
           sublabel="Phone Number"
           type="tel"
           inputMode="numeric"
+          autoComplete="tel-national"
           prefix="+91"
           value={phone}
           onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
           placeholder="9876543210"
           maxLength={10}
         />
-        <GoldButton className="w-full" loading={isSending && !showEmailSection} disabled={!isValidPhone} onClick={handlePhoneOtp}>
-          OTP भेजें — Send OTP
+        <GoldButton type="submit" className="w-full" loading={isSending && !showEmailSection} disabled={!isValidPhone}>
+          {isSending && !showEmailSection ? 'प्रतीक्षा करें…' : 'OTP भेजें — Send OTP'}
         </GoldButton>
-      </div>
+      </form>
 
       {/* Divider */}
       <div className="flex items-center gap-3 my-5">

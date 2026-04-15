@@ -1,10 +1,15 @@
 'use client';
+import dynamic from 'next/dynamic';
 import SideNav from './SideNav';
 import BottomNav from './BottomNav';
 import TopBar from './TopBar';
 import FeedbackWidget from './FeedbackWidget';
-import PWAInstallPrompt from '@/components/ui/PWAInstallPrompt';
 import { Toaster } from 'react-hot-toast';
+
+// PWA install banner only appears after the browser fires `beforeinstallprompt`
+// (and only for users who haven't installed/dismissed). No need to ship its
+// JS on the critical path — lazy-load it.
+const PWAInstallPrompt = dynamic(() => import('@/components/ui/PWAInstallPrompt'), { ssr: false });
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   return (

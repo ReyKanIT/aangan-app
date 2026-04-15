@@ -17,6 +17,8 @@ function OtpForm() {
     if (storedPhone) setPhone(storedPhone);
     else if (storedEmail) setEmail(storedEmail);
     else router.replace('/login');
+    // Autofocus first OTP box so Dadi doesn't have to tap it
+    setTimeout(() => refs.current[0]?.focus(), 50);
   }, [router]);
 
   const { verifyOtp, verifyEmailOtp, sendOtp, sendEmailOtp, session, isNewUser, isLoading, error, setError } = useAuthStore();
@@ -37,7 +39,15 @@ function OtpForm() {
   }, []);
 
   const handleChange = (i: number, val: string) => {
-    const digit = val.replace(/\D/g, '').slice(-1);
+    // Handle SMS auto-fill: if full 6 digits dumped into one input, split them
+    const clean = val.replace(/\D/g, '');
+    if (clean.length >= VALIDATION.otpLength) {
+      const filled = clean.slice(0, VALIDATION.otpLength).split('');
+      setDigits(filled);
+      refs.current[VALIDATION.otpLength - 1]?.focus();
+      return;
+    }
+    const digit = clean.slice(-1);
     const newDigits = [...digits];
     newDigits[i] = digit;
     setDigits(newDigits);
@@ -49,9 +59,20 @@ function OtpForm() {
   };
 
   const handlePaste = (e: React.ClipboardEvent) => {
+    e.preventDefault();
     const pasted = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, VALIDATION.otpLength);
     if (pasted.length === VALIDATION.otpLength) {
       setDigits(pasted.split(''));
+      refs.current[VALIDATION.otpLength - 1]?.focus();
+    } else if (pasted.length > 0) {
+      // Partial paste — fill what we have starting from current position
+      const newDigits = [...digits];
+      for (let j = 0; j < pasted.length && j < VALIDATION.otpLength; j++) {
+        newDigits[j] = pasted[j];
+      }
+      setDigits(newDigits);
+      const nextFocus = Math.min(pasted.length, VALIDATION.otpLength - 1);
+      refs.current[nextFocus]?.focus();
     }
   };
 
@@ -108,24 +129,29 @@ function OtpForm() {
         </div>
       )}
 
-      <div className="flex gap-2 justify-center mb-8" onPaste={handlePaste}>
+      <div className="flex gap-2 justify-center mb-8">
         {digits.map((d, i) => (
           <input
             key={i}
             ref={(el) => { refs.current[i] = el; }}
             type="tel"
             inputMode="numeric"
-            maxLength={1}
+            autoComplete="one-time-code"
+            // maxLength allows SMS auto-fill to paste full code; handleChange splits it
+            maxLength={VALIDATION.otpLength}
             value={d}
             onChange={(e) => handleChange(i, e.target.value)}
             onKeyDown={(e) => handleKeyDown(i, e)}
-            className="w-12 h-14 text-center text-xl font-bold font-body text-brown border-2 border-gray-300 rounded-lg focus:border-haldi-gold focus:outline-none"
+            onPaste={handlePaste}
+            onFocus={(e) => e.target.select()}
+            aria-label={`OTP digit ${i + 1}`}
+            className="w-12 h-[52px] sm:w-14 sm:h-[56px] text-center text-2xl font-bold font-body text-brown border-2 border-gray-300 rounded-lg focus:border-haldi-gold focus:outline-none"
           />
         ))}
       </div>
 
       <GoldButton className="w-full" loading={isVerifying} disabled={!isComplete} onClick={handleVerify}>
-        सत्यापित करें — Verify
+        {isVerifying ? 'प्रतीक्षा करें…' : 'सत्यापित करें — Verify'}
       </GoldButton>
 
       <button

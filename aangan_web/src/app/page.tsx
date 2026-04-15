@@ -140,7 +140,7 @@ export default function LandingPage() {
           </span>
           <a
             href="/login"
-            className="px-6 py-3 rounded-full bg-haldi-gold text-white font-semibold text-base hover:bg-haldi-gold-dark transition-colors"
+            className="inline-flex items-center justify-center min-h-dadi px-6 py-3 rounded-full bg-haldi-gold text-white font-semibold text-base hover:bg-haldi-gold-dark transition-colors"
           >
             लॉगिन / साइन अप
           </a>

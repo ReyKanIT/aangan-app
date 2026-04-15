@@ -33,14 +33,22 @@ export default function ProfileSetupPage() {
   };
 
   const handleSave = async () => {
-    if (!name.trim()) { setError('नाम ज़रूरी है'); return; }
+    if (!name.trim()) { setError('नाम ज़रूरी है — Name is required'); return; }
     if (!session?.user) return;
     setIsSaving(true);
     setError('');
+    let avatar_url = user?.avatar_url ?? null;
+    let photoUploadFailed = false;
     try {
-      let avatar_url = user?.avatar_url ?? null;
       if (avatarFile) {
-        avatar_url = await uploadAvatar(avatarFile, session.user.id);
+        try {
+          avatar_url = await uploadAvatar(avatarFile, session.user.id);
+        } catch {
+          // Photo upload failed (weak connection, file too big, etc.)
+          // Don't block the Dadi — save profile without photo and flag it
+          photoUploadFailed = true;
+          avatar_url = user?.avatar_url ?? null;
+        }
       }
       const ok = await updateProfile({
         display_name: name.trim(),
@@ -49,10 +57,19 @@ export default function ProfileSetupPage() {
         bio: bio.trim() || null,
         avatar_url,
       });
-      if (ok) router.replace('/feed');
-      else setError('प्रोफाइल सेव नहीं हो पाई');
+      if (ok) {
+        if (photoUploadFailed) {
+          // Let them continue but warn about the photo
+          setError('फ़ोटो अपलोड नहीं हो पाई, बाकी प्रोफाइल सेव हो गई। बाद में सेटिंग्स से फ़ोटो जोड़ें।\nPhoto could not upload. Profile saved — you can add photo later from Settings.');
+          setTimeout(() => router.replace('/feed'), 2500);
+        } else {
+          router.replace('/feed');
+        }
+      } else {
+        setError('प्रोफाइल सेव नहीं हो पाई। इंटरनेट जाँचें।\nCould not save profile. Check internet.');
+      }
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'कुछ गलत हो गया');
+      setError(e instanceof Error ? e.message : 'कुछ गलत हो गया — Something went wrong');
     }
     setIsSaving(false);
   };
@@ -68,23 +85,24 @@ export default function ProfileSetupPage() {
 
       {/* Avatar */}
       <div className="flex flex-col items-center mb-8">
-        <label className="cursor-pointer group relative">
+        <label className="cursor-pointer group relative block min-h-dadi min-w-dadi">
           <AvatarCircle src={avatarPreview} name={name || 'A'} size={96} />
           <div className="absolute inset-0 rounded-full bg-black/30 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
             <span className="text-white text-2xl">📷</span>
           </div>
-          <input type="file" accept="image/*" onChange={handleAvatarChange} className="hidden" />
+          <input type="file" accept="image/*" onChange={handleAvatarChange} className="hidden" aria-label="फ़ोटो जोड़ें" />
         </label>
-        <p className="font-body text-sm text-brown-light mt-2">फ़ोटो जोड़ें — Add Photo</p>
+        <p className="font-body text-base text-brown mt-2 font-semibold">फ़ोटो जोड़ें — Add Photo</p>
+        <p className="font-body text-sm text-brown-light">वैकल्पिक — Optional, you can add later</p>
       </div>
 
       {error && (
         <div className="bg-red-50 border border-error rounded-lg px-4 py-3 mb-4">
-          <p className="font-body text-base text-error">{error}</p>
+          <p className="font-body text-base text-error whitespace-pre-line">{error}</p>
         </div>
       )}
 
-      <InputField label="आपका नाम *" sublabel="Your Name" value={name} onChange={(e) => setName(e.target.value)} placeholder="अपना नाम डालें" />
+      <InputField label="आपका नाम *" sublabel="Your Name (required)" value={name} onChange={(e) => setName(e.target.value)} placeholder="अपना नाम डालें" autoFocus />
       <InputField label="हिंदी में नाम" sublabel="Name in Hindi" value={nameHindi} onChange={(e) => setNameHindi(e.target.value)} placeholder="हिंदी में नाम" />
       <InputField label="गाँव / शहर" sublabel="Village or City" value={city} onChange={(e) => setCity(e.target.value)} placeholder="अपना गाँव या शहर" />
 
@@ -105,7 +123,7 @@ export default function ProfileSetupPage() {
       </div>
 
       <GoldButton className="w-full mt-4" loading={isSaving} onClick={handleSave}>
-        आगे बढ़ें — Continue
+        {isSaving ? 'प्रतीक्षा करें…' : 'आगे बढ़ें — Continue'}
       </GoldButton>
     </div>
   );
