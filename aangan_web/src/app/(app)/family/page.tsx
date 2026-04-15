@@ -91,7 +91,7 @@ export default function FamilyPage() {
         <EmptyState
           emoji="👨‍👩‍👧‍👦"
           title="कोई परिवार नहीं"
-          subtitle="Add family members to get started"
+          subtitle="शुरू करने के लिए परिवार के सदस्य जोड़ें — Add family members to get started"
           action={<GoldButton size="sm" onClick={() => setDrawerOpen(true)}>सदस्य जोड़ें</GoldButton>}
         />
       ) : (

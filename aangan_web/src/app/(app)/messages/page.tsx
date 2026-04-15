@@ -131,7 +131,7 @@ export default function MessagesPage() {
               परिवार का सदस्य चुनें — Select a family member
             </p>
             {members.length === 0 ? (
-              <p className="font-body text-sm text-brown-light py-2">Loading...</p>
+              <p className="font-body text-sm text-brown-light py-2">प्रतीक्षा करें… Loading…</p>
             ) : newChatMembers.length === 0 ? (
               <p className="font-body text-sm text-brown-light py-2">
                 सभी से बात हो चुकी है — All family members have conversations
@@ -180,7 +180,7 @@ export default function MessagesPage() {
             <EmptyState
               emoji="💬"
               title="कोई संदेश नहीं"
-              subtitle="Start a conversation with family"
+              subtitle="परिवार से बातचीत शुरू करें — Start a conversation with family"
               action={
                 <GoldButton size="sm" onClick={handleNewChat}>
                   नया संदेश भेजें — New Message
@@ -350,7 +350,7 @@ export default function MessagesPage() {
             <span className="text-6xl mb-4">💬</span>
             <h3 className="font-heading text-xl text-brown mb-1">संदेश चुनें</h3>
             <p className="font-body text-brown-light text-base">
-              Select a conversation or start a new one
+              कोई बातचीत चुनें या नई शुरू करें — Select a conversation or start a new one
             </p>
           </div>
         )}

@@ -124,7 +124,7 @@ export default function EventDetailPage() {
               href={`/upload/${currentEvent.id}`}
               className="flex-1 flex items-center justify-center gap-2 min-h-dadi rounded-xl border-2 border-haldi-gold text-haldi-gold-dark font-body font-semibold text-base hover:bg-haldi-gold/10 transition-colors"
             >
-              <span>📸</span> Guest Photo Upload Link
+              <span>📸</span> मेहमान फ़ोटो लिंक — Guest Photo Upload
             </Link>
           </div>
           <p className="font-body text-sm text-brown-light mt-3">

@@ -42,7 +42,7 @@ export default function EventsPage() {
         <EmptyState
           emoji="🎉"
           title="कोई उत्सव नहीं"
-          subtitle="No upcoming events"
+          subtitle="आने वाला कोई उत्सव नहीं — No upcoming events"
           action={<GoldButton size="sm" onClick={() => setModalOpen(true)}>उत्सव बनाएं</GoldButton>}
         />
       ) : (
