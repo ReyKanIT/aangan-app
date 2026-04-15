@@ -32,7 +32,7 @@
     },
     "android": {
       "package": "app.aangan.family",
-      "versionCode": 13,
+      "versionCode": 19,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#FDFAF0"
@@ -96,7 +96,8 @@
           "speechRecognitionPermission": "Aangan uses speech recognition for voice-to-text in Hindi and English."
         }
       ],
-      "./plugins/withAdiRegistration"
+      "./plugins/withAdiRegistration",
+      "expo-web-browser"
     ],
     "extra": {
       "eas": {

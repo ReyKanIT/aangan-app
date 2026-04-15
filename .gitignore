@@ -46,3 +46,8 @@ supabase/.branches/
 # Root-level build artifacts (historical clutter — see archive/ for preserved versions)
 /*.apk
 /*.apk.idsig
+
+# Release APKs (large binaries; downloaded on demand from EAS)
+releases/
+aangan_web/public/*.apk
+aangan_web/public/*.apk.idsig
