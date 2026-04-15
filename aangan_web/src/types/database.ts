@@ -118,7 +118,10 @@ export interface Notification {
   body: string;
   body_hindi: string | null;
   is_read: boolean;
-  data: Record<string, string> | null;
+  // JSONB column — cron jobs insert rich payloads (digest_type, nudge_type,
+  // event_id, nested arrays/counts). Kept as `unknown` so consumers read
+  // keys defensively rather than trusting a stale narrow type.
+  data: Record<string, unknown> | null;
   created_at: string;
 }
 
