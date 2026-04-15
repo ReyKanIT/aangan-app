@@ -233,20 +233,149 @@ const MASA_NAMES: string[] = [
   'मार्गशीर्ष', 'पौष', 'माघ', 'फाल्गुन',
 ];
 
+/**
+ * Karana names — each tithi contains 2 karanas (6° elongation each).
+ * 60 karana slots per lunar month. 4 are "fixed" (sthira) at positions
+ * 57, 58, 59, 0; the other 56 cycle through 7 "movable" (chara) names.
+ *
+ * Positions:
+ *   0            → Kimstughna (fixed) — 1st half of Shukla Pratipada
+ *   1–56         → Bava, Balava, Kaulava, Taitila, Gara, Vanija, Vishti cycle
+ *   57           → Shakuni      (fixed) — 2nd half of Krishna Chaturdashi
+ *   58           → Chatushpada  (fixed) — 1st half of Amavasya
+ *   59           → Naga         (fixed) — 2nd half of Amavasya
+ */
+const CHARA_KARANA: string[] = [
+  'बव', 'बालव', 'कौलव', 'तैतिल', 'गर', 'वणिज', 'विष्टि',
+];
+
+function getKarana(elong: number): string {
+  const idx = Math.floor(elong / 6) % 60;
+  if (idx === 0)  return 'किंस्तुघ्न';
+  if (idx === 57) return 'शकुनि';
+  if (idx === 58) return 'चतुष्पाद';
+  if (idx === 59) return 'नाग';
+  return CHARA_KARANA[(idx - 1) % 7];
+}
+
+// ─── End-time Transitions ────────────────────────────────────────────────────
+
+/**
+ * Find the local-time string "HH:MM" (24h) when a quantity transitions out of
+ * its current bucket, searching forward from `startJD` (UT).
+ *
+ * @param startJD          starting Julian Day (UT)
+ * @param utcOffset        timezone offset in hours (e.g. India +5.5)
+ * @param currentIdx       the bucket index we're currently in
+ * @param idxAt            function (jd) → current index at that instant
+ * @param stepHours        coarse search step in hours (default 1h)
+ * @param maxHours         max look-ahead (default 48h — nakshatras can exceed 24h)
+ * @returns                "HH:MM" local time, with "+1d" suffix if past next midnight
+ */
+function findTransition(
+  startJD: number,
+  utcOffset: number,
+  currentIdx: number,
+  idxAt: (jd: number) => number,
+  stepHours = 1,
+  maxHours = 48,
+): string {
+  // Coarse forward scan
+  let lo = startJD;
+  let hi = startJD;
+  let found = false;
+  for (let h = stepHours; h <= maxHours; h += stepHours) {
+    hi = startJD + h / 24;
+    if (idxAt(hi) !== currentIdx) { found = true; break; }
+    lo = hi;
+  }
+  if (!found) return '—';
+
+  // Bisect to 1-minute precision
+  for (let i = 0; i < 12; i++) {
+    const mid = (lo + hi) / 2;
+    if (idxAt(mid) === currentIdx) lo = mid; else hi = mid;
+  }
+
+  // Convert JD (UT) → local Date
+  const unixMs = (hi - 2440587.5) * 86400 * 1000;
+  const localMs = unixMs + utcOffset * 3600 * 1000;
+  const local = new Date(localMs);
+  const hh = local.getUTCHours().toString().padStart(2, '0');
+  const mm = local.getUTCMinutes().toString().padStart(2, '0');
+
+  // Next-day flag (relative to startJD's local date)
+  const startUnixMs = (startJD - 2440587.5) * 86400 * 1000;
+  const startLocal = new Date(startUnixMs + utcOffset * 3600 * 1000);
+  const sameDay =
+    local.getUTCFullYear() === startLocal.getUTCFullYear() &&
+    local.getUTCMonth()    === startLocal.getUTCMonth() &&
+    local.getUTCDate()     === startLocal.getUTCDate();
+  return sameDay ? `${hh}:${mm}` : `${hh}:${mm} (+1d)`;
+}
+
 // ─── Vikram Samvat ────────────────────────────────────────────────────────────
 
 /**
  * Returns the Vikram Samvat year for a Gregorian date.
- * VS new year falls on Chaitra Shukla Pratipada (~March–April).
- * Before that: VS = Gregorian + 56; after: VS = Gregorian + 57.
+ *
+ * VS new year = Chaitra Shukla Pratipada, a lunar date falling between
+ * ~March 17 and ~April 15 depending on the year. This detects it precisely
+ * by scanning March–April for the first day when:
+ *   • tithi index = 0 (Shukla Pratipada), AND
+ *   • sidereal sun is in Meena (330°–360°) or early Mesha (0°–15°)
+ *
+ * Cached per calendar year.
  */
-function vikramSamvat(year: number, month: number, day: number): number {
-  // Approximate: VS new year is ~mid-March to mid-April
-  // Use April 1 as rough boundary (good enough for UI)
-  if (month < 4 || (month === 4 && day < 1)) {
-    return year + 56;
+const vsCache = new Map<number, number>(); // year → day-of-year (1-based) of Chaitra Shukla 1
+
+function chaitraShuklaDayOfYear(year: number, utcOffset: number): number {
+  const cached = vsCache.get(year);
+  if (cached !== undefined) return cached;
+
+  // Scan March 10 → April 20 for the civil day in which elongation
+  // crosses 360°→0° (Amavasya → Shukla Pratipada) with sun in Meena or
+  // early Mesha. Using the "crossing during the day" test handles tithi
+  // kshaya (elided Pratipada) correctly — the civil date is still VS new
+  // year even if Pratipada never holds at sunrise.
+  for (let m = 3; m <= 4; m++) {
+    const maxDay = m === 3 ? 31 : 20;
+    const startDay = m === 3 ? 10 : 1;
+    for (let d = startDay; d <= maxDay; d++) {
+      const jdStart = julianDay(year, m, d, 0 - utcOffset);     // local 00:00
+      const jdEnd   = jdStart + 1;                               // next local 00:00
+      const elStart = norm360(moonLongitude(jdStart) - sunLongitude(jdStart));
+      const elEnd   = norm360(moonLongitude(jdEnd)   - sunLongitude(jdEnd));
+      // Crossed 360°→0° during this civil day?
+      //   elStart in the last 60° (300°–360°), elEnd in the first 60° (0°–60°)
+      const crossed = elStart > 300 && elEnd < 60;
+      if (!crossed) continue;
+      const sunSid = norm360(sunLongitude(jdStart) - lahiriAyanamsa(jdStart));
+      if (sunSid >= 330 || sunSid < 15) {
+        const jan1 = new Date(year, 0, 1).getTime();
+        const target = new Date(year, m - 1, d).getTime();
+        const doy = Math.round((target - jan1) / 86400000) + 1;
+        vsCache.set(year, doy);
+        return doy;
+      }
+    }
   }
-  return year + 57;
+  // Fallback: March 22 (long-term mean)
+  const fallback = 31 + 28 + 22 + (isLeap(year) ? 1 : 0);
+  vsCache.set(year, fallback);
+  return fallback;
+}
+
+function isLeap(y: number): boolean {
+  return (y % 4 === 0 && y % 100 !== 0) || y % 400 === 0;
+}
+
+function vikramSamvat(year: number, month: number, day: number, utcOffset: number): number {
+  const jan1 = new Date(year, 0, 1).getTime();
+  const today = new Date(year, month - 1, day).getTime();
+  const todayDoy = Math.round((today - jan1) / 86400000) + 1;
+  const nydDoy = chaitraShuklaDayOfYear(year, utcOffset);
+  return today < jan1 || todayDoy < nydDoy ? year + 56 : year + 57;
 }
 
 /**
@@ -276,8 +405,13 @@ export interface PanchangData {
   paksha: string;           // शुक्ल पक्ष / कृष्ण पक्ष
   tithi: string;
   tithiNumber: number;      // 1–30
+  tithiEndTime: string;     // "HH:MM" (24h) or "HH:MM (+1d)"
   nakshatra: string;
+  nakshatraEndTime: string;
   yoga: string;
+  yogaEndTime: string;
+  karana: string;
+  karanaEndTime: string;
   vara: string;             // day of week in Hindi
   sunrise: string;          // "HH:MM"
   sunset: string;           // "HH:MM"
@@ -334,6 +468,10 @@ export function getPanchang(
   const yogaIdx = Math.floor((norm360(sunSid + moonSid) * 27) / 360) % 27;
   const yoga    = YOGA_NAMES[yogaIdx];
 
+  // Karana (each = 6° elongation, 2 per tithi, 60 per month)
+  const karanaIdx = Math.floor(elong / 6) % 60;
+  const karana    = getKarana(elong);
+
   // Vara (day of week) — JD 0 was a Monday
   const varaIdx = ((Math.floor(jd + 1.5)) % 7 + 7) % 7;
   const vara    = VARA_NAMES[varaIdx];
@@ -344,14 +482,34 @@ export function getPanchang(
   // Moon phase percent (0 = new, 50 = full, loops)
   const moonPhasePercent = Math.round((elong / 360) * 100);
 
+  // End-time transitions — forward-scan until each bucket changes
+  const tithiEndTime     = findTransition(jd, location.utcOffset, tithiIdx,
+    (j) => Math.floor(norm360(moonLongitude(j) - sunLongitude(j)) / 12));
+
+  const nakshatraEndTime = findTransition(jd, location.utcOffset, nakshatraIdx,
+    (j) => Math.floor((norm360(moonLongitude(j) - lahiriAyanamsa(j)) * 27) / 360) % 27);
+
+  const yogaEndTime      = findTransition(jd, location.utcOffset, yogaIdx,
+    (j) => Math.floor(
+      (norm360(sunLongitude(j) + moonLongitude(j) - 2 * lahiriAyanamsa(j)) * 27) / 360
+    ) % 27);
+
+  const karanaEndTime    = findTransition(jd, location.utcOffset, karanaIdx,
+    (j) => Math.floor(norm360(moonLongitude(j) - sunLongitude(j)) / 6) % 60);
+
   return {
-    vikramSamvat: vikramSamvat(year, month, day),
+    vikramSamvat: vikramSamvat(year, month, day, location.utcOffset),
     maas: getCurrentMasa(sunSid),
     paksha,
     tithi,
     tithiNumber: tithiIdx + 1,
+    tithiEndTime,
     nakshatra,
+    nakshatraEndTime,
     yoga,
+    yogaEndTime,
+    karana,
+    karanaEndTime,
     vara,
     sunrise,
     sunset,

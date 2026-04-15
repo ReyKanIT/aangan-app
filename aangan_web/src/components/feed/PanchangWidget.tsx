@@ -55,34 +55,40 @@ export default function PanchangWidget() {
           <span className="text-brown-light text-base">{expanded ? '▲' : '▼'}</span>
         </div>
 
-        {/* Tithi highlight bar */}
+        {/* Tithi highlight bar with end-time */}
         <div className="flex flex-wrap items-center gap-2 bg-cream rounded-xl px-4 py-2 mt-1">
           <span className="text-base text-brown-light font-heading">तिथि:</span>
           <span className="text-base font-semibold text-haldi-gold font-heading">{panchang.tithi}</span>
+          <span className="text-xs text-brown-light/80">{panchang.tithiEndTime} तक</span>
           <span className="text-brown-light mx-1">&middot;</span>
           <span className="text-base text-brown-light font-heading">नक्षत्र:</span>
           <span className="text-base font-semibold text-haldi-gold font-heading">{panchang.nakshatra}</span>
+          <span className="text-xs text-brown-light/80">{panchang.nakshatraEndTime} तक</span>
         </div>
       </button>
 
       {/* Expandable details grid */}
       <div
         className={`transition-all duration-300 ease-in-out ${
-          expanded ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
+          expanded ? 'max-h-[32rem] opacity-100' : 'max-h-0 opacity-0'
         } overflow-hidden`}
       >
         <div className="px-5 pb-5 pt-1 border-t border-haldi-gold/10">
           <p className="text-base text-brown-light mb-3 font-heading">आज का पंचांग &middot; Today&apos;s Panchang</p>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-            <PanchangRow label="तिथि / Tithi" value={panchang.tithi} />
+            <PanchangRow label="तिथि / Tithi" value={panchang.tithi} subvalue={`${panchang.tithiEndTime} तक`} />
             <PanchangRow label="पक्ष / Paksha" value={panchang.paksha} />
-            <PanchangRow label="नक्षत्र / Nakshatra" value={panchang.nakshatra} />
+            <PanchangRow label="नक्षत्र / Nakshatra" value={panchang.nakshatra} subvalue={`${panchang.nakshatraEndTime} तक`} />
+            <PanchangRow label="करण / Karana" value={panchang.karana} subvalue={`${panchang.karanaEndTime} तक`} />
             <PanchangRow label="वार / Day" value={`${panchang.vara} (${WEEKDAYS_EN[today.getDay()]})`} />
             <PanchangRow label="सूर्योदय / Sunrise" value={`🌅 ${panchang.sunrise}`} />
             <PanchangRow label="सूर्यास्त / Sunset" value={`🌇 ${panchang.sunset}`} />
           </div>
           <div className="mt-4 pt-3 border-t border-haldi-gold/10 flex items-center justify-between">
-            <span className="text-base text-brown-light font-heading">योग / Yoga</span>
+            <div className="flex flex-col">
+              <span className="text-base text-brown-light font-heading">योग / Yoga</span>
+              <span className="text-xs text-brown-light/70">{panchang.yogaEndTime} तक</span>
+            </div>
             <span className={`text-base font-semibold ${yogaColor}`}>
               {panchang.yoga} ({yogaDesc})
             </span>
@@ -96,11 +102,12 @@ export default function PanchangWidget() {
   );
 }
 
-function PanchangRow({ label, value }: { label: string; value: string }) {
+function PanchangRow({ label, value, subvalue }: { label: string; value: string; subvalue?: string }) {
   return (
     <div className="flex flex-col bg-cream/50 rounded-lg px-3 py-2">
       <span className="text-xs text-brown-light">{label}</span>
       <span className="text-base text-brown font-semibold mt-0.5">{value}</span>
+      {subvalue && <span className="text-xs text-brown-light/70 mt-0.5">{subvalue}</span>}
     </div>
   );
 }
