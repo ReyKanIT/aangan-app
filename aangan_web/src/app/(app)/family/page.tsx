@@ -119,7 +119,7 @@ function MemberCard({ member, onRemove }: { member: FamilyMember; onRemove: () =
       <p className="font-body font-semibold text-brown text-base truncate">
         {member.member?.display_name_hindi ?? member.member?.display_name}
       </p>
-      <p className="font-body text-base text-brown-light">{member.relationship_hindi || RELATIONSHIP_MAP[member.relationship_type] || member.relationship_type}</p>
+      <p className="font-body text-base text-brown-light">{member.relationship_label_hindi || RELATIONSHIP_MAP[member.relationship_type] || member.relationship_type}</p>
       <span className="inline-block mt-1.5 bg-haldi-gold-light text-haldi-gold-dark text-base font-bold px-2 py-0.5 rounded-full">
         L{member.connection_level}
       </span>

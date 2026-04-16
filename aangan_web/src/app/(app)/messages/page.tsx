@@ -153,7 +153,7 @@ export default function MessagesPage() {
                       <p className="font-body text-base text-brown font-semibold">
                         {m.member?.display_name_hindi || m.member?.display_name}
                       </p>
-                      <p className="font-body text-sm text-brown-light">{m.relationship_hindi}</p>
+                      <p className="font-body text-sm text-brown-light">{m.relationship_label_hindi}</p>
                     </div>
                   </button>
                 ))}

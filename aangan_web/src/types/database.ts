@@ -31,9 +31,9 @@ export interface FamilyMember {
   user_id: string;
   family_member_id: string;
   relationship_type: string;
-  relationship_hindi: string;
+  relationship_label_hindi: string;
   connection_level: number;
-  is_confirmed: boolean;
+  is_verified: boolean;
   created_at: string;
   member?: User;
 }
