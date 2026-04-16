@@ -38,6 +38,26 @@ export interface FamilyMember {
   member?: User;
 }
 
+export interface OfflineFamilyMember {
+  id: string;
+  added_by: string;
+  display_name: string;
+  display_name_hindi: string | null;
+  relationship_type: string;
+  relationship_label_hindi: string | null;
+  connection_level: number;
+  is_deceased: boolean;
+  village_city: string | null;
+  avatar_url: string | null;
+  birth_year: number | null;
+  death_year: number | null;
+  notes: string | null;
+  linked_user_id: string | null;
+  is_confirmed: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface Post {
   id: string;
   author_id: string;

@@ -6,9 +6,11 @@ import AvatarCircle from '@/components/ui/AvatarCircle';
 import GoldButton from '@/components/ui/GoldButton';
 import EmptyState from '@/components/ui/EmptyState';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
-import type { FamilyMember } from '@/types/database';
+import type { FamilyMember, OfflineFamilyMember } from '@/types/database';
 import { RELATIONSHIP_MAP } from '@/lib/constants';
 import AddMemberDrawer from '@/components/family/AddMemberDrawer';
+import InviteShareCard from '@/components/ui/InviteShareCard';
+import { supabase } from '@/lib/supabase/client';
 
 const LEVELS = [
   { value: 0, label: 'सभी', sub: 'All' },
@@ -19,12 +21,29 @@ const LEVELS = [
 
 export default function FamilyPage() {
   const { members, fetchMembers, removeMember, isLoading, error } = useFamilyStore();
+  const [offlineMembers, setOfflineMembers] = useState<OfflineFamilyMember[]>([]);
   const [activeLevel, setActiveLevel] = useState(0);
   const [drawerOpen, setDrawerOpen] = useState(false);
 
-  useEffect(() => { fetchMembers(); }, [fetchMembers]);
+  const fetchOfflineMembers = useCallback(async () => {
+    try {
+      const { data, error } = await supabase
+        .from('offline_family_members')
+        .select('*')
+        .order('connection_level', { ascending: true });
+      if (!error && data) setOfflineMembers(data as OfflineFamilyMember[]);
+    } catch {
+      // Table may not exist yet — silently ignore
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchMembers();
+    fetchOfflineMembers();
+  }, [fetchMembers, fetchOfflineMembers]);
 
   const filtered = activeLevel === 0 ? members : members.filter((m) => m.connection_level === activeLevel);
+  const filteredOffline = activeLevel === 0 ? offlineMembers : offlineMembers.filter((m) => m.connection_level === activeLevel);
 
   const handleRemove = useCallback(async (m: FamilyMember) => {
     if (!confirm(`${m.member?.display_name_hindi ?? m.member?.display_name} को हटाएं?`)) return;
@@ -35,6 +54,19 @@ export default function FamilyPage() {
       toastError('सदस्य हटाने में समस्या हुई', 'Member removal failed');
     }
   }, [removeMember]);
+
+  const handleRemoveOffline = useCallback(async (m: OfflineFamilyMember) => {
+    if (!confirm(`${m.display_name_hindi ?? m.display_name} को हटाएं?`)) return;
+    try {
+      const { error } = await supabase.from('offline_family_members').delete().eq('id', m.id);
+      if (!error) setOfflineMembers((prev) => prev.filter((o) => o.id !== m.id));
+      else toastError('सदस्य हटाने में समस्या हुई', 'Member removal failed');
+    } catch {
+      toastError('सदस्य हटाने में समस्या हुई', 'Member removal failed');
+    }
+  }, []);
+
+  const totalCount = filtered.length + filteredOffline.length;
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-6">
@@ -47,22 +79,7 @@ export default function FamilyPage() {
       </div>
 
       {/* Invite Family CTA — viral loop */}
-      <a
-        href={`https://wa.me/?text=${encodeURIComponent('नमस्ते! 🙏 मैं आपको Aangan आँगन पर बुलाना चाहता/चाहती हूँ — हमारा परिवार सोशल नेटवर्क।\nअभी डाउनलोड करें: https://aangan.app')}`}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="flex items-center justify-between gap-3 mb-6 px-4 py-3 min-h-dadi rounded-2xl bg-[#25D366]/10 border border-[#25D366]/30 hover:bg-[#25D366]/15 transition-colors"
-        aria-label="परिवार को WhatsApp पर आमंत्रित करें"
-      >
-        <div className="flex items-center gap-3">
-          <span className="text-2xl" aria-hidden>💚</span>
-          <div className="text-left">
-            <p className="font-body font-semibold text-brown text-base">परिवार को बुलाएं</p>
-            <p className="font-body text-base text-brown-light">Invite family on WhatsApp</p>
-          </div>
-        </div>
-        <span className="font-body text-base text-[#1DA851] font-semibold whitespace-nowrap">भेजें →</span>
-      </a>
+      <InviteShareCard className="mb-6" />
 
       {/* Level Tabs */}
       <div className="flex gap-1 bg-cream-dark rounded-xl p-1 mb-6">
@@ -87,7 +104,7 @@ export default function FamilyPage() {
 
       {isLoading ? (
         <div className="flex justify-center py-20"><LoadingSpinner /></div>
-      ) : filtered.length === 0 ? (
+      ) : totalCount === 0 ? (
         <EmptyState
           emoji="👨‍👩‍👧‍👦"
           title="कोई परिवार नहीं"
@@ -96,13 +113,25 @@ export default function FamilyPage() {
         />
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+          {/* Online (app) members */}
           {filtered.map((member) => (
             <MemberCard key={member.id} member={member} onRemove={() => handleRemove(member)} />
+          ))}
+
+          {/* Offline / deceased members */}
+          {filteredOffline.map((member) => (
+            <OfflineMemberCard key={member.id} member={member} onRemove={() => handleRemoveOffline(member)} />
           ))}
         </div>
       )}
 
-      {drawerOpen && <AddMemberDrawer onClose={() => { setDrawerOpen(false); fetchMembers(); }} />}
+      {drawerOpen && (
+        <AddMemberDrawer onClose={() => {
+          setDrawerOpen(false);
+          fetchMembers();
+          fetchOfflineMembers();
+        }} />
+      )}
     </div>
   );
 }
@@ -123,8 +152,51 @@ function MemberCard({ member, onRemove }: { member: FamilyMember; onRemove: () =
       <span className="inline-block mt-1.5 bg-haldi-gold-light text-haldi-gold-dark text-base font-bold px-2 py-0.5 rounded-full">
         L{member.connection_level}
       </span>
+      {!member.is_verified && (
+        <span className="inline-block ml-1 mt-1.5 bg-yellow-100 text-yellow-700 text-sm font-semibold px-2 py-0.5 rounded-full" title="पुष्टि बाकी — Pending confirmation">
+          ⏳
+        </span>
+      )}
       {member.member?.village_city && (
         <p className="font-body text-base text-brown-light mt-1 truncate">📍 {member.member.village_city}</p>
+      )}
+      <button
+        onClick={onRemove}
+        className="absolute top-1 right-1 opacity-60 sm:opacity-0 sm:group-hover:opacity-100 text-gray-400 hover:text-error transition-all min-w-dadi min-h-dadi flex items-center justify-center text-base rounded-lg"
+        aria-label="सदस्य हटाएं — Remove member"
+      >✕</button>
+    </div>
+  );
+}
+
+function OfflineMemberCard({ member, onRemove }: { member: OfflineFamilyMember; onRemove: () => void }) {
+  return (
+    <div className={`rounded-2xl p-4 text-center shadow-sm group relative ${member.is_deceased ? 'bg-gray-50 border border-gray-200' : 'bg-white'}`}>
+      {/* Placeholder avatar with initial */}
+      <div className={`w-16 h-16 mx-auto mb-3 rounded-full flex items-center justify-center text-2xl font-heading font-bold ${member.is_deceased ? 'bg-gray-200 text-gray-500' : 'bg-haldi-gold-light text-haldi-gold-dark'}`}>
+        {member.is_deceased ? '🕊️' : (member.display_name_hindi ?? member.display_name).charAt(0).toUpperCase()}
+      </div>
+      <p className={`font-body font-semibold text-base truncate ${member.is_deceased ? 'text-gray-600' : 'text-brown'}`}>
+        {member.display_name_hindi ?? member.display_name}
+      </p>
+      <p className="font-body text-base text-brown-light">
+        {member.relationship_label_hindi || RELATIONSHIP_MAP[member.relationship_type] || member.relationship_type}
+      </p>
+      <span className="inline-block mt-1.5 bg-haldi-gold-light text-haldi-gold-dark text-base font-bold px-2 py-0.5 rounded-full">
+        L{member.connection_level}
+      </span>
+      {member.is_deceased && (
+        <span className="inline-block ml-1 mt-1.5 bg-gray-200 text-gray-600 text-sm font-semibold px-2 py-0.5 rounded-full">
+          स्वर्गवासी
+        </span>
+      )}
+      {!member.is_deceased && (
+        <span className="inline-block ml-1 mt-1.5 bg-blue-100 text-blue-600 text-sm font-semibold px-2 py-0.5 rounded-full" title="ऐप पर नहीं — Not on app">
+          ऑफ़लाइन
+        </span>
+      )}
+      {member.village_city && (
+        <p className="font-body text-base text-brown-light mt-1 truncate">📍 {member.village_city}</p>
       )}
       <button
         onClick={onRemove}

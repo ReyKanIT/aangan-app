@@ -35,6 +35,7 @@ Kumar — solo founder building Aangan. New to FlutterFlow and Supabase (needs s
 - **Timestamp every reply** — Start EVERY response with a timestamp in the format above. No exceptions. Applies to all messages, summaries, dashboards, agent reports, and commit messages.
 - **Timestamp Kumar's messages too** — When quoting, echoing, referencing, or summarizing anything Kumar has typed (in memory notes, plan files, agent prompts, commit messages, dashboards), prefix his message with a timestamp in the same format.
 - **No regressions** — Never break working features. Before modifying any screen/flow, verify existing functionality is preserved. If restructuring a file, ensure every existing handler, navigation path, and feature is carried forward. Test build after every change.
+- **Version bump on new features** — Whenever Kumar asks for a new feature, bump the version in `aangan_web/package.json` (and `aangan_rn/app.json` if mobile-relevant), create a git tag (e.g. `v0.9.1`), and push the tag. Patch bump for small features/fixes, minor bump for significant features. Always commit the version bump as part of the feature commit or as a separate follow-up commit.
 
 ---
 
