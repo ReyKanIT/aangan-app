@@ -1,5 +1,5 @@
 # ReyKan IT — CEO Action Tracker
-> Last updated: 2026-04-10
+> Last updated: 2026-04-17
 
 ---
 
@@ -11,11 +11,11 @@
 |---|------|-------|--------|-----|-------|
 | 1 | Add Google Sign-In to web + mobile app | Claude | ✅ DONE | Apr 9 | Web + mobile, removes SMS OTP dependency |
 | 2 | Fix Indus App Store screenshots (replace dashboard with real screens) | Claude + Kumar | PENDING | Apr 9 | Need real app screenshots |
-| 3 | Complete VilPower DLT approval | VilPower | WAITING | Apr 10 | Reg# VI-1100093984, ~48 hrs |
-| 4 | Register Header "AANGAN" on DLT | Claude | BLOCKED | Apr 10 | Needs VilPower approval first |
-| 5 | Register OTP template on DLT | Claude | BLOCKED | Apr 10 | Needs VilPower approval first |
-| 6 | Link PE-TM chain in MSG91 | Claude | BLOCKED | Apr 10 | Needs DLT Entity ID |
-| 7 | Test real SMS OTP delivery | Claude | BLOCKED | Apr 11 | Needs all DLT steps done |
+| 3 | Complete VilPower DLT approval | VilPower | ✅ DONE | Apr 10 | PE ID: 1101455800000093984, Entity approved |
+| 4 | Register Header on DLT | Claude | ⏳ PENDING | Apr 16 | `AANGFM` submitted (AANGAN was taken). Header ID: 1105177634147076603. Awaiting Vilpower approval (24-48h) |
+| 5 | Register OTP template on DLT | Claude | BLOCKED | Apr 17+ | Needs header approval first. Template: `Your Aangan verification code is {#var#}. Do not share this code with anyone.` |
+| 6 | Link PE-TM chain in MSG91 | Claude | BLOCKED | Apr 17+ | Needs DLT template ID. PE ID: 1101455800000093984 |
+| 7 | Test real SMS OTP delivery | Claude | BLOCKED | Apr 17+ | Needs all DLT steps done. MSG91 currently returning 400 errors (expected) |
 | 8 | Install Aangan on 5 family phones | Kumar | PENDING | Apr 9 | Use test OTP: 9886110312 -> 123456 |
 
 ### P1 — High Priority (This Week)

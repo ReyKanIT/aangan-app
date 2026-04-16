@@ -10,7 +10,7 @@
 
 const MSG91_AUTH_KEY     = Deno.env.get('MSG91_AUTH_KEY') ?? '';
 const MSG91_TEMPLATE_ID = Deno.env.get('MSG91_TEMPLATE_ID') ?? '';
-const MSG91_SENDER_ID   = Deno.env.get('MSG91_SENDER_ID') ?? 'AANGAN';
+const MSG91_SENDER_ID   = Deno.env.get('MSG91_SENDER_ID') ?? 'AANGFM';
 const WEBHOOK_SECRET    = Deno.env.get('SUPABASE_WEBHOOK_SECRET') ?? '';
 
 Deno.serve(async (req: Request) => {
