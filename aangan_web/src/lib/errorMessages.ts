@@ -49,6 +49,26 @@ const ERROR_MAP: Record<string, { hindi: string; english: string }> = {
     hindi: 'इस नंबर से रजिस्ट्रेशन बंद है',
     english: 'Signups not allowed via OTP',
   },
+  'sms send failed': {
+    hindi: 'SMS नहीं भेज पाए। कृपया दोबारा कोशिश करें',
+    english: 'SMS could not be sent. Please try again',
+  },
+  'sms provider error': {
+    hindi: 'SMS सेवा में समस्या है। कुछ देर बाद कोशिश करें',
+    english: 'SMS service error. Please try after some time',
+  },
+  'phone number not valid': {
+    hindi: 'सही फ़ोन नंबर डालें (10 अंक)',
+    english: 'Enter a valid 10-digit phone number',
+  },
+  'over email sending rate limit': {
+    hindi: 'बहुत ज़्यादा OTP भेजे गए। 1 मिनट बाद कोशिश करें',
+    english: 'Too many OTPs sent. Wait 1 minute',
+  },
+  'over sms sending rate limit': {
+    hindi: 'बहुत ज़्यादा SMS भेजे गए। 1 मिनट बाद कोशिश करें',
+    english: 'Too many SMS sent. Wait 1 minute',
+  },
 
   // Network errors
   'failed to fetch': {
