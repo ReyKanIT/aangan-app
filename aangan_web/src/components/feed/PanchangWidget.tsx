@@ -1,7 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { getPanchang, moonPhaseEmoji, yogaDescription, DELHI, type PanchangData } from '@/services/panchangService';
+import { loadEvents, matchesToday, type TithiEvent, eventTypeLabel } from '@/services/tithiEventService';
 
 const WEEKDAYS_EN = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 const MONTHS_EN = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
@@ -18,10 +20,17 @@ export default function PanchangWidget() {
   const [panchang, setPanchang] = useState<PanchangData | null>(null);
   const [expanded, setExpanded] = useState(true);
   const [today] = useState(new Date());
+  const [todayEvents, setTodayEvents] = useState<TithiEvent[]>([]);
 
   useEffect(() => {
     const data = getPanchang(new Date(), DELHI);
     setPanchang(data);
+    // Check tithi-event reminders for today
+    try {
+      const all = loadEvents();
+      const matched = all.filter((e) => matchesToday(e));
+      setTodayEvents(matched);
+    } catch { /* localStorage unavailable on server */ }
   }, []);
 
   if (!panchang) return null;
@@ -93,9 +102,39 @@ export default function PanchangWidget() {
               {panchang.yoga} ({yogaDesc})
             </span>
           </div>
-          <p className="text-xs text-brown-light/60 mt-3 text-right">
-            Location: Delhi, India &middot; Drik Ganita based calculation
-          </p>
+          {/* Tithi event reminders for today */}
+          {todayEvents.length > 0 && (
+            <div className="mt-4 pt-3 border-t border-haldi-gold/10">
+              <p className="text-sm font-heading text-haldi-gold mb-2">
+                🎉 आज की तिथि घटनाएँ
+              </p>
+              {todayEvents.map((e) => (
+                <div
+                  key={e.id}
+                  className="flex items-center gap-2 bg-haldi-gold/5 rounded-lg px-3 py-2 mb-1"
+                >
+                  <span className="text-lg">
+                    {e.type === 'birthday' ? '🎂' : e.type === 'shraddha' ? '🙏' : e.type === 'anniversary' ? '💍' : e.type === 'festival' ? '🎉' : '📌'}
+                  </span>
+                  <div>
+                    <span className="text-sm font-semibold text-brown">{e.name}</span>
+                    <span className="text-xs text-brown-light ml-2">({eventTypeLabel(e.type)})</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+          <div className="mt-3 flex items-center justify-between">
+            <p className="text-xs text-brown-light/60">
+              Location: Delhi, India &middot; Drik Ganita based calculation
+            </p>
+            <Link
+              href="/tithi-reminders"
+              className="text-xs text-haldi-gold hover:text-haldi-gold-dark font-semibold"
+            >
+              तिथि अनुस्मारक →
+            </Link>
+          </div>
         </div>
       </div>
     </div>

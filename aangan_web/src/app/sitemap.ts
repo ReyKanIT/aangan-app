@@ -11,6 +11,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${base}/chatbot`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.5 },
     { url: `${base}/demo`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.5 },
     { url: `${base}/support`, lastModified: new Date(), priority: 0.6 },
+    { url: `${base}/tithi-reminders`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.6 },
     { url: `${base}/privacy`, lastModified: new Date(), priority: 0.3 },
     { url: `${base}/terms`, lastModified: new Date(), priority: 0.3 },
   ];

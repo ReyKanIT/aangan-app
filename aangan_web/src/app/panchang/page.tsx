@@ -63,9 +63,10 @@ export default function PanchangPage() {
   const dateEnglish = formatDateEnglish(now);
 
   const rows = [
-    { label: 'तिथि / Tithi', value: `${panchang.paksha} ${panchang.tithi}` },
-    { label: 'नक्षत्र / Nakshatra', value: panchang.nakshatra },
-    { label: 'योग / Yoga', value: `${panchang.yoga} (${yogaNote})` },
+    { label: 'तिथि / Tithi', value: `${panchang.paksha} ${panchang.tithi}`, sub: `${panchang.tithiEndTime} तक` },
+    { label: 'नक्षत्र / Nakshatra', value: panchang.nakshatra, sub: `${panchang.nakshatraEndTime} तक` },
+    { label: 'योग / Yoga', value: `${panchang.yoga} (${yogaNote})`, sub: `${panchang.yogaEndTime} तक` },
+    { label: 'करण / Karana', value: panchang.karana, sub: `${panchang.karanaEndTime} तक` },
     { label: 'वार / Day', value: panchang.vara },
     { label: 'मास / Month', value: panchang.maas },
     { label: 'विक्रम संवत', value: String(panchang.vikramSamvat) },
@@ -112,9 +113,14 @@ export default function PanchangPage() {
               }`}
             >
               <span className="text-brown-light text-base">{row.label}</span>
-              <span className="font-heading text-brown font-semibold text-base md:text-lg text-right">
-                {row.value}
-              </span>
+              <div className="text-right">
+                <span className="font-heading text-brown font-semibold text-base md:text-lg">
+                  {row.value}
+                </span>
+                {row.sub && (
+                  <p className="text-xs text-brown-light/70 mt-0.5">{row.sub}</p>
+                )}
+              </div>
             </div>
           ))}
         </div>

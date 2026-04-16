@@ -10,6 +10,7 @@ const NAV_ITEMS = [
   { href: '/family', emoji: '👨‍👩‍👧‍👦', hindi: 'परिवार', english: 'Family' },
   { href: '/events', emoji: '📅', hindi: 'उत्सव', english: 'Events' },
   { href: '/kuldevi', emoji: '🛕', hindi: 'कुलदेवी', english: 'Kuldevi' },
+  { href: '/tithi-reminders', emoji: '🗓️', hindi: 'तिथि', english: 'Tithi' },
   { href: '/messages', emoji: '💬', hindi: 'संदेश', english: 'Messages' },
   { href: '/chatbot', emoji: '🤖', hindi: 'बॉट', english: 'Chatbot' },
   { href: '/notifications', emoji: '🔔', hindi: 'सूचना', english: 'Notifications' },
