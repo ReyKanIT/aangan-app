@@ -184,7 +184,7 @@ function sunriseSunset(
   const set  = solarNoon + HA / 15;
 
   function toHHMM(h: number): string {
-    const total = Math.round(((h % 24) + 24) % 24 * 60);
+    const total = Math.round(((h % 24) + 24) % 24 * 60) % 1440;
     const hh = Math.floor(total / 60).toString().padStart(2, '0');
     const mm = (total % 60).toString().padStart(2, '0');
     return `${hh}:${mm}`;

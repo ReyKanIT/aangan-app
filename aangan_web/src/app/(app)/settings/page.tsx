@@ -307,7 +307,7 @@ export default function SettingsPage() {
       </GoldButton>
 
       {/* Version */}
-      <p className="font-body text-sm text-brown-light text-center mt-6">Aangan v0.8.0</p>
+      <p className="font-body text-sm text-brown-light text-center mt-6">Aangan v0.9.0</p>
     </div>
   );
 }

@@ -51,3 +51,25 @@ supabase/.branches/
 releases/
 aangan_web/public/*.apk
 aangan_web/public/*.apk.idsig
+
+# Root-level brand assets & store graphics (keep in repo for reference, hide from git status)
+/aangan_icon_*.png
+/aangan_icon_*.svg
+/aangan_logo.*
+/play_store_*.png
+
+# Old Flutter prototype (superseded by aangan_rn Expo + aangan_web Next.js)
+aangan_flutter/
+
+# Milestones docs
+milestones/
+
+# Stray root app.json (real one is aangan_rn/app.json)
+/app.json
+
+# Supabase local config (machine-specific)
+supabase/.gitignore
+supabase/config.toml
+
+# Draft migrations not yet applied
+supabase/migrations/create_app_settings.sql

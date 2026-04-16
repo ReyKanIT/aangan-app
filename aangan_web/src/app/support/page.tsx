@@ -10,6 +10,13 @@ export const metadata: Metadata = {
     description: 'Get help with Aangan. Send feedback, report bugs, or reach our team.',
     url: 'https://aangan.app/support',
     type: 'website',
+    images: [{ url: '/og-image.png', width: 1200, height: 630, alt: 'Aangan — सहायता केंद्र' }],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Aangan Support — सहायता',
+    description: 'Get help with Aangan — send feedback, report bugs, reach our team.',
+    images: ['/og-image.png'],
   },
 };
 
@@ -113,7 +120,7 @@ export default function SupportPage() {
         </section>
 
         <footer className="text-center text-sm text-gray-500 pt-8">
-          Aangan आँगन &middot; app.aangan.family
+          Aangan आँगन &middot; aangan.app
         </footer>
       </div>
     </main>

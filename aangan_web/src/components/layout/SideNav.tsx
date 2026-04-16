@@ -71,7 +71,7 @@ export default function SideNav() {
 
       {/* Version Footer */}
       <div className="px-6 py-4 border-t border-cream-dark">
-        <p className="font-body text-sm text-brown-light">v0.8.0 — Comments, Chat, Kuldevi, Voice, Chatbot</p>
+        <p className="font-body text-sm text-brown-light">v0.9.0 — Panchang, Tithi Reminders, Feedback</p>
       </div>
     </nav>
   );

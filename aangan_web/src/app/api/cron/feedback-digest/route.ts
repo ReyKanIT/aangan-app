@@ -194,9 +194,13 @@ export async function GET(request: NextRequest) {
         // Telegram expects { chat_id, text } in the body.
         // Slack / Discord / generic use { text, content }.
         const isTelegram = webhook.includes('api.telegram.org');
-        const body = isTelegram
+        const chatId = isTelegram ? new URL(webhook).searchParams.get('chat_id') : null;
+        if (isTelegram && !chatId) {
+          console.error('Telegram webhook missing chat_id in URL params — skipping delivery');
+        }
+        const body = isTelegram && chatId
           ? JSON.stringify({
-              chat_id: new URL(webhook).searchParams.get('chat_id') ?? '',
+              chat_id: chatId,
               text,
               parse_mode: 'Markdown',
               disable_web_page_preview: true,

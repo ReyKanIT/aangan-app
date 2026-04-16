@@ -114,9 +114,10 @@ export function gregorianToTithi(
   date: Date,
   location: PanchangLocation = DELHI,
 ): { tithiNumber: number; paksha: 'shukla' | 'krishna'; masa: number; masaName: string } {
-  // Sample at ~06:00 local (just after sunrise for most Indian latitudes)
-  const atSunrise = new Date(date);
-  atSunrise.setHours(6, 0, 0, 0);
+  // Sample at ~06:00 IST (just after sunrise for most Indian latitudes)
+  // Use explicit IST construction to avoid browser-timezone mismatches
+  const y = date.getFullYear(), m = date.getMonth(), d = date.getDate();
+  const atSunrise = new Date(Date.UTC(y, m, d, 0, 30)); // 00:30 UTC = 06:00 IST
   const p = getPanchang(atSunrise, location);
   const paksha: 'shukla' | 'krishna' = p.tithiNumber <= 15 ? 'shukla' : 'krishna';
   const masa = masaFromHindi(p.maas);
@@ -157,8 +158,8 @@ export function nextOccurrence(
   from: Date = new Date(),
   location: PanchangLocation = DELHI,
 ): Date | null {
-  const cursor = new Date(from);
-  cursor.setHours(6, 0, 0, 0);
+  // Use UTC-based cursor to avoid browser timezone drift
+  const cursor = new Date(Date.UTC(from.getFullYear(), from.getMonth(), from.getDate(), 0, 30)); // 00:30 UTC = 06:00 IST
   for (let i = 0; i < 730; i++) {
     const t = gregorianToTithi(cursor, location);
     if (
@@ -168,7 +169,7 @@ export function nextOccurrence(
     ) {
       return new Date(cursor);
     }
-    cursor.setDate(cursor.getDate() + 1);
+    cursor.setUTCDate(cursor.getUTCDate() + 1);
   }
   return null;
 }

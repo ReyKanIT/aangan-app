@@ -19,11 +19,13 @@ function formatEnglishDate(date: Date): string {
 export default function PanchangWidget() {
   const [panchang, setPanchang] = useState<PanchangData | null>(null);
   const [expanded, setExpanded] = useState(true);
-  const [today] = useState(new Date());
+  const [today, setToday] = useState<Date | null>(null);
   const [todayEvents, setTodayEvents] = useState<TithiEvent[]>([]);
 
   useEffect(() => {
-    const data = getPanchang(new Date(), DELHI);
+    const now = new Date();
+    setToday(now);
+    const data = getPanchang(now, DELHI);
     setPanchang(data);
     // Check tithi-event reminders for today
     try {
@@ -33,7 +35,19 @@ export default function PanchangWidget() {
     } catch { /* localStorage unavailable on server */ }
   }, []);
 
-  if (!panchang) return null;
+  if (!panchang || !today) {
+    return (
+      <div className="bg-white rounded-2xl shadow-sm mb-4 overflow-hidden border border-haldi-gold/20 px-5 py-6">
+        <div className="animate-pulse flex items-center gap-3">
+          <div className="w-10 h-10 bg-cream rounded-full" />
+          <div className="flex-1 space-y-2">
+            <div className="h-4 bg-cream rounded w-3/4" />
+            <div className="h-3 bg-cream rounded w-1/2" />
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const yogaDesc = yogaDescription(panchang.yoga);
   const yogaColor =
