@@ -38,6 +38,7 @@ aangan_web/node_modules/
 aangan_web/.next/
 aangan_web/.env.local
 aangan_web/tsconfig.tsbuildinfo
+*.tsbuildinfo
 
 # Supabase CLI local state
 supabase/.temp/
