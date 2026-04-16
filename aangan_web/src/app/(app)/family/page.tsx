@@ -58,10 +58,10 @@ export default function FamilyPage() {
           <span className="text-2xl" aria-hidden>💚</span>
           <div className="text-left">
             <p className="font-body font-semibold text-brown text-base">परिवार को बुलाएं</p>
-            <p className="font-body text-sm text-brown-light">Invite family on WhatsApp</p>
+            <p className="font-body text-base text-brown-light">Invite family on WhatsApp</p>
           </div>
         </div>
-        <span className="font-body text-sm text-[#1DA851] font-semibold whitespace-nowrap">भेजें →</span>
+        <span className="font-body text-base text-[#1DA851] font-semibold whitespace-nowrap">भेजें →</span>
       </a>
 
       {/* Level Tabs */}
@@ -73,7 +73,7 @@ export default function FamilyPage() {
             className={`flex-1 py-3 rounded-lg font-body text-base font-semibold transition-all ${activeLevel === level.value ? 'bg-white shadow text-haldi-gold' : 'text-brown-light'}`}
           >
             {level.label}
-            <span className="block text-sm font-normal opacity-70">{level.sub}</span>
+            <span className="block text-base font-normal opacity-70">{level.sub}</span>
           </button>
         ))}
       </div>
@@ -119,16 +119,16 @@ function MemberCard({ member, onRemove }: { member: FamilyMember; onRemove: () =
       <p className="font-body font-semibold text-brown text-base truncate">
         {member.member?.display_name_hindi ?? member.member?.display_name}
       </p>
-      <p className="font-body text-sm text-brown-light">{member.relationship_hindi || RELATIONSHIP_MAP[member.relationship_type] || member.relationship_type}</p>
-      <span className="inline-block mt-1.5 bg-haldi-gold-light text-haldi-gold-dark text-sm font-bold px-2 py-0.5 rounded-full">
+      <p className="font-body text-base text-brown-light">{member.relationship_hindi || RELATIONSHIP_MAP[member.relationship_type] || member.relationship_type}</p>
+      <span className="inline-block mt-1.5 bg-haldi-gold-light text-haldi-gold-dark text-base font-bold px-2 py-0.5 rounded-full">
         L{member.connection_level}
       </span>
       {member.member?.village_city && (
-        <p className="font-body text-sm text-brown-light mt-1 truncate">📍 {member.member.village_city}</p>
+        <p className="font-body text-base text-brown-light mt-1 truncate">📍 {member.member.village_city}</p>
       )}
       <button
         onClick={onRemove}
-        className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 text-gray-400 hover:text-error transition-all min-w-dadi min-h-dadi flex items-center justify-center text-base rounded-lg"
+        className="absolute top-1 right-1 opacity-60 sm:opacity-0 sm:group-hover:opacity-100 text-gray-400 hover:text-error transition-all min-w-dadi min-h-dadi flex items-center justify-center text-base rounded-lg"
         aria-label="सदस्य हटाएं — Remove member"
       >✕</button>
     </div>

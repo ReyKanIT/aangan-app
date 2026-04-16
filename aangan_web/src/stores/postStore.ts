@@ -127,7 +127,7 @@ export const usePostStore = create<PostState>((set, get) => ({
     set((state) => ({
       posts: state.posts.map((p) =>
         p.id === postId
-          ? { ...p, like_count: wasLiked ? p.like_count - 1 : p.like_count + 1, is_liked: !wasLiked }
+          ? { ...p, like_count: wasLiked ? Math.max(0, p.like_count - 1) : p.like_count + 1, is_liked: !wasLiked }
           : p
       ),
     }));

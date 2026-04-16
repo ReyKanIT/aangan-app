@@ -16,10 +16,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   }, [initialize]);
 
   useEffect(() => {
+    if (!session) return;          // ← wait for auth before fetching
     fetchNotifications();
     subscribeToRealtime();
     return () => unsubscribeFromRealtime();
-  }, [fetchNotifications, subscribeToRealtime, unsubscribeFromRealtime]);
+  }, [session, fetchNotifications, subscribeToRealtime, unsubscribeFromRealtime]);
 
   // A user who signed up via OAuth but closed the tab before finishing
   // profile setup can deep-link straight into /feed, /family, etc. The

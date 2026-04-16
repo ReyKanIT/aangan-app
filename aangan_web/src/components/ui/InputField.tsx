@@ -15,7 +15,7 @@ export default function InputField({ label, sublabel, error, prefix, className, 
       {label && (
         <label className="block mb-1">
           <span className="font-body font-semibold text-brown text-base">{label}</span>
-          {sublabel && <span className="ml-2 text-sm text-brown-light font-body">{sublabel}</span>}
+          {sublabel && <span className="ml-2 text-base text-brown-light font-body">{sublabel}</span>}
         </label>
       )}
       <div className={cn('flex items-center border-2 rounded-lg overflow-hidden bg-white', error ? 'border-error' : 'border-gray-300 focus-within:border-haldi-gold')}>
@@ -32,7 +32,7 @@ export default function InputField({ label, sublabel, error, prefix, className, 
           {...props}
         />
       </div>
-      {error && <p className="mt-1 text-sm text-error font-body">{error}</p>}
+      {error && <p className="mt-1 text-base text-error font-body">{error}</p>}
     </div>
   );
 }

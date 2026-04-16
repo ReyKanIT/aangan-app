@@ -15,7 +15,7 @@ const PanchangWidget = dynamic(() => import('@/components/feed/PanchangWidget'),
 const PostComposer = dynamic(() => import('@/components/feed/PostComposer'), { ssr: false });
 
 export default function FeedPage() {
-  const { posts, fetchPosts, isLoading, isFetching, hasMore } = usePostStore();
+  const { posts, fetchPosts, isLoading, isFetching, hasMore, error } = usePostStore();
   const { members, fetchMembers } = useFamilyStore();
   const [composerOpen, setComposerOpen] = useState(false);
 
@@ -49,6 +49,14 @@ export default function FeedPage() {
 
       {/* Panchang Widget */}
       <PanchangWidget />
+
+      {/* Error State */}
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 mb-4 font-body text-base">
+          <p className="font-semibold">कुछ गड़बड़ हुई — Something went wrong</p>
+          <p className="text-base mt-1">{error}</p>
+        </div>
+      )}
 
       {isLoading && posts.length === 0 ? (
         <div className="flex justify-center py-20"><LoadingSpinner /></div>
@@ -92,7 +100,7 @@ export default function FeedPage() {
           ))}
           {isFetching && <div className="flex justify-center py-4"><LoadingSpinner className="h-6 w-6" /></div>}
           {!hasMore && posts.length > 0 && (
-            <p className="text-center font-body text-sm text-brown-light py-6">सभी पोस्ट देख लिए — All posts loaded</p>
+            <p className="text-center font-body text-base text-brown-light py-6">सभी पोस्ट देख लिए — All posts loaded</p>
           )}
         </>
       )}

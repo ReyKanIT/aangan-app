@@ -24,7 +24,7 @@ function PasswordStrength({ password }: { password: string }) {
           <div key={i} className={`h-1 flex-1 rounded-full ${i < score ? colors[score] : 'bg-gray-200'}`} />
         ))}
       </div>
-      <p className={`font-body text-sm ${score <= 1 ? 'text-red-500' : score === 2 ? 'text-yellow-600' : 'text-mehndi-green'}`}>
+      <p className={`font-body text-base ${score <= 1 ? 'text-red-500' : score === 2 ? 'text-yellow-600' : 'text-mehndi-green'}`}>
         {labels[score]}
       </p>
     </div>
@@ -130,7 +130,7 @@ function LoginContent() {
         <h1 className="font-heading text-4xl text-haldi-gold font-bold tracking-wide">AANGAN</h1>
         <p className="font-heading text-2xl text-brown mt-1">{'\u0906\u0901\u0917\u0928'}</p>
         <p className="font-body text-brown-light mt-2 text-base">{'\u092A\u0930\u093F\u0935\u093E\u0930 \u0938\u0947 \u091C\u0941\u0921\u093C\u0947\u0902'}</p>
-        <p className="font-body text-sm text-brown-light">Connect with Family</p>
+        <p className="font-body text-base text-brown-light">Connect with Family</p>
       </div>
 
       {/* ===== 1. SOCIAL LOGIN — Primary (like Instagram/ShareChat) ===== */}
@@ -162,7 +162,7 @@ function LoginContent() {
       {/* Divider */}
       <div className="flex items-center gap-3 my-5">
         <div className="flex-1 h-px bg-gray-200" />
-        <span className="font-body text-sm text-brown-light uppercase tracking-wider">या / or</span>
+        <span className="font-body text-base text-brown-light uppercase tracking-wider">या / or</span>
         <div className="flex-1 h-px bg-gray-200" />
       </div>
 
@@ -177,7 +177,7 @@ function LoginContent() {
                 : `कुछ गलत हो गया — Something went wrong (${authError})`}
             </p>
             {authErrorReason && (
-              <p className="text-sm opacity-80 mt-1">({authErrorReason})</p>
+              <p className="text-base opacity-80 mt-1">({authErrorReason})</p>
             )}
           </div>
         </div>
@@ -216,7 +216,7 @@ function LoginContent() {
       {/* Divider */}
       <div className="flex items-center gap-3 my-5">
         <div className="flex-1 h-px bg-gray-200" />
-        <span className="font-body text-sm text-brown-light uppercase tracking-wider">या / or</span>
+        <span className="font-body text-base text-brown-light uppercase tracking-wider">या / or</span>
         <div className="flex-1 h-px bg-gray-200" />
       </div>
 
@@ -228,7 +228,7 @@ function LoginContent() {
         >
           <span className="text-xl">📧</span>
           <span className="font-semibold">ईमेल से जारी रखें</span>
-          <span className="text-sm text-brown-light">Continue with Email</span>
+          <span className="text-base text-brown-light">Continue with Email</span>
         </button>
       ) : (
         <div className="space-y-3 bg-cream/50 rounded-xl p-4 border border-gray-100">
@@ -304,7 +304,7 @@ function LoginContent() {
                     </button>
                   </div>
                   {confirmPassword.length > 0 && (
-                    <p className={`font-body text-sm ${passwordsMatch ? 'text-mehndi-green' : 'text-error'}`}>
+                    <p className={`font-body text-base ${passwordsMatch ? 'text-mehndi-green' : 'text-error'}`}>
                       {passwordsMatch ? 'पासवर्ड मेल खा रहे हैं ✓' : 'पासवर्ड मेल नहीं खा रहे'}
                     </p>
                   )}
@@ -353,7 +353,7 @@ function LoginContent() {
                   setIsSignUp(false);
                   setError(null);
                 }}
-                className="w-full py-2 font-body text-sm text-brown-light hover:text-brown hover:underline transition-all"
+                className="w-full py-2 min-h-dadi font-body text-base text-brown-light hover:text-brown hover:underline transition-all"
               >
                 ← बिना पासवर्ड — OTP से जारी रखें
               </button>
@@ -371,7 +371,7 @@ function LoginContent() {
               setIsSignUp(false);
               setError(null);
             }}
-            className="w-full py-1 font-body text-sm text-gray-400 hover:text-gray-600 transition-all"
+            className="w-full py-2 min-h-dadi font-body text-base text-gray-400 hover:text-gray-600 transition-all"
           >
             ▲ बंद करें
           </button>
@@ -379,7 +379,7 @@ function LoginContent() {
       )}
 
       {/* Terms */}
-      <p className="font-body text-sm text-brown-light text-center mt-6 leading-relaxed">
+      <p className="font-body text-base text-brown-light text-center mt-6 leading-relaxed">
         आगे बढ़कर आप हमारी{' '}
         <a href="/terms" className="text-haldi-gold hover:underline" aria-label="Terms of Service">Terms</a>{' '}
         और{' '}

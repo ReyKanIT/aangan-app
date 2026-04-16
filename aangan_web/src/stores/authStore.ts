@@ -178,7 +178,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   signOut: async () => {
     if (_subscription) { _subscription.unsubscribe(); _subscription = null; }
     await supabase.auth.signOut();
-    set({ session: null, user: null, isNewUser: false });
+    set({ session: null, user: null, isNewUser: false, isLoading: false });
 
     // Clear every per-user cache so the next user signing in on the same
     // browser does not briefly see the previous user's feed / family /
