@@ -101,11 +101,20 @@ export async function middleware(request: NextRequest) {
 export const config = {
   matcher: [
     /*
-     * Match all request paths except:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico, manifest.json, etc.
+     * Skip middleware entirely (no @supabase/ssr bundle cost, no TTFB hit)
+     * for:
+     *   - static assets (_next/*, icons, sitemap, robots)
+     *   - /api/* (API routes handle their own auth)
+     *   - /auth/callback (OAuth exchange has its own flow)
+     *   - /upload/* (guest photo upload, no auth required)
+     *   - public SEO landing pages (panchang, festivals, demo, privacy,
+     *     terms, invite, tithi-reminders, support)
+     *
+     * Middleware still runs on: /, /feed, /family, /settings, /messages,
+     * /notifications, /kuldevi, /chatbot, /admin, /login, /otp,
+     * /profile-setup, /auth/* (other than /auth/callback). These are the
+     * paths that actually need session enforcement.
      */
-    '/((?!_next/static|_next/image|favicon.ico|manifest.json|og-image|apple-touch-icon|robots.txt|sitemap.xml).*)',
+    '/((?!_next/static|_next/image|favicon.ico|manifest.json|og-image|apple-touch-icon|robots.txt|sitemap.xml|api/|auth/callback|upload/|panchang|festivals|demo|privacy|terms|invite|tithi-reminders|support).*)',
   ],
 };

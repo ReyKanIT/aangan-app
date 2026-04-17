@@ -1,4 +1,5 @@
 'use client';
+import PublicShareCTA from '@/components/ui/PublicShareCTA';
 
 import { useState, useEffect } from 'react';
 
@@ -146,6 +147,13 @@ export default function DemoPage() {
       <div className="fixed bottom-6 left-6 text-sm text-amber-600/50" style={{ fontFamily: 'Georgia, serif' }}>
         aangan.app
       </div>
+
+      <PublicShareCTA
+        titleHi="यह demo किसी को दिखाएं"
+        titleEn="Share this Aangan demo with family"
+        shareMessage="Aangan — भारतीय परिवारों के लिए social network. Hindi voice, family tree, panchang सब एक जगह। देखें:"
+        loginLabel="Aangan शुरू करें — Sign up"
+      />
 
       <style jsx>{`
         @keyframes fade-in {

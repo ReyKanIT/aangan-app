@@ -116,28 +116,44 @@ export default function ProfileSetupPage() {
       )}
 
       <InputField label="आपका नाम *" sublabel="Your Name (required)" value={name} onChange={(e) => setName(e.target.value)} placeholder="अपना नाम डालें" autoFocus />
-      <InputField label="हिंदी में नाम" sublabel="Name in Hindi" value={nameHindi} onChange={(e) => setNameHindi(e.target.value)} placeholder="हिंदी में नाम" />
-      <InputField label="गाँव / शहर" sublabel="Village or City" value={city} onChange={(e) => setCity(e.target.value)} placeholder="अपना गाँव या शहर" />
 
-      <div className="mb-4">
-        <label className="block mb-1">
-          <span className="font-body font-semibold text-brown text-base">अपने बारे में</span>
-          <span className="ml-2 text-sm text-brown-light font-body">About You</span>
-        </label>
-        <textarea
-          value={bio}
-          onChange={(e) => setBio(e.target.value)}
-          placeholder="अपने बारे में कुछ बताएं..."
-          maxLength={200}
-          rows={3}
-          className="w-full border-2 border-gray-300 rounded-lg px-4 py-3 font-body text-base text-brown bg-white focus:border-haldi-gold focus:outline-none placeholder-gray-400 resize-none"
-        />
-        <p className="text-sm text-brown-light text-right font-body">{bio.length}/200</p>
-      </div>
+      {/* Optional fields are hidden behind a disclosure to shorten the first-run
+          funnel. Every required field is one more dropoff risk — most Indian
+          users want to see the feed in < 30 seconds. City/bio/Hindi-name are
+          editable from Settings later. */}
+      <details className="mb-4 group">
+        <summary className="cursor-pointer min-h-dadi py-3 text-brown-light font-body text-base font-semibold select-none list-none flex items-center gap-2">
+          <span className="group-open:rotate-90 transition-transform inline-block">▸</span>
+          और विवरण जोड़ें (वैकल्पिक) — Add more (optional)
+        </summary>
+        <div className="pt-2 space-y-0">
+          <InputField label="हिंदी में नाम" sublabel="Name in Hindi" value={nameHindi} onChange={(e) => setNameHindi(e.target.value)} placeholder="हिंदी में नाम" />
+          <InputField label="गाँव / शहर" sublabel="Village or City" value={city} onChange={(e) => setCity(e.target.value)} placeholder="अपना गाँव या शहर" />
+          <div className="mb-4">
+            <label className="block mb-1">
+              <span className="font-body font-semibold text-brown text-base">अपने बारे में</span>
+              <span className="ml-2 text-sm text-brown-light font-body">About You</span>
+            </label>
+            <textarea
+              value={bio}
+              onChange={(e) => setBio(e.target.value)}
+              placeholder="अपने बारे में कुछ बताएं..."
+              maxLength={200}
+              rows={3}
+              className="w-full border-2 border-gray-300 rounded-lg px-4 py-3 font-body text-base text-brown bg-white focus:border-haldi-gold focus:outline-none placeholder-gray-400 resize-none"
+            />
+            <p className="text-sm text-brown-light text-right font-body">{bio.length}/200</p>
+          </div>
+        </div>
+      </details>
 
       <GoldButton className="w-full mt-4" loading={isSaving} onClick={handleSave}>
         {isSaving ? 'प्रतीक्षा करें…' : 'आगे बढ़ें — Continue'}
       </GoldButton>
+
+      <p className="text-center font-body text-sm text-brown-light mt-3">
+        आप बाद में Settings से प्रोफाइल अपडेट कर सकते हैं — You can update later from Settings
+      </p>
     </div>
   );
 }

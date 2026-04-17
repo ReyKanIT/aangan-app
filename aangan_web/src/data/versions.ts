@@ -24,6 +24,20 @@ export interface ReleaseNote {
 
 export const RELEASES: ReleaseNote[] = [
   {
+    version: '0.9.10',
+    releasedAt: '2026-04-17T15:55:00+05:30',
+    stamp: '[3:55pm - 17Apr26]',
+    summary: 'Growth unlock — landing SSR, profile-setup funnel trim, public share CTAs, middleware slim',
+    category: 'fix',
+    highlights: [
+      'Landing page now renders content HTML to Googlebot / WhatsApp crawlers (removed the checking=true spinner gate that was blocking SSR body)',
+      'Profile-setup funnel trimmed: Hindi name, city, bio moved into an optional <details> disclosure; only name is required to Continue',
+      'PublicShareCTA on /panchang, /festivals, /demo — WhatsApp share + copy link + login CTA to turn passive SEO traffic into sharing + signup loops',
+      'Middleware matcher tightened: /api/*, /auth/callback, /upload/*, /panchang, /festivals, /demo, /privacy, /terms, /invite, /tithi-reminders, /support no longer invoke @supabase/ssr bundle on every request (cuts TTFB on SEO pages)',
+      'Footer version stamp updated on landing + panchang + festivals (was stale v0.9.0)',
+    ],
+  },
+  {
     version: '0.9.9',
     releasedAt: '2026-04-17T15:20:00+05:30',
     stamp: '[3:20pm - 17Apr26]',

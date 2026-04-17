@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { getPanchang, moonPhaseEmoji, yogaDescription, DELHI } from '@/services/panchangService';
+import PublicShareCTA from '@/components/ui/PublicShareCTA';
 
 function formatDateHindi(d: Date): string {
   const months = [
@@ -173,15 +174,22 @@ export default function PanchangPage() {
         </div>
       </div>
 
+      <PublicShareCTA
+        titleHi="आज का पंचांग परिवार को भेजें"
+        titleEn="Share today's panchang with your family"
+        shareMessage={`आज का पंचांग — तिथि: ${panchang.tithi}, नक्षत्र: ${panchang.nakshatra}। पूरा padhein:`}
+        loginLabel="Daily reminders के लिए login करें"
+      />
+
       {/* Footer */}
-      <footer className="py-8 px-4 bg-brown text-cream">
+      <footer className="py-8 px-4 bg-brown text-cream mt-12">
         <div className="max-w-4xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-cream-dark">
           <span className="font-heading text-haldi-gold">Aangan आँगन</span>
           <div className="flex gap-4">
             <a href="/privacy" className="hover:text-haldi-gold transition-colors">Privacy</a>
             <a href="/terms" className="hover:text-haldi-gold transition-colors">Terms</a>
           </div>
-          <p>&copy; 2026 ReyKan IT &middot; v0.9.0</p>
+          <p>&copy; 2026 ReyKan IT &middot; v0.9.10</p>
         </div>
       </footer>
 

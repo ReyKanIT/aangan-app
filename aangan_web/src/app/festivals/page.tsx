@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import PublicShareCTA from '@/components/ui/PublicShareCTA';
 
 export const metadata: Metadata = {
   title: 'भारतीय त्योहार 2026 — Indian Festivals Calendar',
@@ -188,8 +189,15 @@ export default function FestivalsPage() {
         </div>
       </div>
 
+      <PublicShareCTA
+        titleHi="त्योहार कैलेंडर परिवार को भेजें"
+        titleEn="Share this festivals calendar with your family"
+        shareMessage="2026 के सभी प्रमुख भारतीय त्योहार एक जगह — शुभ मुहूर्त, तिथियां। Aangan पर देखें:"
+        loginLabel="Festival reminders के लिए login करें"
+      />
+
       {/* Footer */}
-      <footer className="py-8 px-4 bg-brown text-cream">
+      <footer className="py-8 px-4 bg-brown text-cream mt-12">
         <div className="max-w-4xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-cream-dark">
           <span className="font-heading text-haldi-gold">Aangan आँगन</span>
           <div className="flex gap-4">
@@ -197,7 +205,7 @@ export default function FestivalsPage() {
             <a href="/privacy" className="hover:text-haldi-gold transition-colors">Privacy</a>
             <a href="/terms" className="hover:text-haldi-gold transition-colors">Terms</a>
           </div>
-          <p>&copy; 2026 ReyKan IT &middot; v0.9.0</p>
+          <p>&copy; 2026 ReyKan IT &middot; v0.9.10</p>
         </div>
       </footer>
 

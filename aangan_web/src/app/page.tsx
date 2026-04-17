@@ -82,7 +82,12 @@ const SHARE_TEXT = 'Aangan — परिवार से जुड़ें! ड
 
 export default function LandingPage() {
   const router = useRouter();
-  const [checking, setChecking] = useState(true);
+  // The SSR body always renders content. Previously an early-return spinner
+  // gate (triggered by a `checking=true` state) meant Googlebot / WhatsApp
+  // crawlers saw only the spinner HTML, killing organic SEO and producing
+  // dead OG previews on shared landing links. The session check still runs
+  // client-side to redirect logged-in users — minor content flash for them
+  // is an acceptable trade for the SEO unlock.
   const [copied, setCopied] = useState(false);
 
   const handleShare = async () => {
@@ -114,34 +119,19 @@ export default function LandingPage() {
 
   useEffect(() => {
     let cancelled = false;
+    // Still do the session redirect — but without blocking the initial paint.
     supabase.auth.getSession().then(
       ({ data: { session } }) => {
         if (cancelled) return;
-        if (session) {
-          router.replace('/feed');
-        } else {
-          setChecking(false);
-        }
+        if (session) router.replace('/feed');
       },
-      // If the session call rejects (network blip, Supabase down),
-      // don't leave the user staring at a spinner forever — show the
-      // landing page; any actual protected nav will re-check auth.
       (err) => {
         if (cancelled) return;
         console.error('[landing] getSession failed:', err);
-        setChecking(false);
       },
     );
     return () => { cancelled = true; };
   }, [router]);
-
-  if (checking) {
-    return (
-      <div className="min-h-screen bg-cream flex items-center justify-center">
-        <div className="w-10 h-10 border-4 border-haldi-gold border-t-transparent rounded-full animate-spin" />
-      </div>
-    );
-  }
 
   return (
     <main className="min-h-screen bg-cream font-body text-brown overflow-x-hidden">
@@ -413,7 +403,7 @@ export default function LandingPage() {
 
           <div className="mt-8 pt-6 border-t border-cream/10 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-cream-dark">
             <p>{"Made with ❤️ in India"}</p>
-            <p>&copy; 2026 ReyKan IT &middot; v0.9.0</p>
+            <p>&copy; 2026 ReyKan IT &middot; v0.9.10</p>
           </div>
         </div>
       </footer>
