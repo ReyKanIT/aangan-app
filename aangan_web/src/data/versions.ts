@@ -24,6 +24,20 @@ export interface ReleaseNote {
 
 export const RELEASES: ReleaseNote[] = [
   {
+    version: '0.9.6',
+    releasedAt: '2026-04-17T13:15:00+05:30',
+    stamp: '[1:15pm - 17Apr26]',
+    summary: 'Admin settings page self-heals — seeds defaults + diagnostic when DB empty',
+    category: 'fix',
+    highlights: [
+      'Empty `app_settings` table now surfaces "Initialize defaults" button (one-click seed)',
+      'Inline diagnostic shows exact Postgres error (42P01 no table, 42501 RLS block, etc.)',
+      'Refresh button + row-count in header for quick sanity check',
+      '"Add any missing defaults" available even when table is partially populated',
+      'Handles null `updated_at` gracefully (shows "Never" instead of "Invalid Date")',
+    ],
+  },
+  {
     version: '0.9.5',
     releasedAt: '2026-04-17T12:50:00+05:30',
     stamp: '[12:50pm - 17Apr26]',
