@@ -27,7 +27,7 @@ export const RELEASES: ReleaseNote[] = [
     version: '0.9.8',
     releasedAt: '2026-04-17T14:35:00+05:30',
     stamp: '[2:35pm - 17Apr26]',
-    summary: 'CEO Mode audit sweep — growth, bugs, UX, perf fixes across the board',
+    summary: '🧪 CODEX TEST CANDIDATE — CEO Mode audit sweep (growth, bugs, UX, perf)',
     category: 'fix',
     highlights: [
       'robots.txt unblocked /events + /kuldevi — fixes WhatsApp preview for every shared event link (huge viral unlock)',
