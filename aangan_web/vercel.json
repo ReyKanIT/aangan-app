@@ -7,6 +7,10 @@
     {
       "path": "/api/cron/feedback-digest",
       "schedule": "30 12 * * *"
+    },
+    {
+      "path": "/api/cron/send-scheduled-invites",
+      "schedule": "*/5 * * * *"
     }
   ]
 }

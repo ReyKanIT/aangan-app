@@ -104,6 +104,8 @@ export interface AanganEvent {
   voice_invite_url: string | null;
   voice_invite_duration_sec: number | null;
   parent_event_id: string | null;
+  invites_scheduled_at: string | null;
+  invites_sent_at: string | null;
   created_at: string;
   updated_at: string;
   creator?: User;
@@ -223,6 +225,26 @@ export interface EventPotluckItem {
   created_by: string | null;
   created_at: string;
   signups?: EventPotluckSignup[];
+}
+
+export type PlannedInviteStatus = 'pending' | 'sent' | 'failed' | 'skipped';
+export type PlannedInviteChannel = 'notification' | 'sms' | 'both' | null;
+
+export interface PlannedInvite {
+  id: string;
+  event_id: string;
+  invitee_user_id: string | null;
+  invitee_name: string;
+  invitee_name_hindi: string | null;
+  invitee_phone: string;
+  relationship_hint: string | null;
+  send_status: PlannedInviteStatus;
+  send_channel: PlannedInviteChannel;
+  sent_at: string | null;
+  send_error: string | null;
+  added_by: string | null;
+  added_at: string;
+  updated_at: string;
 }
 
 export interface EventPotluckSignup {

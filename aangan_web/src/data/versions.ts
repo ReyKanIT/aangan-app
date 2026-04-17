@@ -24,6 +24,24 @@ export interface ReleaseNote {
 
 export const RELEASES: ReleaseNote[] = [
   {
+    version: '0.9.9',
+    releasedAt: '2026-04-17T15:20:00+05:30',
+    stamp: '[3:20pm - 17Apr26]',
+    summary: 'Bulk invite scheduler — paste, contact picker, schedule one-shot send to all invitees',
+    category: 'feature',
+    migration: 'supabase_migration_v0.9.9_bulk_invites.sql',
+    highlights: [
+      'BulkInviteManager on every event detail page (hosts + co-hosts only)',
+      'Paste invitees as "Name, 9876543210" one per line — dedupes, validates Indian mobile pattern',
+      'Optional Contact Picker API on Android Chrome (progressive enhancement; paste fallback everywhere)',
+      'Auto-matches pasted phones against existing Aangan users — shows ✓ / 📱 SMS only',
+      'Schedule a one-shot batch send at a fixed IST time, or "Send now"',
+      'Vercel cron runs every 5 minutes → drains pending queue: in-app notifications to existing users, MSG91 SMS to non-users (gated on DLT template approval)',
+      'Pre-seeds event_rsvps with status=pending so invitees see the event in /events immediately',
+      'Per-invitee status tracking (pending → sent/failed) with error detail',
+    ],
+  },
+  {
     version: '0.9.8',
     releasedAt: '2026-04-17T14:35:00+05:30',
     stamp: '[2:35pm - 17Apr26]',

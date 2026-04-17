@@ -14,6 +14,7 @@ import GpsCheckIn from '@/components/events/GpsCheckIn';
 import GiftRegister from '@/components/events/GiftRegister';
 import SubEventsSection from '@/components/events/SubEventsSection';
 import PotluckSection from '@/components/events/PotluckSection';
+import BulkInviteManager from '@/components/events/BulkInviteManager';
 import { VoiceInvitePlayer } from '@/components/events/VoiceInvite';
 import dynamic from 'next/dynamic';
 import { supabase } from '@/lib/supabase/client';
@@ -255,6 +256,17 @@ export default function EventDetailPage() {
         isCreator={isCreator}
         onOpenManagers={isCreator ? () => setManagersOpen(true) : undefined}
       />
+
+      {/* Bulk invite scheduler — hosts only */}
+      {canManage && (
+        <BulkInviteManager
+          eventId={currentEvent.id}
+          currentUserId={user?.id}
+          scheduledAt={currentEvent.invites_scheduled_at}
+          sentAt={currentEvent.invites_sent_at}
+          onScheduleChange={() => fetchEvent(eventId)}
+        />
+      )}
 
       {/* Physical card tracker — hosts only */}
       {canManage && <PhysicalCardTracker eventId={currentEvent.id} rsvps={rsvps} />}
