@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/lib/supabase/client';
 import { cn } from '@/lib/utils/cn';
+import { notifyUser } from '@/lib/utils/notifyUser';
 
 type TicketStatus = 'open' | 'assigned' | 'in_progress' | 'waiting_for_user' | 'resolved' | 'closed';
 type TicketCategory = 'billing' | 'account' | 'bug_report' | 'feature_request' | 'complaint' | 'general';
@@ -127,6 +128,19 @@ export default function SupportPage() {
       await supabase.from('support_tickets').update({ status: 'in_progress' }).eq('id', selected.id);
       setSelected((s) => s ? { ...s, status: 'in_progress' } : s);
     }
+    // Notify the ticket owner — internal notes stay internal.
+    // Fire-and-forget so notification failure doesn't block the reply itself.
+    if (!isNote && selected.user_id) {
+      await notifyUser({
+        userId: selected.user_id,
+        type: 'support_reply',
+        titleHi: 'आपके टिकट पर जवाब आया है',
+        titleEn: 'New reply on your support ticket',
+        bodyHi: reply.trim().slice(0, 200),
+        bodyEn: reply.trim().slice(0, 200),
+        data: { ticket_id: selected.id, ticket_number: selected.ticket_number },
+      });
+    }
     setReply('');
     setSending(false);
     // Reload messages
@@ -148,6 +162,18 @@ export default function SupportPage() {
     await supabase.from('support_tickets').update(patch).eq('id', ticketId);
     setSelected((s) => s ? { ...s, status, ...(note ? { resolution_notes: note } : {}) } : s);
     setShowResolve(false);
+    // Notify the user when their ticket is resolved (not on other transitions — those are internal state).
+    if (status === 'resolved' && selected?.user_id) {
+      await notifyUser({
+        userId: selected.user_id,
+        type: 'issue_resolved',
+        titleHi: 'आपकी शिकायत का समाधान हो गया 🙏',
+        titleEn: 'Your support ticket is resolved',
+        bodyHi: note?.slice(0, 200) || 'मेज़बान ने टिकट close कर दिया है',
+        bodyEn: note?.slice(0, 200) || 'Your ticket has been marked resolved',
+        data: { ticket_id: ticketId, ticket_number: selected.ticket_number },
+      });
+    }
     fetchTickets();
   }
 

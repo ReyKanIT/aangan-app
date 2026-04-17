@@ -8,6 +8,7 @@ import { Toaster } from 'react-hot-toast';
 
 const navItems = [
   { href: '/admin', label: 'Dashboard', icon: DashboardIcon, roles: ['super_admin','admin','manager'] },
+  { href: '/admin/issues', label: 'Issues Inbox', icon: InboxIcon, roles: ['super_admin','admin','manager'] },
   { href: '/admin/users', label: 'Users', icon: UsersIcon, roles: ['super_admin','admin'] },
   { href: '/admin/support', label: 'Support Tickets', icon: SupportIcon, roles: ['super_admin','admin','manager'] },
   { href: '/admin/feedback-digest', label: 'Feedback Digest', icon: DigestIcon, roles: ['super_admin','admin','manager'] },
@@ -185,6 +186,14 @@ function DigestIcon({ className }: { className?: string }) {
   return (
     <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+    </svg>
+  );
+}
+
+function InboxIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 00-2 2v6a2 2 0 002 2h14a2 2 0 002-2v-6a2 2 0 00-2-2M5 8V6a2 2 0 012-2h10a2 2 0 012 2v2m-4 6H9a1 1 0 01-.8-.4L7 11h10l-1.2 2.6a1 1 0 01-.8.4z" />
     </svg>
   );
 }

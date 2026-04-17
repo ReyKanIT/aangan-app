@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/lib/supabase/client';
 import { toastError } from '@/lib/toast';
+import { notifyUser } from '@/lib/utils/notifyUser';
 
 type ReportStatus = 'pending' | 'reviewing' | 'resolved' | 'dismissed';
 
@@ -78,6 +79,27 @@ export default function AdminReportsPage() {
         .eq('id', reportId);
 
       if (updateError) throw updateError;
+
+      // Notify the reporter when the report closes out — they deserve to
+      // know their flag was actioned (one way or the other). Dismissed
+      // reports get a softer "we reviewed, no action needed" note.
+      const report = reports.find((r) => r.id === reportId);
+      if (report?.reporter_id && (newStatus === 'resolved' || newStatus === 'dismissed')) {
+        await notifyUser({
+          userId: report.reporter_id,
+          type: 'issue_resolved',
+          titleHi: newStatus === 'resolved' ? 'आपकी रिपोर्ट पर action लिया गया 🙏' : 'आपकी रिपोर्ट की जाँच हुई',
+          titleEn: newStatus === 'resolved' ? 'Action taken on your report' : 'Your report was reviewed',
+          bodyHi: note?.slice(0, 200) || (newStatus === 'resolved'
+            ? 'जो content आपने flag किया था — guidelines के against था, हमने action ले लिया है।'
+            : 'जाँच में guidelines का उल्लंघन नहीं मिला। यदि परेशान हों तो उस user को block कर सकते हैं।'),
+          bodyEn: note?.slice(0, 200) || (newStatus === 'resolved'
+            ? 'The content you flagged violated our guidelines — we\'ve taken action.'
+            : 'We reviewed and didn\'t find a guideline violation. You can block the user if needed.'),
+          data: { report_id: reportId, status: newStatus },
+        });
+      }
+
       setReports((prev) =>
         prev.map((r) =>
           r.id === reportId ? { ...r, status: newStatus, resolution_note: note ?? r.resolution_note } : r

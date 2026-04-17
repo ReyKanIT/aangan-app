@@ -24,6 +24,23 @@ export interface ReleaseNote {
 
 export const RELEASES: ReleaseNote[] = [
   {
+    version: '0.9.7',
+    releasedAt: '2026-04-17T13:45:00+05:30',
+    stamp: '[1:45pm - 17Apr26]',
+    summary: 'User-issue reply plumbing — unified /admin/issues inbox, Hindi/English templates, user notifications on reply & resolve',
+    category: 'feature',
+    migration: 'supabase_migration_v0.9.7_user_issues.sql',
+    highlights: [
+      'New /admin/issues page consolidates support_tickets + content_reports into one triage inbox',
+      'Shared ReplyComposer with 10 built-in Hindi/English templates (OTP, photo upload, family, events, moderation, profile, generic)',
+      'Every admin reply + every resolve now fires an in-app notification to the user (notifications table, bilingual)',
+      'Content reports gain a reply thread via new report_messages table (mirrors support_messages)',
+      '/admin/support: replies + resolves now notify the ticket owner',
+      '/admin/reports: resolve/dismiss now notifies the reporter with tailored Hindi+English copy',
+      'Issues Inbox nav link prominent in admin sidebar',
+    ],
+  },
+  {
     version: '0.9.6',
     releasedAt: '2026-04-17T13:15:00+05:30',
     stamp: '[1:15pm - 17Apr26]',

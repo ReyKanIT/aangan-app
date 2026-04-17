@@ -1,7 +1,7 @@
 export type AudienceType = 'all' | 'level' | 'custom';
 export type RsvpStatus = 'going' | 'maybe' | 'not_going';
 export type EventType = 'wedding' | 'birthday' | 'puja' | 'festival' | 'reunion' | 'other';
-export type NotificationType = 'new_post' | 'event_invite' | 'rsvp_update' | 'new_family_member' | 'post_like' | 'post_comment' | 'general';
+export type NotificationType = 'new_post' | 'event_invite' | 'rsvp_update' | 'new_family_member' | 'post_like' | 'post_comment' | 'general' | 'support_reply' | 'report_reply' | 'issue_resolved';
 
 export interface User {
   id: string;
@@ -162,6 +162,47 @@ export interface EventGiftManager {
   granted_by: string | null;
   granted_at: string;
   user?: User;
+}
+
+export interface ReportMessage {
+  id: string;
+  report_id: string;
+  sender_id: string | null;
+  message: string;
+  message_hindi: string | null;
+  is_from_admin: boolean;
+  is_internal_note: boolean;
+  created_at: string;
+  sender?: Pick<User, 'id' | 'display_name' | 'display_name_hindi' | 'avatar_url'>;
+}
+
+export interface SupportMessage {
+  id: string;
+  ticket_id: string;
+  sender_id: string | null;
+  message: string;
+  is_from_support: boolean;
+  is_internal_note: boolean;
+  attachment_url: string | null;
+  created_at: string;
+  sender?: Pick<User, 'id' | 'display_name' | 'display_name_hindi' | 'avatar_url'>;
+}
+
+export interface SupportTicket {
+  id: string;
+  ticket_number: string;
+  user_id: string;
+  category: 'billing' | 'account' | 'bug_report' | 'feature_request' | 'complaint' | 'general';
+  subject: string;
+  status: 'open' | 'assigned' | 'in_progress' | 'waiting_for_user' | 'resolved' | 'closed';
+  priority: 'low' | 'medium' | 'high' | 'urgent';
+  assigned_to: string | null;
+  resolution_notes: string | null;
+  resolved_at: string | null;
+  first_response_at: string | null;
+  created_at: string;
+  updated_at: string;
+  user?: Pick<User, 'id' | 'display_name' | 'display_name_hindi' | 'avatar_url' | 'phone_number'>;
 }
 
 export interface EventCoHost {
