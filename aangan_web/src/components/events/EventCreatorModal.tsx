@@ -1,10 +1,11 @@
 'use client';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useEventStore } from '@/stores/eventStore';
 import GoldButton from '@/components/ui/GoldButton';
 import InputField from '@/components/ui/InputField';
 import { EVENT_TYPES } from '@/lib/constants';
+import { uploadEventCover } from '@/lib/utils/uploadMedia';
 
 interface Props { onClose: () => void; }
 
@@ -19,12 +20,32 @@ export default function EventCreatorModal({ onClose }: Props) {
   const [time, setTime] = useState('');
   const [location, setLocation] = useState('');
   const [description, setDescription] = useState('');
+  const [coverFile, setCoverFile] = useState<File | null>(null);
+  const [coverPreview, setCoverPreview] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState('');
+  const fileRef = useRef<HTMLInputElement | null>(null);
+
+  const handleCoverPick = (file: File | null) => {
+    setCoverFile(file);
+    if (coverPreview) URL.revokeObjectURL(coverPreview);
+    setCoverPreview(file ? URL.createObjectURL(file) : null);
+  };
 
   const handleCreate = async () => {
     if (!title || !date || !time || !eventType) { setError('सभी ज़रूरी जानकारी भरें'); return; }
     setIsSaving(true);
+
+    let banner_url: string | null = null;
+    if (coverFile) {
+      try {
+        banner_url = await uploadEventCover(coverFile);
+      } catch {
+        // Cover upload failed — save event without it rather than blocking Dadi
+        setError('कवर फ़ोटो अपलोड नहीं हुई — बाकी जानकारी सेव कर रहे हैं');
+      }
+    }
+
     const start = new Date(`${date}T${time}`).toISOString();
     const id = await createEvent({
       title, title_hindi: titleHindi || null,
@@ -34,10 +55,11 @@ export default function EventCreatorModal({ onClose }: Props) {
       description: description || null,
       ceremonies: [],
       is_public: true,
+      banner_url,
     });
     setIsSaving(false);
     if (id) { onClose(); router.push(`/events/${id}`); }
-    else setError('उत्सव नहीं बना पाए');
+    else if (!error) setError('उत्सव नहीं बना पाए');
   };
 
   return (
@@ -75,6 +97,42 @@ export default function EventCreatorModal({ onClose }: Props) {
 
         {step === 2 && (
           <div>
+            {/* Cover photo picker */}
+            <div className="mb-4">
+              <label className="block font-body font-semibold text-brown mb-1">कवर फ़ोटो <span className="text-brown-light text-sm font-normal">Cover Photo</span></label>
+              <button
+                type="button"
+                onClick={() => fileRef.current?.click()}
+                className="w-full h-36 rounded-xl border-2 border-dashed border-haldi-gold/60 bg-cream flex items-center justify-center overflow-hidden hover:bg-cream-dark transition-colors"
+                aria-label="कवर फ़ोटो जोड़ें"
+              >
+                {coverPreview ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={coverPreview} alt="cover preview" className="w-full h-full object-cover" />
+                ) : (
+                  <div className="text-center">
+                    <div className="text-4xl mb-1">🖼️</div>
+                    <p className="font-body text-base text-brown-light">कवर फ़ोटो जोड़ें — Add cover photo</p>
+                  </div>
+                )}
+              </button>
+              {coverPreview && (
+                <button
+                  type="button"
+                  onClick={() => handleCoverPick(null)}
+                  className="mt-2 text-sm text-brown-light font-body underline"
+                >
+                  हटाएं — Remove
+                </button>
+              )}
+              <input
+                ref={fileRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => handleCoverPick(e.target.files?.[0] ?? null)}
+              />
+            </div>
             <InputField label="उत्सव का नाम *" sublabel="Event Title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. शादी समारोह" />
             <InputField label="हिंदी में नाम" sublabel="Hindi Title" value={titleHindi} onChange={(e) => setTitleHindi(e.target.value)} placeholder="हिंदी में नाम" />
             <div className="grid grid-cols-2 gap-3">

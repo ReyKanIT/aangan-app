@@ -51,8 +51,12 @@ export default function EventsPage() {
             const typeInfo = eventTypeMap[event.event_type] ?? { emoji: '📅', label: event.event_type };
             return (
               <Link key={event.id} href={`/events/${event.id}`}>
-                <article className="bg-white rounded-2xl p-4 shadow-sm hover:shadow-md transition-shadow cursor-pointer">
-                  <div className="flex items-start gap-4">
+                <article className="bg-white rounded-2xl shadow-sm hover:shadow-md transition-shadow cursor-pointer overflow-hidden">
+                  {event.banner_url && (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={event.banner_url} alt={event.title} loading="lazy" className="w-full h-32 object-cover" />
+                  )}
+                  <div className="flex items-start gap-4 p-4">
                     <div className="w-14 h-14 rounded-xl bg-cream-dark flex items-center justify-center text-3xl flex-shrink-0">
                       {typeInfo.emoji}
                     </div>

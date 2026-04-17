@@ -97,6 +97,7 @@ export interface AanganEvent {
   max_attendees: number | null;
   rsvp_deadline: string | null;
   ceremonies: Ceremony[];
+  banner_url: string | null;
   created_at: string;
   updated_at: string;
   creator?: User;
@@ -118,6 +119,7 @@ export interface EventRsvp {
   status: RsvpStatus;
   guests_count: number;
   note: string | null;
+  dietary_preferences: string[] | null;
   created_at: string;
   updated_at: string;
   user?: User;

@@ -13,7 +13,9 @@ interface EventState {
   fetchEvents: () => Promise<void>;
   fetchEvent: (eventId: string) => Promise<void>;
   createEvent: (data: Partial<AanganEvent>) => Promise<string | null>;
-  submitRsvp: (eventId: string, status: RsvpStatus) => Promise<boolean>;
+  updateEvent: (eventId: string, patch: Partial<AanganEvent>) => Promise<boolean>;
+  deleteEvent: (eventId: string) => Promise<boolean>;
+  submitRsvp: (eventId: string, status: RsvpStatus, opts?: { guests_count?: number; note?: string | null }) => Promise<boolean>;
   fetchRsvps: (eventId: string) => Promise<void>;
   setError: (error: string | null) => void;
 }
@@ -74,13 +76,50 @@ export const useEventStore = create<EventState>((set, get) => ({
     }
   },
 
-  submitRsvp: async (eventId, status) => {
+  updateEvent: async (eventId, patch) => {
+    set({ error: null });
+    try {
+      const { error } = await supabase.from('events').update(patch).eq('id', eventId);
+      if (error) { set({ error: friendlyError(error.message) }); return false; }
+      set((state) => ({
+        currentEvent: state.currentEvent?.id === eventId
+          ? { ...state.currentEvent, ...patch } as AanganEvent
+          : state.currentEvent,
+        events: state.events.map((e) => e.id === eventId ? { ...e, ...patch } as AanganEvent : e),
+      }));
+      return true;
+    } catch (e: unknown) {
+      set({ error: friendlyError(e instanceof Error ? e.message : 'Update failed') });
+      return false;
+    }
+  },
+
+  deleteEvent: async (eventId) => {
+    set({ error: null });
+    try {
+      const { error } = await supabase.from('events').delete().eq('id', eventId);
+      if (error) { set({ error: friendlyError(error.message) }); return false; }
+      set((state) => ({
+        events: state.events.filter((e) => e.id !== eventId),
+        currentEvent: state.currentEvent?.id === eventId ? null : state.currentEvent,
+      }));
+      return true;
+    } catch (e: unknown) {
+      set({ error: friendlyError(e instanceof Error ? e.message : 'Delete failed') });
+      return false;
+    }
+  },
+
+  submitRsvp: async (eventId, status, opts) => {
     set({ error: null });
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return false;
     try {
+      const payload: Record<string, unknown> = { event_id: eventId, user_id: user.id, status };
+      if (opts?.guests_count !== undefined) payload.guests_count = opts.guests_count;
+      if (opts?.note !== undefined) payload.note = opts.note;
       const { error } = await supabase.from('event_rsvps')
-        .upsert({ event_id: eventId, user_id: user.id, status }, { onConflict: 'event_id,user_id' });
+        .upsert(payload, { onConflict: 'event_id,user_id' });
       if (error) { set({ error: friendlyError(error.message) }); return false; }
       set((state) => ({
         currentEvent: state.currentEvent?.id === eventId
