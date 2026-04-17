@@ -212,7 +212,7 @@ export default function BulkInviteManager({ eventId, currentUserId, scheduledAt,
       await fetch('/api/cron/send-scheduled-invites', { method: 'POST' });
     } catch { /* cron may be token-protected; the 5-min tick will catch up */ }
     setSavingSchedule(false);
-    setOk('Send triggered — cron will process within 5 minutes.');
+    setOk('Send triggered — processing now.');
     onScheduleChange?.(now);
     setTimeout(fetchQueue, 6000);
   };
@@ -433,7 +433,8 @@ export default function BulkInviteManager({ eventId, currentUserId, scheduledAt,
             </div>
             {scheduledAt && !isSent && (
               <p className="font-body text-sm text-brown-light">
-                ⏰ Scheduled for {new Date(scheduledAt).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })} IST · fires within 5 minutes of that time
+                ⏰ Scheduled for {new Date(scheduledAt).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })} IST.
+                Fires at the next daily sweep (12:15 AM IST) after that time. For instant send, click <b>Send now</b>.
               </p>
             )}
             {stats.pending === 0 && (

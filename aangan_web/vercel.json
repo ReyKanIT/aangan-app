@@ -10,7 +10,7 @@
     },
     {
       "path": "/api/cron/send-scheduled-invites",
-      "schedule": "*/5 * * * *"
+      "schedule": "15 0 * * *"
     }
   ]
 }

@@ -36,7 +36,7 @@ export const RELEASES: ReleaseNote[] = [
       'Optional Contact Picker API on Android Chrome (progressive enhancement; paste fallback everywhere)',
       'Auto-matches pasted phones against existing Aangan users — shows ✓ / 📱 SMS only',
       'Schedule a one-shot batch send at a fixed IST time, or "Send now"',
-      'Vercel cron runs every 5 minutes → drains pending queue: in-app notifications to existing users, MSG91 SMS to non-users (gated on DLT template approval)',
+      'Daily Vercel cron (00:15 IST sweep) drains pending queue: in-app notifications to existing users, MSG91 SMS to non-users (gated on DLT template approval). "Send now" button triggers immediately.',
       'Pre-seeds event_rsvps with status=pending so invitees see the event in /events immediately',
       'Per-invitee status tracking (pending → sent/failed) with error detail',
     ],
