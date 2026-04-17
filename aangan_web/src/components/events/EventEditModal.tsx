@@ -5,6 +5,7 @@ import { useEventStore } from '@/stores/eventStore';
 import GoldButton from '@/components/ui/GoldButton';
 import InputField from '@/components/ui/InputField';
 import { uploadEventCover } from '@/lib/utils/uploadMedia';
+import LocationPicker from './LocationPicker';
 import type { AanganEvent } from '@/types/database';
 
 interface Props { event: AanganEvent; onClose: () => void; }
@@ -21,6 +22,9 @@ export default function EventEditModal({ event, onClose }: Props) {
   const [date, setDate] = useState(initialDate);
   const [time, setTime] = useState(initialTime);
   const [location, setLocation] = useState(event.location ?? '');
+  const [hostedBy, setHostedBy] = useState(event.hosted_by ?? '');
+  const [lat, setLat] = useState<number | null>(event.latitude ?? null);
+  const [lng, setLng] = useState<number | null>(event.longitude ?? null);
   const [description, setDescription] = useState(event.description ?? '');
   const [coverFile, setCoverFile] = useState<File | null>(null);
   const [coverPreview, setCoverPreview] = useState<string | null>(event.banner_url ?? null);
@@ -63,6 +67,9 @@ export default function EventEditModal({ event, onClose }: Props) {
       start_datetime: start,
       location: location || null,
       description: description || null,
+      latitude: lat,
+      longitude: lng,
+      hosted_by: hostedBy.trim() || null,
     };
     if (banner_url !== undefined) patch.banner_url = banner_url;
 
@@ -120,6 +127,14 @@ export default function EventEditModal({ event, onClose }: Props) {
           <InputField label="समय *" sublabel="Time" type="time" value={time} onChange={(e) => setTime(e.target.value)} />
         </div>
         <InputField label="स्थान" sublabel="Location" value={location} onChange={(e) => setLocation(e.target.value)} />
+        <LocationPicker latitude={lat} longitude={lng} onChange={(la, ln) => { setLat(la); setLng(ln); }} />
+        <InputField
+          label="किनकी ओर से — On behalf of"
+          sublabel="Elders/hosts on the invite"
+          value={hostedBy}
+          onChange={(e) => setHostedBy(e.target.value)}
+          placeholder="श्री सुखदेव शर्मा एवं परिवार"
+        />
         <div className="mb-4">
           <label className="block font-body font-semibold text-brown mb-1">विवरण <span className="text-brown-light text-sm font-normal">Description</span></label>
           <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={3} className="w-full border-2 border-gray-300 rounded-xl px-4 py-3 font-body text-base text-brown focus:border-haldi-gold focus:outline-none resize-none" />

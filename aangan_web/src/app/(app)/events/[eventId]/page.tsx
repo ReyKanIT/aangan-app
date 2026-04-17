@@ -10,6 +10,10 @@ import EventInviteCard from '@/components/events/EventInviteCard';
 import EventEditModal from '@/components/events/EventEditModal';
 import EventMemoryRecap from '@/components/events/EventMemoryRecap';
 import RsvpDetailsForm from '@/components/events/RsvpDetailsForm';
+import PhysicalCardTracker from '@/components/events/PhysicalCardTracker';
+import GpsCheckIn from '@/components/events/GpsCheckIn';
+import GiftRegister from '@/components/events/GiftRegister';
+import GiftManagersModal from '@/components/events/GiftManagersModal';
 import { formatEventDate, formatEventTime } from '@/lib/utils/formatters';
 import { downloadEventIcs } from '@/lib/utils/calendar';
 import { EVENT_TYPES } from '@/lib/constants';
@@ -27,6 +31,7 @@ export default function EventDetailPage() {
   const user = useAuthStore((s) => s.user);
   const [submittingRsvp, setSubmittingRsvp] = useState<string | null>(null);
   const [editOpen, setEditOpen] = useState(false);
+  const [managersOpen, setManagersOpen] = useState(false);
 
   useEffect(() => {
     fetchEvent(eventId);
@@ -70,7 +75,6 @@ export default function EventDetailPage() {
         ← वापस / Back
       </Link>
 
-      {/* Cover Photo — hero visual when present */}
       {currentEvent.banner_url && (
         <div className="relative rounded-2xl overflow-hidden mb-4 shadow-sm">
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -82,13 +86,17 @@ export default function EventDetailPage() {
         </div>
       )}
 
-      {/* Event Header */}
       <div className="bg-white rounded-2xl p-6 shadow-sm mb-4">
         <div className="flex items-start gap-3 mb-4">
           <span className="text-4xl">{typeInfo.emoji}</span>
           <div className="flex-1 min-w-0">
             <h1 className="font-heading text-2xl text-brown">{currentEvent.title_hindi ?? currentEvent.title}</h1>
             {currentEvent.title_hindi && <p className="font-body text-sm text-brown-light">{currentEvent.title}</p>}
+            {currentEvent.hosted_by && (
+              <p className="font-body text-base text-haldi-gold-dark mt-1 italic">
+                {currentEvent.hosted_by} की ओर से 🙏
+              </p>
+            )}
           </div>
           {isCreator && (
             <button
@@ -123,10 +131,13 @@ export default function EventDetailPage() {
         )}
       </div>
 
-      {/* Memory Recap — only for past events */}
+      {/* Day-of check-in */}
+      <GpsCheckIn event={currentEvent} userId={user?.id} />
+
+      {/* Memory recap for past events */}
       {isPastEvent && <EventMemoryRecap eventId={currentEvent.id} />}
 
-      {/* RSVP Section — hidden once event is well past, but keep visible for day-of walkthrough */}
+      {/* RSVP */}
       {!isPastEvent && (
         <div className="bg-white rounded-2xl p-6 shadow-sm mb-4">
           <h3 className="font-heading text-lg text-brown mb-2">आप आएंगे?</h3>
@@ -178,6 +189,17 @@ export default function EventDetailPage() {
         </div>
       )}
 
+      {/* Gift register — host side only (RLS enforces) */}
+      <GiftRegister
+        eventId={currentEvent.id}
+        currentUserId={user?.id}
+        isCreator={isCreator}
+        onOpenManagers={isCreator ? () => setManagersOpen(true) : undefined}
+      />
+
+      {/* Physical card tracker — creator only */}
+      {isCreator && <PhysicalCardTracker eventId={currentEvent.id} rsvps={rsvps} />}
+
       {/* Attendees with notes */}
       {rsvps.filter((r) => r.status === 'going').length > 0 && (
         <div className="bg-white rounded-2xl p-6 shadow-sm">
@@ -207,6 +229,7 @@ export default function EventDetailPage() {
       )}
 
       {editOpen && <EventEditModal event={currentEvent} onClose={() => setEditOpen(false)} />}
+      {managersOpen && <GiftManagersModal eventId={currentEvent.id} onClose={() => setManagersOpen(false)} />}
     </div>
   );
 }

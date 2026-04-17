@@ -6,6 +6,7 @@ import GoldButton from '@/components/ui/GoldButton';
 import InputField from '@/components/ui/InputField';
 import { EVENT_TYPES } from '@/lib/constants';
 import { uploadEventCover } from '@/lib/utils/uploadMedia';
+import LocationPicker from './LocationPicker';
 
 interface Props { onClose: () => void; }
 
@@ -19,6 +20,9 @@ export default function EventCreatorModal({ onClose }: Props) {
   const [date, setDate] = useState('');
   const [time, setTime] = useState('');
   const [location, setLocation] = useState('');
+  const [hostedBy, setHostedBy] = useState('');
+  const [lat, setLat] = useState<number | null>(null);
+  const [lng, setLng] = useState<number | null>(null);
   const [description, setDescription] = useState('');
   const [coverFile, setCoverFile] = useState<File | null>(null);
   const [coverPreview, setCoverPreview] = useState<string | null>(null);
@@ -56,6 +60,9 @@ export default function EventCreatorModal({ onClose }: Props) {
       ceremonies: [],
       is_public: true,
       banner_url,
+      latitude: lat,
+      longitude: lng,
+      hosted_by: hostedBy.trim() || null,
     });
     setIsSaving(false);
     if (id) { onClose(); router.push(`/events/${id}`); }
@@ -140,6 +147,14 @@ export default function EventCreatorModal({ onClose }: Props) {
               <InputField label="समय *" sublabel="Time" type="time" value={time} onChange={(e) => setTime(e.target.value)} />
             </div>
             <InputField label="स्थान" sublabel="Location" value={location} onChange={(e) => setLocation(e.target.value)} placeholder="गाँव / शहर / हॉल" />
+            <LocationPicker latitude={lat} longitude={lng} onChange={(la, ln) => { setLat(la); setLng(ln); }} />
+            <InputField
+              label="किनकी ओर से — On behalf of"
+              sublabel="Elders/hosts whose name appears on the invite"
+              value={hostedBy}
+              onChange={(e) => setHostedBy(e.target.value)}
+              placeholder="जैसे — श्री सुखदेव शर्मा एवं परिवार"
+            />
             <div className="mb-4">
               <label className="block font-body font-semibold text-brown mb-1">विवरण <span className="text-brown-light text-sm font-normal">Description</span></label>
               <textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="उत्सव के बारे में..." rows={3} className="w-full border-2 border-gray-300 rounded-xl px-4 py-3 font-body text-base text-brown focus:border-haldi-gold focus:outline-none resize-none" />

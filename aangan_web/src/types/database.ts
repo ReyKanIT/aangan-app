@@ -98,6 +98,9 @@ export interface AanganEvent {
   rsvp_deadline: string | null;
   ceremonies: Ceremony[];
   banner_url: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  hosted_by: string | null;
   created_at: string;
   updated_at: string;
   creator?: User;
@@ -129,6 +132,33 @@ export interface RsvpCounts {
   going: number;
   maybe: number;
   not_going: number;
+}
+
+export type GiftType = 'cash' | 'gold' | 'silver' | 'gift' | 'blessing' | 'other';
+
+export interface EventGift {
+  id: string;
+  event_id: string;
+  giver_user_id: string | null;
+  giver_name: string;
+  giver_name_hindi: string | null;
+  gift_type: GiftType;
+  amount: number | null;
+  description: string | null;
+  description_hindi: string | null;
+  received_at: string;
+  logged_by: string | null;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface EventGiftManager {
+  event_id: string;
+  user_id: string;
+  granted_by: string | null;
+  granted_at: string;
+  user?: User;
 }
 
 export interface Notification {
