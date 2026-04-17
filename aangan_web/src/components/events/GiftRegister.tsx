@@ -28,7 +28,7 @@ function inr(n: number | null | undefined): string {
  * GiftRegister — Private shagun/नेग ledger. Shown only if the viewer is the
  * creator or in event_gift_managers. Falls back silently (no render) if the
  * gift tables don't exist yet — lets us ship UI before Kumar applies the
- * v0.10 migration, without crashing.
+ * v0.9.2 migration, without crashing.
  */
 export default function GiftRegister({ eventId, currentUserId, isCreator, onOpenManagers }: Props) {
   const [gifts, setGifts] = useState<EventGift[]>([]);

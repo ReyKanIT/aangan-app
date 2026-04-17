@@ -1,8 +1,8 @@
 -- ============================================================================
--- Aangan v0.10 — Event feature expansion
+-- Aangan v0.9.2 — Event feature expansion
 -- Adds: hosted_by ("on behalf of" elders), event gift register (shagun/नेग),
 --       event_gift_managers (host-side access control).
--- Kumar: run this in the Supabase SQL editor before releasing the v0.10 web build.
+-- Kumar: run this in the Supabase SQL editor before releasing the v0.9.2 web build.
 -- Safe to re-run — everything is IF NOT EXISTS.
 -- ============================================================================
 

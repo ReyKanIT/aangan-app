@@ -1,6 +1,6 @@
 {
   "name": "aangan-web",
-  "version": "0.12.0",
+  "version": "0.9.5",
   "private": true,
   "scripts": {
     "dev": "next dev",

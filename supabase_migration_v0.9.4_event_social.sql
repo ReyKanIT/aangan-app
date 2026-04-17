@@ -1,8 +1,8 @@
 -- ============================================================================
--- Aangan v0.11 — Event social expansion
+-- Aangan v0.9.4 — Event social expansion
 -- Adds: voice invite from elders, sub-event series (wedding tilak/haldi/sangeet),
 --       co-hosts with edit rights, potluck sign-up lists.
--- Kumar: run this AFTER v0.10 migration, before the v0.12 web release.
+-- Kumar: run this AFTER the v0.9.2 migration, before releasing the v0.9.4 web build.
 -- Idempotent — all operations use IF NOT EXISTS / DROP POLICY IF EXISTS.
 -- ============================================================================
 
