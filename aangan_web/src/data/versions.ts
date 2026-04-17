@@ -24,6 +24,27 @@ export interface ReleaseNote {
 
 export const RELEASES: ReleaseNote[] = [
   {
+    version: '0.9.8',
+    releasedAt: '2026-04-17T14:35:00+05:30',
+    stamp: '[2:35pm - 17Apr26]',
+    summary: 'CEO Mode audit sweep — growth, bugs, UX, perf fixes across the board',
+    category: 'fix',
+    highlights: [
+      'robots.txt unblocked /events + /kuldevi — fixes WhatsApp preview for every shared event link (huge viral unlock)',
+      'sitemap.ts added /kuldevi entry (distinct low-competition SEO keyword)',
+      'guest-upload API: end_time (non-existent) → end_datetime — upload deadlines now actually enforce 7-day post-event cutoff',
+      'admin/issues inbox: guarded sender_id against null + surfaces ticket/report update errors that were silently swallowed',
+      'PotluckSection: captured mutation errors + shows 42P01 "migration pending" banner',
+      'PhysicalCardTracker: surfaced errors so hosts know when a card toggle doesn\'t save',
+      'RN app: plus_count → guests_count everywhere (matches live DB, was silently writing non-existent column)',
+      'RN version sync: app.json + package.json both now 0.9.8',
+      'Lazy-loaded EventEditModal, GiftManagersModal, CoHostsModal on event detail (perf)',
+      'Dadi Test: 7 bare-link buttons upgraded to 52px+ tap targets with proper labels (co-host +/हटाएं, gift manager +/हटाएं, gift access, sub-event +, memory +फ़ोटो, event edit, potluck delete ✕)',
+      'Event invite copy confirmation now visible on mobile (was hidden on sm breakpoint)',
+      'Removed stray root package-lock.json (Sentry/Next build warning)',
+    ],
+  },
+  {
     version: '0.9.7',
     releasedAt: '2026-04-17T13:45:00+05:30',
     stamp: '[1:45pm - 17Apr26]',

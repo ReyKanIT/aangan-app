@@ -73,10 +73,13 @@ export async function POST(req: NextRequest) {
 
     const supabase = getServiceClient();
 
-    // Verify the event exists and is not in the past (within 7 days after end)
+    // Verify the event exists and is not in the past (within 7 days after end).
+    // Column name is `end_datetime` (matches events table + web types). Previous
+    // code read `end_time` which doesn't exist, so uploadDeadline was silently
+    // always null — guests could upload to any event forever.
     const { data: event, error: eventErr } = await supabase
       .from('events')
-      .select('id, end_time')
+      .select('id, end_datetime, start_datetime')
       .eq('id', event_id)
       .single();
 
@@ -84,8 +87,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Event not found' }, { status: 404 });
     }
 
-    const uploadDeadline = event.end_time
-      ? new Date(new Date(event.end_time).getTime() + 7 * 24 * 60 * 60 * 1000)
+    // Fall back to start_datetime + 1 day if the event has no explicit end.
+    const endish = (event as { end_datetime?: string | null; start_datetime?: string | null }).end_datetime
+      ?? ((event as { start_datetime?: string | null }).start_datetime
+          ? new Date(new Date((event as { start_datetime: string }).start_datetime).getTime() + 24 * 60 * 60 * 1000).toISOString()
+          : null);
+    const uploadDeadline = endish
+      ? new Date(new Date(endish).getTime() + 7 * 24 * 60 * 60 * 1000)
       : null;
 
     if (uploadDeadline && new Date() > uploadDeadline) {

@@ -50,7 +50,7 @@ export default function EventMemoryRecap({ eventId }: Props) {
         </div>
         <a
           href={`/upload/${eventId}`}
-          className="font-body text-sm text-haldi-gold-dark font-semibold hover:underline"
+          className="min-h-dadi px-4 inline-flex items-center rounded-xl border-2 border-haldi-gold text-haldi-gold-dark font-body text-base font-semibold hover:bg-unread-bg transition-colors whitespace-nowrap"
         >
           + फ़ोटो जोड़ें
         </a>

@@ -55,7 +55,7 @@ export default function SubEventsSection({ parentEvent, canManage, onAddSubEvent
         {canManage && (
           <button
             onClick={onAddSubEvent}
-            className="font-body text-sm text-haldi-gold-dark font-semibold hover:underline whitespace-nowrap"
+            className="min-h-dadi px-4 rounded-xl border-2 border-haldi-gold text-haldi-gold-dark font-body text-base font-semibold hover:bg-unread-bg transition-colors whitespace-nowrap"
           >
             + जोड़ें
           </button>

@@ -142,7 +142,7 @@ export interface EventRsvp {
   user_id: string;
   status: RsvpStatus;
   response_note: string | null;
-  plus_count: number;
+  guests_count: number;
   dietary_preferences: string[];
   created_at: string;
   updated_at: string;

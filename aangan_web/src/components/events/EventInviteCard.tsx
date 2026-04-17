@@ -101,7 +101,7 @@ export default function EventInviteCard({ event, inviter, className = '' }: Prop
           {copied ? (
             <>
               <span className="text-lg">✅</span>
-              <span className="hidden sm:inline">कॉपी हुआ</span>
+              <span>कॉपी हुआ</span>
             </>
           ) : (
             <>

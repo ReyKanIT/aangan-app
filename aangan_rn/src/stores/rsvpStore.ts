@@ -97,7 +97,7 @@ export const useRsvpStore = create<RsvpState>((set, get) => ({
         declined: rsvps.filter((r) => r.status === 'declined').length,
         pending: rsvps.filter((r) => r.status === 'pending').length,
         maybe: rsvps.filter((r) => r.status === 'maybe').length,
-        total_guests: rsvps.reduce((sum, r) => sum + (r.status === 'accepted' ? 1 + r.plus_count : 0), 0),
+        total_guests: rsvps.reduce((sum, r) => sum + (r.status === 'accepted' ? 1 + (r.guests_count ?? 0) : 0), 0),
       };
       set({ stats });
     } catch (error: any) {
@@ -123,7 +123,7 @@ export const useRsvpStore = create<RsvpState>((set, get) => ({
             event_id: eventId,
             user_id: session.user.id,
             status,
-            plus_count: plusCount,
+            guests_count: plusCount,
             response_note: responseNote,
             dietary_preferences: dietaryPreferences,
             updated_at: now,
@@ -149,7 +149,7 @@ export const useRsvpStore = create<RsvpState>((set, get) => ({
     try {
       const { data, error } = await supabase
         .from('event_rsvps')
-        .select('status, plus_count')
+        .select('status, guests_count')
         .eq('event_id', eventId);
 
       if (error) {
@@ -164,7 +164,7 @@ export const useRsvpStore = create<RsvpState>((set, get) => ({
         declined: rsvps.filter((r) => r.status === 'declined').length,
         pending: rsvps.filter((r) => r.status === 'pending').length,
         maybe: rsvps.filter((r) => r.status === 'maybe').length,
-        total_guests: rsvps.reduce((sum, r) => sum + (r.status === 'accepted' ? 1 + r.plus_count : 0), 0),
+        total_guests: rsvps.reduce((sum, r) => sum + (r.status === 'accepted' ? 1 + (r.guests_count ?? 0) : 0), 0),
       };
       set({ stats });
     } catch (error: any) {

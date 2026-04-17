@@ -125,7 +125,7 @@ export default function CoHostsModal({ eventId, onClose }: Props) {
                   <button
                     onClick={() => removeCoHost(m.user_id)}
                     disabled={working === m.user_id}
-                    className="font-body text-sm text-red-500 hover:underline disabled:opacity-50"
+                    className="min-h-dadi px-3 rounded-lg border-2 border-red-400 text-red-600 font-body text-base font-semibold hover:bg-red-50 disabled:opacity-50 transition-colors"
                   >
                     हटाएं
                   </button>
@@ -158,7 +158,7 @@ export default function CoHostsModal({ eventId, onClose }: Props) {
                   <button
                     onClick={() => addCoHost(u)}
                     disabled={working === u.id}
-                    className="font-body text-sm text-haldi-gold-dark font-semibold hover:underline disabled:opacity-50"
+                    className="min-h-dadi px-4 rounded-xl bg-haldi-gold text-white font-body text-base font-semibold hover:bg-haldi-gold-dark disabled:opacity-50 transition-colors"
                   >
                     {working === u.id ? '…' : '+ जोड़ें'}
                   </button>

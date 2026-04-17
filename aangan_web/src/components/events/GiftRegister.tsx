@@ -136,7 +136,7 @@ export default function GiftRegister({ eventId, currentUserId, isCreator, onOpen
         {isCreator && onOpenManagers && (
           <button
             onClick={onOpenManagers}
-            className="font-body text-sm text-haldi-gold-dark hover:underline font-semibold whitespace-nowrap"
+            className="min-h-dadi px-4 rounded-xl border-2 border-haldi-gold text-haldi-gold-dark font-body text-base font-semibold hover:bg-unread-bg transition-colors whitespace-nowrap"
           >
             👥 एक्सेस दें
           </button>

@@ -19,6 +19,7 @@ export default function PotluckSection({ eventId, currentUserId, canManage }: Pr
   const [items, setItems] = useState<EventPotluckItem[]>([]);
   const [tableMissing, setTableMissing] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [newItem, setNewItem] = useState('');
   const [newItemQty, setNewItemQty] = useState('1');
   const [adding, setAdding] = useState(false);
@@ -63,12 +64,22 @@ export default function PotluckSection({ eventId, currentUserId, canManage }: Pr
   const handleAddItem = async () => {
     if (!newItem.trim()) return;
     setAdding(true);
-    await supabase.from('event_potluck_items').insert({
+    setError(null);
+    const { error: insErr } = await supabase.from('event_potluck_items').insert({
       event_id: eventId,
       item_name: newItem.trim(),
       quantity_needed: Math.max(1, parseInt(newItemQty, 10) || 1),
       created_by: currentUserId ?? null,
     });
+    if (insErr) {
+      // 42P01 → migration pending. Show a helpful banner instead of silently
+      // losing the click.
+      setError(insErr.code === '42P01'
+        ? 'Potluck table missing — apply v0.9.4 migration in Supabase'
+        : `सेव नहीं हुआ: ${insErr.message}`);
+      setAdding(false);
+      return;
+    }
     setNewItem(''); setNewItemQty('1');
     setAdding(false);
     refresh();
@@ -77,7 +88,9 @@ export default function PotluckSection({ eventId, currentUserId, canManage }: Pr
   const handleDeleteItem = async (itemId: string) => {
     if (!confirm('इस आइटम को हटाएं?')) return;
     setBusy(itemId);
-    await supabase.from('event_potluck_items').delete().eq('id', itemId);
+    setError(null);
+    const { error: delErr } = await supabase.from('event_potluck_items').delete().eq('id', itemId);
+    if (delErr) setError(`हटा नहीं सका: ${delErr.message}`);
     setBusy(null);
     refresh();
   };
@@ -85,16 +98,16 @@ export default function PotluckSection({ eventId, currentUserId, canManage }: Pr
   const toggleSignup = async (item: EventPotluckItem) => {
     if (!currentUserId) return;
     setBusy(item.id);
+    setError(null);
     const mine = item.signups?.find((s) => s.user_id === currentUserId);
-    if (mine) {
-      await supabase.from('event_potluck_signups').delete().eq('id', mine.id);
-    } else {
-      await supabase.from('event_potluck_signups').insert({
-        item_id: item.id,
-        user_id: currentUserId,
-        quantity: 1,
-      });
-    }
+    const { error: opErr } = mine
+      ? await supabase.from('event_potluck_signups').delete().eq('id', mine.id)
+      : await supabase.from('event_potluck_signups').insert({
+          item_id: item.id,
+          user_id: currentUserId,
+          quantity: 1,
+        });
+    if (opErr) setError(`अपडेट नहीं हो सका: ${opErr.message}`);
     setBusy(null);
     refresh();
   };
@@ -109,6 +122,12 @@ export default function PotluckSection({ eventId, currentUserId, canManage }: Pr
           <p className="font-body text-sm text-brown-light">मेज़बान तय करे, मेहमान चुनें</p>
         </div>
       </div>
+
+      {error && (
+        <div className="mb-3 px-3 py-2 rounded-lg bg-red-50 border border-red-200 text-red-700 font-body text-sm">
+          {error}
+        </div>
+      )}
 
       {loading && <p className="font-body text-base text-brown-light">…</p>}
 
@@ -147,7 +166,7 @@ export default function PotluckSection({ eventId, currentUserId, canManage }: Pr
                   <button
                     onClick={() => handleDeleteItem(item.id)}
                     disabled={busy === item.id}
-                    className="text-brown-light hover:text-red-500 text-lg p-1"
+                    className="min-h-dadi min-w-dadi flex items-center justify-center rounded-lg text-brown-light hover:text-red-500 hover:bg-red-50 text-xl transition-colors disabled:opacity-50"
                     aria-label="आइटम हटाएं"
                   >
                     ✕

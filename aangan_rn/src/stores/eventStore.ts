@@ -125,7 +125,7 @@ export const useEventStore = create<EventState>((set, get) => ({
           event_id: event.id,
           user_id: userId,
           status: 'pending' as const,
-          plus_count: 0,
+          guests_count: 0,
           dietary_preferences: [],
           created_at: now,
           updated_at: now,

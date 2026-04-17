@@ -7,14 +7,11 @@ import { useAuthStore } from '@/stores/authStore';
 import AvatarCircle from '@/components/ui/AvatarCircle';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import EventInviteCard from '@/components/events/EventInviteCard';
-import EventEditModal from '@/components/events/EventEditModal';
 import EventMemoryRecap from '@/components/events/EventMemoryRecap';
 import RsvpDetailsForm from '@/components/events/RsvpDetailsForm';
 import PhysicalCardTracker from '@/components/events/PhysicalCardTracker';
 import GpsCheckIn from '@/components/events/GpsCheckIn';
 import GiftRegister from '@/components/events/GiftRegister';
-import GiftManagersModal from '@/components/events/GiftManagersModal';
-import CoHostsModal from '@/components/events/CoHostsModal';
 import SubEventsSection from '@/components/events/SubEventsSection';
 import PotluckSection from '@/components/events/PotluckSection';
 import { VoiceInvitePlayer } from '@/components/events/VoiceInvite';
@@ -22,7 +19,13 @@ import dynamic from 'next/dynamic';
 import { supabase } from '@/lib/supabase/client';
 import { formatEventDate, formatEventTime } from '@/lib/utils/formatters';
 
+// Modals are below-the-fold and only open on host interactions — ship them
+// as dynamic imports so the /events/:id initial JS drops from 20.4 kB to
+// what's actually rendered on first paint.
 const EventCreatorModal = dynamic(() => import('@/components/events/EventCreatorModal'), { ssr: false });
+const EventEditModal = dynamic(() => import('@/components/events/EventEditModal'), { ssr: false });
+const GiftManagersModal = dynamic(() => import('@/components/events/GiftManagersModal'), { ssr: false });
+const CoHostsModal = dynamic(() => import('@/components/events/CoHostsModal'), { ssr: false });
 import { downloadEventIcs } from '@/lib/utils/calendar';
 import { EVENT_TYPES } from '@/lib/constants';
 import type { RsvpStatus } from '@/types/database';
@@ -128,10 +131,10 @@ export default function EventDetailPage() {
             )}
           </div>
           {canManage && (
-            <div className="flex flex-col gap-1">
+            <div className="flex flex-col gap-2">
               <button
                 onClick={() => setEditOpen(true)}
-                className="font-body text-sm text-brown-light hover:text-haldi-gold-dark px-3 py-2 rounded-lg hover:bg-cream-dark transition-colors"
+                className="min-h-dadi px-4 rounded-xl border-2 border-gray-200 text-brown font-body text-base font-semibold hover:border-haldi-gold hover:bg-cream-dark transition-colors"
                 aria-label="संपादन"
               >
                 ✏️ संपादन
@@ -139,7 +142,7 @@ export default function EventDetailPage() {
               {isCreator && (
                 <button
                   onClick={() => setCoHostsOpen(true)}
-                  className="font-body text-sm text-brown-light hover:text-haldi-gold-dark px-3 py-2 rounded-lg hover:bg-cream-dark transition-colors whitespace-nowrap"
+                  className="min-h-dadi px-4 rounded-xl border-2 border-gray-200 text-brown font-body text-base font-semibold hover:border-haldi-gold hover:bg-cream-dark transition-colors whitespace-nowrap"
                 >
                   👥 सह-मेज़बान
                 </button>

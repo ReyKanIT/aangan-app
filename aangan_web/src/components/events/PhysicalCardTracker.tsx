@@ -26,15 +26,21 @@ interface Props {
 export default function PhysicalCardTracker({ eventId, rsvps }: Props) {
   const [cards, setCards] = useState<Record<string, PhysicalCard>>({});
   const [saving, setSaving] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const { data } = await supabase
+      const { data, error: selErr } = await supabase
         .from('physical_cards')
         .select('event_id, user_id, card_sent, sent_via, sent_at')
         .eq('event_id', eventId);
-      if (!cancelled && data) {
+      if (cancelled) return;
+      if (selErr && selErr.code !== '42P01') {
+        setError(`Failed to load card log: ${selErr.message}`);
+        return;
+      }
+      if (data) {
         const map: Record<string, PhysicalCard> = {};
         for (const c of data as PhysicalCard[]) map[c.user_id] = c;
         setCards(map);
@@ -45,6 +51,7 @@ export default function PhysicalCardTracker({ eventId, rsvps }: Props) {
 
   const toggleCard = async (userId: string, via: 'hand' | 'post' | 'courier') => {
     setSaving(userId);
+    setError(null);
     const existing = cards[userId];
     const nextSent = !(existing?.card_sent && existing?.sent_via === via);
     const payload = {
@@ -54,10 +61,14 @@ export default function PhysicalCardTracker({ eventId, rsvps }: Props) {
       sent_via: nextSent ? via : null,
       sent_at: nextSent ? new Date().toISOString() : null,
     };
-    const { error } = await supabase
+    const { error: upErr } = await supabase
       .from('physical_cards')
       .upsert(payload, { onConflict: 'event_id,user_id' });
-    if (!error) {
+    if (upErr) {
+      // Surface errors so the host knows the click didn't land. Previously
+      // failed upserts were swallowed silently.
+      setError(`सेव नहीं हुआ: ${upErr.message}`);
+    } else {
       setCards((prev) => ({ ...prev, [userId]: payload as PhysicalCard }));
     }
     setSaving(null);
@@ -74,6 +85,12 @@ export default function PhysicalCardTracker({ eventId, rsvps }: Props) {
         <span className="font-body text-sm text-brown-light">{totalSent}/{rsvps.length}</span>
       </div>
       <p className="font-body text-sm text-brown-light mb-4">किसको कार्ड दिया? — Who received their physical card?</p>
+
+      {error && (
+        <div className="mb-3 px-3 py-2 rounded-lg bg-red-50 border border-red-200 text-red-700 font-body text-sm">
+          {error}
+        </div>
+      )}
 
       <div className="space-y-3">
         {rsvps.map((r) => {

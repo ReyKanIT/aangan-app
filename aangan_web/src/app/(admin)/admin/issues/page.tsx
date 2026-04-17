@@ -163,18 +163,32 @@ export default function AdminIssuesPage() {
   const sendReply = async (bodyHi: string, bodyEn: string, shouldResolve: boolean) => {
     if (!selected) return;
 
+    // Resolve sender identity synchronously so a fast-clicking admin doesn't
+    // submit with sender_id=null (which would fail RLS or create orphan rows).
+    let senderId = currentAdmin;
+    if (!senderId) {
+      const { data } = await supabase.auth.getUser();
+      senderId = data.user?.id ?? null;
+    }
+    if (!senderId) {
+      setError('Session lost — please re-login and try again.');
+      return;
+    }
+
     if (selected.channel === 'support') {
       // Insert thread message
       const { error: msgErr } = await supabase.from('support_messages').insert({
         ticket_id: selected.id,
-        sender_id: currentAdmin,
+        sender_id: senderId,
         message: bodyEn || bodyHi, // support_messages is single-language; prefer English with Hindi fallback
         is_from_support: true,
         is_internal_note: false,
       });
-      if (msgErr) { setError(msgErr.message); return; }
+      if (msgErr) { setError(`Reply failed: ${msgErr.message}`); return; }
 
-      // Update ticket status + optionally resolve
+      // Update ticket status + optionally resolve. Failures must surface —
+      // previously we swallowed errors here, so admin thought the ticket was
+      // resolved while the DB still showed it as open.
       const patch: Record<string, unknown> = { updated_at: new Date().toISOString() };
       if (shouldResolve) {
         patch.status = 'resolved';
@@ -182,29 +196,36 @@ export default function AdminIssuesPage() {
       } else if (selected.status === 'open') {
         patch.status = 'in_progress';
       }
-      await supabase.from('support_tickets').update(patch).eq('id', selected.id);
+      const { error: updErr } = await supabase.from('support_tickets').update(patch).eq('id', selected.id);
+      if (updErr) {
+        setError(`Reply sent, but status update failed: ${updErr.message}`);
+        // Don't return — we still want to send the notification for the reply.
+      }
     } else {
       // Report channel — write to report_messages (gracefully skipped if table missing)
       const { error: msgErr } = await supabase.from('report_messages').insert({
         report_id: selected.id,
-        sender_id: currentAdmin,
+        sender_id: senderId,
         message: bodyEn || bodyHi,
         message_hindi: bodyHi || null,
         is_from_admin: true,
         is_internal_note: false,
       });
       if (msgErr && msgErr.code !== '42P01') {
-        setError(msgErr.message);
+        setError(`Reply failed: ${msgErr.message}`);
         return;
       }
       const patch: Record<string, unknown> = { updated_at: new Date().toISOString() };
       if (shouldResolve) {
         patch.status = 'resolved';
-        patch.resolved_by = currentAdmin;
+        patch.resolved_by = senderId;
       } else if (selected.status === 'pending') {
         patch.status = 'reviewing';
       }
-      await supabase.from('content_reports').update(patch).eq('id', selected.id);
+      const { error: updErr } = await supabase.from('content_reports').update(patch).eq('id', selected.id);
+      if (updErr) {
+        setError(`Reply recorded, but status update failed: ${updErr.message}`);
+      }
     }
 
     // Fire-and-forget user notification (both reply and resolve trigger a ping)
