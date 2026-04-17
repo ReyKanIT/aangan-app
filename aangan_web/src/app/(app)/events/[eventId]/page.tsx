@@ -14,7 +14,15 @@ import PhysicalCardTracker from '@/components/events/PhysicalCardTracker';
 import GpsCheckIn from '@/components/events/GpsCheckIn';
 import GiftRegister from '@/components/events/GiftRegister';
 import GiftManagersModal from '@/components/events/GiftManagersModal';
+import CoHostsModal from '@/components/events/CoHostsModal';
+import SubEventsSection from '@/components/events/SubEventsSection';
+import PotluckSection from '@/components/events/PotluckSection';
+import { VoiceInvitePlayer } from '@/components/events/VoiceInvite';
+import dynamic from 'next/dynamic';
+import { supabase } from '@/lib/supabase/client';
 import { formatEventDate, formatEventTime } from '@/lib/utils/formatters';
+
+const EventCreatorModal = dynamic(() => import('@/components/events/EventCreatorModal'), { ssr: false });
 import { downloadEventIcs } from '@/lib/utils/calendar';
 import { EVENT_TYPES } from '@/lib/constants';
 import type { RsvpStatus } from '@/types/database';
@@ -32,11 +40,31 @@ export default function EventDetailPage() {
   const [submittingRsvp, setSubmittingRsvp] = useState<string | null>(null);
   const [editOpen, setEditOpen] = useState(false);
   const [managersOpen, setManagersOpen] = useState(false);
+  const [coHostsOpen, setCoHostsOpen] = useState(false);
+  const [subEventOpen, setSubEventOpen] = useState(false);
+  const [isCoHost, setIsCoHost] = useState(false);
 
   useEffect(() => {
     fetchEvent(eventId);
     fetchRsvps(eventId);
   }, [eventId, fetchEvent, fetchRsvps]);
+
+  // Check co-host membership — determines whether to show edit UI for non-creators.
+  // 42P01 (relation doesn't exist) is treated as "no co-host table yet", defaults to false.
+  useEffect(() => {
+    if (!user?.id) return;
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from('event_co_hosts')
+        .select('user_id')
+        .eq('event_id', eventId)
+        .eq('user_id', user.id)
+        .maybeSingle();
+      if (!cancelled) setIsCoHost(!!data);
+    })();
+    return () => { cancelled = true; };
+  }, [eventId, user?.id]);
 
   const handleRsvp = async (status: RsvpStatus) => {
     if (submittingRsvp || !currentEvent) return;
@@ -59,6 +87,7 @@ export default function EventDetailPage() {
 
   const typeInfo = EVENT_TYPES.find((t) => t.value === currentEvent.event_type) ?? { emoji: '📅', label: currentEvent.event_type };
   const isCreator = user?.id === currentEvent.creator_id;
+  const canManage = isCreator || isCoHost;
 
   const rsvpCounts = rsvps.reduce((acc, r) => {
     acc[r.status] = (acc[r.status] ?? 0) + 1;
@@ -98,14 +127,24 @@ export default function EventDetailPage() {
               </p>
             )}
           </div>
-          {isCreator && (
-            <button
-              onClick={() => setEditOpen(true)}
-              className="font-body text-sm text-brown-light hover:text-haldi-gold-dark px-3 py-2 rounded-lg hover:bg-cream-dark transition-colors"
-              aria-label="संपादन"
-            >
-              ✏️ संपादन
-            </button>
+          {canManage && (
+            <div className="flex flex-col gap-1">
+              <button
+                onClick={() => setEditOpen(true)}
+                className="font-body text-sm text-brown-light hover:text-haldi-gold-dark px-3 py-2 rounded-lg hover:bg-cream-dark transition-colors"
+                aria-label="संपादन"
+              >
+                ✏️ संपादन
+              </button>
+              {isCreator && (
+                <button
+                  onClick={() => setCoHostsOpen(true)}
+                  className="font-body text-sm text-brown-light hover:text-haldi-gold-dark px-3 py-2 rounded-lg hover:bg-cream-dark transition-colors whitespace-nowrap"
+                >
+                  👥 सह-मेज़बान
+                </button>
+              )}
+            </div>
           )}
         </div>
         <div className="space-y-2 font-body text-base text-brown">
@@ -124,12 +163,26 @@ export default function EventDetailPage() {
           📆 कैलेंडर में जोड़ें — Add to Calendar
         </button>
 
-        {isCreator && rsvps.length > 0 && (
+        {canManage && rsvps.length > 0 && (
           <p className="font-body text-base text-brown-light mt-4">
             📋 {rsvps.length} RSVP · {totalGuests} मेहमान आ रहे हैं
           </p>
         )}
       </div>
+
+      {/* Voice invite from elders */}
+      {currentEvent.voice_invite_url && (
+        <div className="mb-4">
+          <VoiceInvitePlayer
+            url={currentEvent.voice_invite_url}
+            durationSec={currentEvent.voice_invite_duration_sec}
+            speaker={currentEvent.hosted_by || currentEvent.creator?.display_name_hindi || currentEvent.creator?.display_name || null}
+          />
+        </div>
+      )}
+
+      {/* Sub-events series (wedding tilak/haldi/mehndi/sangeet) */}
+      <SubEventsSection parentEvent={currentEvent} canManage={canManage} onAddSubEvent={() => setSubEventOpen(true)} />
 
       {/* Day-of check-in */}
       <GpsCheckIn event={currentEvent} userId={user?.id} />
@@ -189,6 +242,9 @@ export default function EventDetailPage() {
         </div>
       )}
 
+      {/* Potluck sign-up — visible to all attendees, editable by hosts */}
+      <PotluckSection eventId={currentEvent.id} currentUserId={user?.id} canManage={canManage} />
+
       {/* Gift register — host side only (RLS enforces) */}
       <GiftRegister
         eventId={currentEvent.id}
@@ -197,8 +253,8 @@ export default function EventDetailPage() {
         onOpenManagers={isCreator ? () => setManagersOpen(true) : undefined}
       />
 
-      {/* Physical card tracker — creator only */}
-      {isCreator && <PhysicalCardTracker eventId={currentEvent.id} rsvps={rsvps} />}
+      {/* Physical card tracker — hosts only */}
+      {canManage && <PhysicalCardTracker eventId={currentEvent.id} rsvps={rsvps} />}
 
       {/* Attendees with notes */}
       {rsvps.filter((r) => r.status === 'going').length > 0 && (
@@ -230,6 +286,13 @@ export default function EventDetailPage() {
 
       {editOpen && <EventEditModal event={currentEvent} onClose={() => setEditOpen(false)} />}
       {managersOpen && <GiftManagersModal eventId={currentEvent.id} onClose={() => setManagersOpen(false)} />}
+      {coHostsOpen && <CoHostsModal eventId={currentEvent.id} onClose={() => setCoHostsOpen(false)} />}
+      {subEventOpen && (
+        <EventCreatorModal
+          parentEventId={currentEvent.id}
+          onClose={() => { setSubEventOpen(false); fetchEvent(eventId); }}
+        />
+      )}
     </div>
   );
 }

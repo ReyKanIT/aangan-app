@@ -7,10 +7,11 @@ import InputField from '@/components/ui/InputField';
 import { EVENT_TYPES } from '@/lib/constants';
 import { uploadEventCover } from '@/lib/utils/uploadMedia';
 import LocationPicker from './LocationPicker';
+import { VoiceInviteRecorder } from './VoiceInvite';
 
-interface Props { onClose: () => void; }
+interface Props { onClose: () => void; parentEventId?: string | null; }
 
-export default function EventCreatorModal({ onClose }: Props) {
+export default function EventCreatorModal({ onClose, parentEventId = null }: Props) {
   const router = useRouter();
   const { createEvent } = useEventStore();
   const [step, setStep] = useState(1);
@@ -23,6 +24,8 @@ export default function EventCreatorModal({ onClose }: Props) {
   const [hostedBy, setHostedBy] = useState('');
   const [lat, setLat] = useState<number | null>(null);
   const [lng, setLng] = useState<number | null>(null);
+  const [voiceUrl, setVoiceUrl] = useState<string | null>(null);
+  const [voiceDuration, setVoiceDuration] = useState<number | null>(null);
   const [description, setDescription] = useState('');
   const [coverFile, setCoverFile] = useState<File | null>(null);
   const [coverPreview, setCoverPreview] = useState<string | null>(null);
@@ -63,6 +66,9 @@ export default function EventCreatorModal({ onClose }: Props) {
       latitude: lat,
       longitude: lng,
       hosted_by: hostedBy.trim() || null,
+      voice_invite_url: voiceUrl,
+      voice_invite_duration_sec: voiceDuration,
+      parent_event_id: parentEventId,
     });
     setIsSaving(false);
     if (id) { onClose(); router.push(`/events/${id}`); }
@@ -155,6 +161,16 @@ export default function EventCreatorModal({ onClose }: Props) {
               onChange={(e) => setHostedBy(e.target.value)}
               placeholder="जैसे — श्री सुखदेव शर्मा एवं परिवार"
             />
+            <VoiceInviteRecorder
+              existingUrl={voiceUrl}
+              existingDuration={voiceDuration}
+              onChange={(u, d) => { setVoiceUrl(u); setVoiceDuration(d); }}
+            />
+            {parentEventId && (
+              <p className="font-body text-sm text-haldi-gold-dark mb-2">
+                🔗 This will be added as a sub-event to the parent wedding/series
+              </p>
+            )}
             <div className="mb-4">
               <label className="block font-body font-semibold text-brown mb-1">विवरण <span className="text-brown-light text-sm font-normal">Description</span></label>
               <textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="उत्सव के बारे में..." rows={3} className="w-full border-2 border-gray-300 rounded-xl px-4 py-3 font-body text-base text-brown focus:border-haldi-gold focus:outline-none resize-none" />

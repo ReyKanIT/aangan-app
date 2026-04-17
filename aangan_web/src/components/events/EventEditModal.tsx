@@ -6,6 +6,7 @@ import GoldButton from '@/components/ui/GoldButton';
 import InputField from '@/components/ui/InputField';
 import { uploadEventCover } from '@/lib/utils/uploadMedia';
 import LocationPicker from './LocationPicker';
+import { VoiceInviteRecorder } from './VoiceInvite';
 import type { AanganEvent } from '@/types/database';
 
 interface Props { event: AanganEvent; onClose: () => void; }
@@ -25,6 +26,8 @@ export default function EventEditModal({ event, onClose }: Props) {
   const [hostedBy, setHostedBy] = useState(event.hosted_by ?? '');
   const [lat, setLat] = useState<number | null>(event.latitude ?? null);
   const [lng, setLng] = useState<number | null>(event.longitude ?? null);
+  const [voiceUrl, setVoiceUrl] = useState<string | null>(event.voice_invite_url ?? null);
+  const [voiceDuration, setVoiceDuration] = useState<number | null>(event.voice_invite_duration_sec ?? null);
   const [description, setDescription] = useState(event.description ?? '');
   const [coverFile, setCoverFile] = useState<File | null>(null);
   const [coverPreview, setCoverPreview] = useState<string | null>(event.banner_url ?? null);
@@ -70,6 +73,8 @@ export default function EventEditModal({ event, onClose }: Props) {
       latitude: lat,
       longitude: lng,
       hosted_by: hostedBy.trim() || null,
+      voice_invite_url: voiceUrl,
+      voice_invite_duration_sec: voiceDuration,
     };
     if (banner_url !== undefined) patch.banner_url = banner_url;
 
@@ -134,6 +139,11 @@ export default function EventEditModal({ event, onClose }: Props) {
           value={hostedBy}
           onChange={(e) => setHostedBy(e.target.value)}
           placeholder="श्री सुखदेव शर्मा एवं परिवार"
+        />
+        <VoiceInviteRecorder
+          existingUrl={voiceUrl}
+          existingDuration={voiceDuration}
+          onChange={(u, d) => { setVoiceUrl(u); setVoiceDuration(d); }}
         />
         <div className="mb-4">
           <label className="block font-body font-semibold text-brown mb-1">विवरण <span className="text-brown-light text-sm font-normal">Description</span></label>

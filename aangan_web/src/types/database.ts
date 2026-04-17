@@ -101,6 +101,9 @@ export interface AanganEvent {
   latitude: number | null;
   longitude: number | null;
   hosted_by: string | null;
+  voice_invite_url: string | null;
+  voice_invite_duration_sec: number | null;
+  parent_event_id: string | null;
   created_at: string;
   updated_at: string;
   creator?: User;
@@ -159,6 +162,36 @@ export interface EventGiftManager {
   granted_by: string | null;
   granted_at: string;
   user?: User;
+}
+
+export interface EventCoHost {
+  event_id: string;
+  user_id: string;
+  granted_by: string | null;
+  granted_at: string;
+  user?: User;
+}
+
+export interface EventPotluckItem {
+  id: string;
+  event_id: string;
+  item_name: string;
+  item_name_hindi: string | null;
+  quantity_needed: number;
+  notes: string | null;
+  created_by: string | null;
+  created_at: string;
+  signups?: EventPotluckSignup[];
+}
+
+export interface EventPotluckSignup {
+  id: string;
+  item_id: string;
+  user_id: string;
+  quantity: number;
+  notes: string | null;
+  created_at: string;
+  user?: Pick<User, 'id' | 'display_name' | 'display_name_hindi' | 'avatar_url'>;
 }
 
 export interface Notification {

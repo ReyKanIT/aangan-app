@@ -5,7 +5,7 @@ import { compressImage } from './compressImage';
  * Images are automatically compressed before upload (max 1MB, 1920px, WebP).
  * Returns the CDN URL of the uploaded file.
  */
-export async function uploadToB2(file: File, folder: 'posts' | 'avatars' | 'event-photos' | 'event-covers' = 'posts'): Promise<string> {
+export async function uploadToB2(file: File, folder: 'posts' | 'avatars' | 'event-photos' | 'event-covers' | 'event-audio' = 'posts'): Promise<string> {
   // Compress images before upload (skips videos, GIFs, small files)
   const optimizedFile = await compressImage(file);
 

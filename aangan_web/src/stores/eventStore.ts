@@ -115,6 +115,31 @@ export const useEventStore = create<EventState>((set, get) => ({
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return false;
     try {
+      // Client-side guard for rsvp_deadline + max_attendees. The DB trusts
+      // these inputs (no DB-level trigger enforces capacity), so we stop
+      // bad RSVPs here before they land. Server-side enforcement can be
+      // added later via a SECURITY DEFINER RPC.
+      const event = get().currentEvent;
+      if (event && event.id === eventId) {
+        if (event.rsvp_deadline && new Date(event.rsvp_deadline).getTime() < Date.now()) {
+          set({ error: 'RSVP की तारीख निकल गई — RSVP deadline has passed' });
+          return false;
+        }
+        if (status === 'going' && event.max_attendees != null) {
+          const myRsvp = get().rsvps.find((r) => r.user_id === user.id);
+          const goingCount = get().rsvps.filter((r) => r.status === 'going').length;
+          const myself = opts?.guests_count ?? myRsvp?.guests_count ?? 0;
+          const currentSeats = goingCount + get().rsvps.reduce((sum, r) => r.status === 'going' ? sum + (r.guests_count ?? 0) : sum, 0);
+          const newSeats = myRsvp?.status === 'going'
+            ? currentSeats - 1 - (myRsvp.guests_count ?? 0) + 1 + myself
+            : currentSeats + 1 + myself;
+          if (newSeats > event.max_attendees) {
+            set({ error: `जगह पूरी भर गई — ${event.max_attendees} की सीमा` });
+            return false;
+          }
+        }
+      }
+
       const payload: Record<string, unknown> = { event_id: eventId, user_id: user.id, status };
       if (opts?.guests_count !== undefined) payload.guests_count = opts.guests_count;
       if (opts?.note !== undefined) payload.note = opts.note;

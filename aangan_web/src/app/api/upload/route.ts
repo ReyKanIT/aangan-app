@@ -4,7 +4,12 @@ import { b2Client, B2_BUCKET, B2_CDN_URL } from '@/lib/b2/client';
 import { createSupabaseServer } from '@/lib/supabase/server';
 
 const MAX_FILE_SIZE = 25 * 1024 * 1024; // 25 MB
-const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'video/mp4', 'video/quicktime'];
+const ALLOWED_TYPES = [
+  'image/jpeg', 'image/png', 'image/webp', 'image/gif',
+  'video/mp4', 'video/quicktime',
+  // Voice invite audio — browser MediaRecorder emits webm on Chrome/Firefox, mp4/m4a on Safari
+  'audio/webm', 'audio/ogg', 'audio/mpeg', 'audio/mp4', 'audio/mp3', 'audio/x-m4a',
+];
 
 export async function POST(request: NextRequest) {
   // Auth check

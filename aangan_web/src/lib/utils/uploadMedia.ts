@@ -11,3 +11,7 @@ export async function uploadAvatar(file: File, userId: string): Promise<string> 
 export async function uploadEventCover(file: File): Promise<string> {
   return uploadToB2(file, 'event-covers');
 }
+
+export async function uploadEventAudio(file: File): Promise<string> {
+  return uploadToB2(file, 'event-audio');
+}
