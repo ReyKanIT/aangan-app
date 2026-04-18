@@ -13,6 +13,19 @@ const MSG91_TEMPLATE_ID = Deno.env.get('MSG91_TEMPLATE_ID') ?? '';
 const MSG91_SENDER_ID   = Deno.env.get('MSG91_SENDER_ID') ?? 'AANGFM';
 const WEBHOOK_SECRET    = Deno.env.get('SUPABASE_WEBHOOK_SECRET') ?? '';
 
+// Reviewer test numbers — belt-and-braces bypass so external store reviewers
+// (Indus, Play pre-launch, App Store Connect) can verify signup flows even
+// when DLT template approval is pending and MSG91 would 400 every real OTP.
+// These same numbers are registered in supabase/config.toml [auth.sms.test_otp]
+// so Supabase Auth short-circuits BEFORE invoking this hook. This list is a
+// second line of defence in case the dashboard test_otp map isn't synced.
+const REVIEWER_PHONES = new Set<string>([
+  '919886110312',  // Indus App Store reviewer (primary)
+  '919000000001',  // Google Play pre-launch reviewer
+  '919000000002',  // App Store Connect reviewer (iOS)
+  '919886110313',  // Internal QA
+]);
+
 Deno.serve(async (req: Request) => {
   if (req.method !== 'POST') {
     return new Response('Method not allowed', { status: 405 });
@@ -55,6 +68,20 @@ Deno.serve(async (req: Request) => {
     });
   }
 
+  // MSG91 expects number without '+' prefix, with country code
+  const mobile = phone.replace(/^\+/, '');
+
+  // Reviewer bypass — return 200 immediately without hitting MSG91. Supabase
+  // Auth's [auth.sms.test_otp] map accepts the paired fixed OTP on verify,
+  // so the reviewer completes signup with no real SMS needed.
+  if (REVIEWER_PHONES.has(mobile)) {
+    console.log('Reviewer bypass for ***' + mobile.slice(-4) + ' — no MSG91 call');
+    return new Response(JSON.stringify({}), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+
   if (!MSG91_AUTH_KEY || !MSG91_TEMPLATE_ID) {
     console.error('MSG91 secrets not configured');
     return new Response(JSON.stringify({ error: 'SMS provider not configured' }), {
@@ -62,9 +89,6 @@ Deno.serve(async (req: Request) => {
       headers: { 'Content-Type': 'application/json' },
     });
   }
-
-  // MSG91 expects number without '+' prefix, with country code
-  const mobile = phone.replace(/^\+/, '');
 
   // Validate: only Indian numbers (91XXXXXXXXXX)
   if (!/^91[6-9]\d{9}$/.test(mobile)) {

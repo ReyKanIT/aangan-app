@@ -81,14 +81,23 @@ export default function LoginScreen({ navigation }: Props) {
       if (success) {
         navigation.navigate('OTP', { phone });
       } else {
+        // Surface the real error so reviewers / QA can see the actual cause
+        // instead of the generic "OTP नहीं भेज पाया". Common causes in prod:
+        //   - DLT template pending → MSG91 400 → Supabase 502
+        //   - SMS provider disabled in Supabase Dashboard
+        //   - Rate limited (too many OTP requests for this number)
+        const realError = useAuthStore.getState().error;
         Alert.alert(
           'OTP नहीं भेज पाया',
-          'कृपया जाँचें:\n\n• फ़ोन नंबर सही है\n• इंटरनेट कनेक्शन चालू है\n• कुछ देर बाद फिर से कोशिश करें',
+          realError
+            ? `${realError}\n\nकृपया जाँचें:\n• फ़ोन नंबर सही है\n• इंटरनेट कनेक्शन चालू है\n• 60 सेकंड रुककर दोबारा कोशिश करें`
+            : 'कृपया जाँचें:\n\n• फ़ोन नंबर सही है\n• इंटरनेट कनेक्शन चालू है\n• कुछ देर बाद फिर से कोशिश करें',
           [{ text: 'ठीक है' }]
         );
       }
-    } catch {
-      Alert.alert('कनेक्शन समस्या', 'इंटरनेट कनेक्शन जाँचें।', [{ text: 'ठीक है' }]);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : 'unknown';
+      Alert.alert('कनेक्शन समस्या', `इंटरनेट कनेक्शन जाँचें।\n\n(${msg})`, [{ text: 'ठीक है' }]);
     } finally {
       setIsSending(false);
     }

@@ -1,7 +1,7 @@
-// App Version
-export const APP_VERSION = '0.5.0';
-export const BUILD_NUMBER = '6';
-export const VERSION_NAME = 'Aangan v0.5.0 — Voice Enabled Operations';
+// App Version — keep in sync with app.json + package.json on every release
+export const APP_VERSION = '0.9.13';
+export const BUILD_NUMBER = '12';
+export const VERSION_NAME = 'Aangan v0.9.13 — Family Events + Wedding Series';
 
 // Storage tiers
 export const STORAGE_TIERS = {
