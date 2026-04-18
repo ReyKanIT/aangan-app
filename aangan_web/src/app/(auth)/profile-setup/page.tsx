@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/stores/authStore';
 import GoldButton from '@/components/ui/GoldButton';
@@ -26,6 +26,13 @@ export default function ProfileSetupPage() {
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState('');
+  const navTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (navTimeoutRef.current) clearTimeout(navTimeoutRef.current);
+    };
+  }, []);
 
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -73,22 +80,36 @@ export default function ProfileSetupPage() {
         avatar_url,
       });
 
-      // Attribute to the referrer (if any) — first-touch only. We write
-      // directly to the users row because updateProfile's Profile type
-      // doesn't include referral columns. Failures are non-fatal (the
-      // user signed up successfully, we just don't credit the inviter).
+      // Attribute to the referrer (if any) — first-touch only.
+      // The stored `ref` may be either (a) the referrer's users.id UUID or
+      // (b) their 8-char user_storage.referral_code. referred_by is a UUID FK,
+      // so we resolve codes via user_storage before writing. Always clear
+      // after the attempt (success or fail) so a bad ref doesn't retry for 90 days.
       if (ok) {
         const ref = getStoredReferral();
         if (ref && session?.user) {
           try {
-            await supabase
-              .from('users')
-              .update({ referred_by: ref, referred_at: new Date().toISOString() })
-              .eq('id', session.user.id)
-              .is('referred_by', null); // only first-touch
-            clearStoredReferral();
+            const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+            let referrerId: string | null = UUID_RE.test(ref) ? ref : null;
+            if (!referrerId) {
+              const { data: storageRow } = await supabase
+                .from('user_storage')
+                .select('user_id')
+                .eq('referral_code', ref)
+                .maybeSingle();
+              referrerId = storageRow?.user_id ?? null;
+            }
+            if (referrerId && referrerId !== session.user.id) {
+              await supabase
+                .from('users')
+                .update({ referred_by: referrerId, referred_at: new Date().toISOString() })
+                .eq('id', session.user.id)
+                .is('referred_by', null); // only first-touch
+            }
           } catch (refErr) {
             console.warn('[profile-setup] referral attribution failed:', refErr);
+          } finally {
+            clearStoredReferral();
           }
         }
       }
@@ -97,7 +118,7 @@ export default function ProfileSetupPage() {
         if (photoUploadFailed) {
           // Let them continue but warn about the photo
           setError('फ़ोटो अपलोड नहीं हो पाई, बाकी प्रोफाइल सेव हो गई। बाद में सेटिंग्स से फ़ोटो जोड़ें।\nPhoto could not upload. Profile saved — you can add photo later from Settings.');
-          setTimeout(() => router.replace('/feed'), 2500);
+          navTimeoutRef.current = setTimeout(() => router.replace('/feed'), 2500);
         } else {
           router.replace('/feed');
         }

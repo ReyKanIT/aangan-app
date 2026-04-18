@@ -1,5 +1,10 @@
 # Letter of Authorization — Aangan Brand Registration
 
+> **Looking for the ready-to-print version?** → [`LOA_AANGAN_PRINT.md`](./LOA_AANGAN_PRINT.md)
+> (Variant C below, pre-filled, with only 9 identity fields left blank.)
+>
+> This file is the full reference with all three variants + rationale.
+>
 > For upload to vilpower.in Brand Name registration
 > Print on **ReyKan IT Pvt Ltd letterhead**, sign with wet signature + company stamp, scan as color PDF (≤ 2 MB), upload.
 

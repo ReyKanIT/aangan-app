@@ -4,6 +4,9 @@ import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase/client';
 import { captureReferralFromUrl } from '@/lib/utils/referral';
+import { RELEASES } from '@/data/versions';
+
+const CURRENT_VERSION = RELEASES[0].version;
 
 function useInView(ref: React.RefObject<HTMLElement | null>, threshold = 0.15) {
   const [isVisible, setIsVisible] = useState(false);
@@ -77,7 +80,7 @@ const FEATURES = [
   },
 ];
 
-const APK_URL = 'https://media.aangan.app/releases/Aangan-v0.9.12.apk';
+const APK_URL = `https://media.aangan.app/releases/Aangan-v${CURRENT_VERSION}.apk`;
 // Flip this on once Play Console approves the first production release.
 // URL pattern: https://play.google.com/store/apps/details?id=app.aangan.family
 // Landing currently surfaces the APK sideload path; after approval we want to
@@ -413,9 +416,14 @@ export default function LandingPage() {
             </div>
           </div>
 
-          <div className="mt-8 pt-6 border-t border-cream/10 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-cream-dark">
-            <p>{"Made with ❤️ in India"}</p>
-            <p>&copy; 2026 ReyKan IT &middot; v0.9.12</p>
+          <div className="mt-8 pt-6 border-t border-cream/10 flex flex-col gap-3 text-sm text-cream-dark">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-2">
+              <p>{"Made with ❤️ in India"}</p>
+              <p>&copy; 2026 ReyKan IT Private Limited &middot; v{CURRENT_VERSION}</p>
+            </div>
+            <div className="text-center sm:text-right text-xs text-cream-dark/70">
+              <a href="mailto:support@aangan.app" className="hover:text-haldi-gold transition-colors">support@aangan.app</a>
+            </div>
           </div>
         </div>
       </footer>

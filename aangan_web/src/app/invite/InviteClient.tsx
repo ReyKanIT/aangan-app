@@ -5,7 +5,7 @@ import { useSearchParams } from 'next/navigation';
 
 const APP_URL = 'https://aangan.app';
 
-const DEFAULT_HINDI_MESSAGE = (referrerName?: string) => {
+const DEFAULT_HINDI_MESSAGE = (referrerName: string | undefined, url: string) => {
   const opener = referrerName
     ? `${referrerName} ने आपको Aangan आँगन पर बुलाया है! 🏠`
     : 'नमस्ते! 🙏 मैं आपको Aangan आँगन पर बुलाना चाहता/चाहती हूँ।';
@@ -19,7 +19,7 @@ Aangan एक हिंदी-फर्स्ट परिवार सोशल
 🎉 इवेंट और RSVP
 
 अभी डाउनलोड करें — दादी भी आसानी से चला सकती हैं!
-${APP_URL}`;
+${url}`;
 };
 
 function InviteContent() {
@@ -30,12 +30,13 @@ function InviteContent() {
   const [copied, setCopied] = useState(false);
   const [customMsg, setCustomMsg] = useState('');
 
-  useEffect(() => {
-    setCustomMsg(DEFAULT_HINDI_MESSAGE(inviterName));
-  }, [inviterName]);
-
   const shareUrl = ref ? `${APP_URL}/?ref=${encodeURIComponent(ref)}` : APP_URL;
-  const finalMessage = customMsg || DEFAULT_HINDI_MESSAGE(inviterName);
+
+  useEffect(() => {
+    setCustomMsg(DEFAULT_HINDI_MESSAGE(inviterName, shareUrl));
+  }, [inviterName, shareUrl]);
+
+  const finalMessage = customMsg || DEFAULT_HINDI_MESSAGE(inviterName, shareUrl);
 
   const whatsappHref = `https://wa.me/?text=${encodeURIComponent(finalMessage)}`;
   const smsHref = `sms:?&body=${encodeURIComponent(finalMessage)}`;
@@ -187,7 +188,7 @@ function InviteContent() {
             <a href="/panchang" className="hover:text-haldi-gold transition-colors">Panchang</a>
             <a href="/privacy" className="hover:text-haldi-gold transition-colors">Privacy</a>
           </div>
-          <p>&copy; 2026 ReyKan IT</p>
+          <p>&copy; 2026 ReyKan IT Private Limited</p>
         </div>
       </footer>
     </main>

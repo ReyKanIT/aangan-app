@@ -24,6 +24,26 @@ export interface ReleaseNote {
 
 export const RELEASES: ReleaseNote[] = [
   {
+    version: '0.9.14',
+    releasedAt: '2026-04-19T11:30:00+05:30',
+    stamp: '[11:30am - 19Apr26]',
+    summary: 'CEO Mode audit sweep — P0 referral + RN typecheck + viral loop unblock + trust signals',
+    category: 'fix',
+    highlights: [
+      'P0 referral attribution fixed — profile-setup was writing the 8-char referral_code into users.referred_by (UUID FK), silently 22P02-ing every login for 90 days; now UUID-validates and resolves code → user_id via user_storage before write',
+      'P0 viral loop unblocked — /invite WhatsApp message body was embedding bare APP_URL instead of shareUrl (no ?ref=) so every WhatsApp invite since v0.9.11 dropped attribution',
+      'P0 RN typecheck green again — 5 blocking errors cleared (EventRsvp.plus_count → guests_count column drift from v0.9.8; ChatScreen voice send/play removed because it was half-wired and blocking Expo builds)',
+      'P1 EventInviteCard now attaches ?ref=<inviter_id> so event-forwarded invites attribute correctly (weddings = highest-intent surface)',
+      'P1 RN Google sign-in now surfaces an alert when redirect URL has no hash/query instead of spinner-stuck silent fail',
+      'P1 PWAInstallPrompt wraps prompt/userChoice in try/catch/finally so aborting the native dialog on Android Chrome doesn\'t leave the button stuck',
+      'P1 profile-setup setTimeout tracked in ref + cleared on unmount; clearStoredReferral always runs via finally',
+      'P1 landing: APK_URL + footer version read from RELEASES[0].version so they can\'t drift again',
+      'P2 event pages: alternates.canonical added so trailing-slash/query variants don\'t dilute page rank',
+      'P2 landing footer: "ReyKan IT Private Limited" full-legal + support@aangan.app visible (Play Store trust + Indian consumer norm)',
+      'aangan_rn versionCode 12 → 13 + version synced across app.json / package.json / constants.ts',
+    ],
+  },
+  {
     version: '0.9.13',
     releasedAt: '2026-04-18T07:50:00+05:30',
     stamp: '[7:50am - 18Apr26]',

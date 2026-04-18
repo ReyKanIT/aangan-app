@@ -67,7 +67,7 @@ export default function EventInvitationScreen({ route, navigation }: Props) {
     if (currentEvent?.my_rsvp) {
       const r = currentEvent.my_rsvp;
       setRsvpStatus(r.status);
-      setPlusCount(r.plus_count);
+      setPlusCount(r.guests_count);
       setDietary(r.dietary_preferences);
       if (r.status !== 'pending') {
         setHasSubmitted(true);

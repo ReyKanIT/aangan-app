@@ -68,11 +68,17 @@ export default function PWAInstallPrompt() {
 
   const handleInstall = async () => {
     if (!deferredPrompt) return;
-    await deferredPrompt.prompt();
-    const { outcome } = await deferredPrompt.userChoice;
-    if (outcome === 'accepted') {
+    try {
+      await deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      if (outcome === 'accepted') {
+        setMode(null);
+      }
+    } catch {
+      // User aborted the native prompt (rare on Android Chrome). Clear state
+      // either way so the button doesn't end up stuck with a stale prompt.
+    } finally {
       setDeferredPrompt(null);
-      setMode(null);
     }
   };
 

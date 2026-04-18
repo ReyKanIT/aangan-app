@@ -181,8 +181,8 @@ export default function RsvpTrackerScreen({ route }: Props) {
                   <Text style={styles.levelBadgeText}>L{item.user.family_level}</Text>
                 </View>
               )}
-              {item.plus_count > 0 && (
-                <Text style={Typography.caption}>+{item.plus_count}</Text>
+              {item.guests_count > 0 && (
+                <Text style={Typography.caption}>+{item.guests_count}</Text>
               )}
             </View>
           </View>

@@ -22,9 +22,13 @@ export default function EventInviteCard({ event, inviter, className = '' }: Prop
   const [copied, setCopied] = useState(false);
   const [expanded, setExpanded] = useState(false);
 
-  const url = typeof window !== 'undefined'
+  const base = typeof window !== 'undefined'
     ? `${window.location.origin}/events/${event.id}`
     : `https://aangan.app/events/${event.id}`;
+  // Attach inviter id as ?ref= so referral attribution works when invitees
+  // sign up from this share. Fall back to plain URL if inviter isn't known
+  // (event page loaded without inviter context).
+  const url = inviter?.id ? `${base}?ref=${encodeURIComponent(inviter.id)}` : base;
 
   const typeInfo = EVENT_TYPES.find((t) => t.value === event.event_type) ?? { emoji: '📅', label: event.event_type };
   const eventTitle = event.title_hindi || event.title;

@@ -225,7 +225,11 @@ export default function LoginScreen({ navigation }: Props) {
       if (result.type === 'success' && result.url) {
         // Extract tokens from the redirect URL fragment (#access_token=...&refresh_token=...)
         const url = result.url;
-        const hashPart = url.includes('#') ? url.split('#')[1] : url.split('?')[1];
+        const hashPart = url.includes('#')
+          ? url.split('#')[1]
+          : url.includes('?')
+            ? url.split('?')[1]
+            : null;
         if (hashPart) {
           const params = new URLSearchParams(hashPart);
           const accessToken = params.get('access_token');
@@ -244,6 +248,11 @@ export default function LoginScreen({ navigation }: Props) {
           } else {
             Alert.alert('Google साइन इन नहीं हुआ', 'प्रमाणीकरण टोकन नहीं मिला।', [{ text: 'ठीक है' }]);
           }
+        } else {
+          // Redirect URL had neither `#` nor `?` — we can't recover tokens.
+          // Silently no-oping here used to leave the spinner stopped with no
+          // explanation; surface it so the user can retry or report it.
+          Alert.alert('Google साइन इन नहीं हुआ', 'अप्रत्याशित प्रतिक्रिया मिली। दोबारा कोशिश करें।', [{ text: 'ठीक है' }]);
         }
       }
       // If result.type === 'cancel' or 'dismiss', user closed the browser — do nothing

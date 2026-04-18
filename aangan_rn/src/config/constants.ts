@@ -1,7 +1,7 @@
 // App Version — keep in sync with app.json + package.json on every release
-export const APP_VERSION = '0.9.13';
-export const BUILD_NUMBER = '12';
-export const VERSION_NAME = 'Aangan v0.9.13 — Family Events + Wedding Series';
+export const APP_VERSION = '0.9.14';
+export const BUILD_NUMBER = '13';
+export const VERSION_NAME = 'Aangan v0.9.14 — CEO Mode sweep: referral + RN typecheck + trust signals';
 
 // Storage tiers
 export const STORAGE_TIERS = {

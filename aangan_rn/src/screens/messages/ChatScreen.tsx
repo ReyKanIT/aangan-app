@@ -20,8 +20,6 @@ import { Spacing, BorderRadius, Shadow } from '../../theme/spacing';
 import { useMessageStore, DirectMessage } from '../../stores/messageStore';
 import { useAuthStore } from '../../stores/authStore';
 import VoiceMicButton from '../../components/voice/VoiceMicButton';
-import VoiceMessageRecorder from '../../components/voice/VoiceMessageRecorder';
-import VoiceMessagePlayer from '../../components/voice/VoiceMessagePlayer';
 
 // ─── Navigation types ─────────────────────────────────────────────────────────
 type Props = NativeStackScreenProps<any, 'Chat'>;
@@ -139,18 +137,14 @@ function MessageBubble({
           ]}
           accessibilityLabel={`${isMine ? 'आपका' : ''} संदेश: ${msg.content}`}
         >
-          {(msg as any).message_type === 'voice' ? (
-            <VoiceMessagePlayer uri={(msg as any).voice_url || msg.content} />
-          ) : (
-            <Text
-              style={[
-                bubbleStyles.bubbleText,
-                isMine ? bubbleStyles.bubbleTextMine : bubbleStyles.bubbleTextTheirs,
-              ]}
-            >
-              {msg.content}
-            </Text>
-          )}
+          <Text
+            style={[
+              bubbleStyles.bubbleText,
+              isMine ? bubbleStyles.bubbleTextMine : bubbleStyles.bubbleTextTheirs,
+            ]}
+          >
+            {msg.content}
+          </Text>
         </View>
         <Text
           style={[
@@ -426,23 +420,23 @@ export default function ChatScreen({ route, navigation }: Props) {
           mode="append"
           size={22}
         />
-        {canSend ? (
-          <TouchableOpacity
-            style={[styles.sendButton, styles.sendButtonActive]}
-            onPress={handleSend}
-            activeOpacity={0.8}
-            accessibilityRole="button"
-            accessibilityLabel="संदेश भेजें"
-          >
-            {sending ? (
-              <ActivityIndicator size="small" color={Colors.white} />
-            ) : (
-              <Text style={styles.sendButtonIcon}>{'➤'}</Text>
-            )}
-          </TouchableOpacity>
-        ) : (
-          <VoiceMessageRecorder />
-        )}
+        <TouchableOpacity
+          style={[
+            styles.sendButton,
+            canSend ? styles.sendButtonActive : undefined,
+          ]}
+          onPress={handleSend}
+          disabled={!canSend || sending}
+          activeOpacity={0.8}
+          accessibilityRole="button"
+          accessibilityLabel="संदेश भेजें"
+        >
+          {sending ? (
+            <ActivityIndicator size="small" color={Colors.white} />
+          ) : (
+            <Text style={styles.sendButtonIcon}>{'➤'}</Text>
+          )}
+        </TouchableOpacity>
       </View>
     </KeyboardAvoidingView>
   );
