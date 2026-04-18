@@ -24,6 +24,20 @@ export interface ReleaseNote {
 
 export const RELEASES: ReleaseNote[] = [
   {
+    version: '0.9.12',
+    releasedAt: '2026-04-18T07:20:00+05:30',
+    stamp: '[7:20am - 18Apr26]',
+    summary: 'Android build bump for Play Console verification + stale APK URL fix',
+    category: 'chore',
+    highlights: [
+      'aangan_rn/app.json — Android versionCode 10 → 11 (monotonic increment required for every Play submission)',
+      'aangan_rn app.json + package.json version 0.9.8 → 0.9.12 (sync to web)',
+      'aangan_web/src/app/page.tsx — APK_URL from Aangan-v0.9.0.apk → Aangan-v0.9.12.apk so the landing download link matches the build that will be produced by EAS on the next production build',
+      'Footer stamp v0.9.10 → v0.9.12',
+      'Google Play Android developer verification: see GOOGLE_PLAY_VERIFICATION_PLAN.md for the 7-step external-distribution registration Kumar must do manually on Play Console before Sept 2026',
+    ],
+  },
+  {
     version: '0.9.11',
     releasedAt: '2026-04-17T16:15:00+05:30',
     stamp: '[4:15pm - 17Apr26]',

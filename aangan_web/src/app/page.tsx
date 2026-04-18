@@ -77,7 +77,7 @@ const FEATURES = [
   },
 ];
 
-const APK_URL = 'https://media.aangan.app/releases/Aangan-v0.9.0.apk';
+const APK_URL = 'https://media.aangan.app/releases/Aangan-v0.9.12.apk';
 const SHARE_URL = 'https://aangan.app';
 const SHARE_TEXT = 'Aangan — परिवार से जुड़ें! डाउनलोड करें:';
 
@@ -409,7 +409,7 @@ export default function LandingPage() {
 
           <div className="mt-8 pt-6 border-t border-cream/10 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-cream-dark">
             <p>{"Made with ❤️ in India"}</p>
-            <p>&copy; 2026 ReyKan IT &middot; v0.9.10</p>
+            <p>&copy; 2026 ReyKan IT &middot; v0.9.12</p>
           </div>
         </div>
       </footer>
