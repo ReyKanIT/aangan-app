@@ -78,6 +78,12 @@ const FEATURES = [
 ];
 
 const APK_URL = 'https://media.aangan.app/releases/Aangan-v0.9.12.apk';
+// Flip this on once Play Console approves the first production release.
+// URL pattern: https://play.google.com/store/apps/details?id=app.aangan.family
+// Landing currently surfaces the APK sideload path; after approval we want to
+// lead with the Play listing and keep the APK as a secondary option for users
+// who can't use Play (e.g., Huawei devices, OEMs without GMS).
+const PLAY_STORE_URL: string | null = null;
 const SHARE_URL = 'https://aangan.app';
 const SHARE_TEXT = 'Aangan — परिवार से जुड़ें! डाउनलोड करें:';
 
