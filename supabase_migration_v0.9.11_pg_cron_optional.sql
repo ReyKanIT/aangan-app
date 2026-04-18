@@ -1,0 +1,83 @@
+-- ============================================================================
+-- Aangan v0.9.11 — OPTIONAL pg_cron setup for 5-minute scheduled-invite sweeps
+--
+-- Why this is OPTIONAL:
+--   Vercel Hobby caps cron jobs at once-per-day. v0.9.9 already has a daily
+--   Vercel cron at 00:15 IST that drains the scheduled-invite queue. Plus the
+--   "Send now" button fires the endpoint immediately. So bulk invites work
+--   out of the box on Hobby — you just can't precisely schedule "send at 3pm
+--   tomorrow" without waiting for midnight.
+--
+--   This migration gives Kumar a free alternative: use Supabase's built-in
+--   pg_cron extension to hit the same Next API endpoint every 5 minutes. The
+--   job runs inside Supabase, doesn't count against Vercel cron limits, and
+--   is free on all Supabase plans.
+--
+-- Prerequisites on the Supabase project:
+--   1. Database → Extensions → enable `pg_cron` and `pg_net`
+--   2. Know your Vercel production URL (default: https://aangan.app)
+--   3. Know your CRON_SECRET (from Vercel env vars — set one if not present)
+--
+-- Kumar: run these blocks one at a time. Fill in the secret + URL first.
+-- Idempotent — safe to re-run.
+-- ============================================================================
+
+-- Step 1. Enable the extensions (uncomment and run separately if not already enabled)
+--   CREATE EXTENSION IF NOT EXISTS pg_cron;
+--   CREATE EXTENSION IF NOT EXISTS pg_net;
+
+-- Step 2. Store the cron secret in the Postgres vault so we don't inline it.
+-- Replace 'REPLACE_WITH_CRON_SECRET' with your actual Vercel env var value.
+-- Requires the 'vault' extension (enabled by default on Supabase).
+--
+--   SELECT vault.create_secret(
+--     'REPLACE_WITH_CRON_SECRET',
+--     'aangan_cron_secret',
+--     'Bearer token for /api/cron/* endpoints'
+--   );
+
+-- Step 3. Schedule the cron job. Runs every 5 minutes.
+-- The Next route accepts POST without the Bearer token (manual kicks from the
+-- UI rely on RLS), and accepts GET with the Bearer token from Vercel Cron.
+-- pg_cron uses POST here so we don't need the secret at all — but we pass it
+-- anyway for belt-and-braces auth.
+--
+-- Remove + re-add to make idempotent.
+--
+-- SELECT cron.unschedule('aangan-send-scheduled-invites')
+--   WHERE EXISTS (SELECT 1 FROM cron.job WHERE jobname = 'aangan-send-scheduled-invites');
+--
+-- SELECT cron.schedule(
+--   'aangan-send-scheduled-invites',
+--   '*/5 * * * *',
+--   $$
+--   SELECT net.http_post(
+--     url := 'https://aangan.app/api/cron/send-scheduled-invites',
+--     headers := jsonb_build_object(
+--       'Content-Type', 'application/json',
+--       'Authorization', 'Bearer ' || (SELECT decrypted_secret FROM vault.decrypted_secrets WHERE name = 'aangan_cron_secret')
+--     ),
+--     body := '{}'::jsonb,
+--     timeout_milliseconds := 30000
+--   );
+--   $$
+-- );
+
+-- Step 4. Verify. Should return the schedule row:
+--   SELECT jobname, schedule, active FROM cron.job WHERE jobname = 'aangan-send-scheduled-invites';
+
+-- Step 5. Watch it fire (last 10 runs):
+--   SELECT runid, job_pid, database, username, command, status, return_message, start_time, end_time
+--   FROM cron.job_run_details
+--   WHERE jobid = (SELECT jobid FROM cron.job WHERE jobname = 'aangan-send-scheduled-invites')
+--   ORDER BY start_time DESC
+--   LIMIT 10;
+
+-- To DISABLE later:
+--   SELECT cron.unschedule('aangan-send-scheduled-invites');
+
+-- Rationale for keeping everything commented out by default:
+--   This file exists as a runbook. Kumar uncomments + runs after enabling
+--   pg_cron + pg_net in the Supabase dashboard and setting the secret. If we
+--   executed these by default on migration apply, any forgotten /
+--   misconfigured secret would silently pile up errored cron runs.

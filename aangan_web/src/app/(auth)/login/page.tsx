@@ -5,6 +5,7 @@ import { useAuthStore } from '@/stores/authStore';
 import GoldButton from '@/components/ui/GoldButton';
 import InputField from '@/components/ui/InputField';
 import { VALIDATION } from '@/lib/constants';
+import { captureReferralFromUrl } from '@/lib/utils/referral';
 
 function PasswordStrength({ password }: { password: string }) {
   if (!password) return null;
@@ -59,7 +60,12 @@ function LoginContent() {
   const [showPasswordField, setShowPasswordField] = useState(false);
   const [isSignUp, setIsSignUp] = useState(false);
 
-  useEffect(() => { initialize(); }, [initialize]);
+  useEffect(() => {
+    initialize();
+    // Also try to capture `?ref=` here — users often land straight on /login
+    // via a shared WhatsApp link, skipping the root page.
+    captureReferralFromUrl();
+  }, [initialize]);
 
   useEffect(() => {
     if (session && !isLoading) {

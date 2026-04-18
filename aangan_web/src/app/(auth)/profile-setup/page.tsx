@@ -6,6 +6,8 @@ import GoldButton from '@/components/ui/GoldButton';
 import InputField from '@/components/ui/InputField';
 import AvatarCircle from '@/components/ui/AvatarCircle';
 import { uploadAvatar } from '@/lib/utils/uploadMedia';
+import { supabase } from '@/lib/supabase/client';
+import { getStoredReferral, clearStoredReferral } from '@/lib/utils/referral';
 
 export default function ProfileSetupPage() {
   const router = useRouter();
@@ -70,6 +72,27 @@ export default function ProfileSetupPage() {
         bio: bio.trim() || null,
         avatar_url,
       });
+
+      // Attribute to the referrer (if any) — first-touch only. We write
+      // directly to the users row because updateProfile's Profile type
+      // doesn't include referral columns. Failures are non-fatal (the
+      // user signed up successfully, we just don't credit the inviter).
+      if (ok) {
+        const ref = getStoredReferral();
+        if (ref && session?.user) {
+          try {
+            await supabase
+              .from('users')
+              .update({ referred_by: ref, referred_at: new Date().toISOString() })
+              .eq('id', session.user.id)
+              .is('referred_by', null); // only first-touch
+            clearStoredReferral();
+          } catch (refErr) {
+            console.warn('[profile-setup] referral attribution failed:', refErr);
+          }
+        }
+      }
+
       if (ok) {
         if (photoUploadFailed) {
           // Let them continue but warn about the photo

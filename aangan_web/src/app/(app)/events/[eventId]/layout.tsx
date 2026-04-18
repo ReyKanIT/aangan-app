@@ -59,13 +59,17 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         type: 'website',
         siteName: 'Aangan — आँगन',
         locale: 'hi_IN',
-        images,
+        // Banner-uploaded cover wins when present. Otherwise omit `images`
+        // entirely so Next's file-convention opengraph-image.tsx in this
+        // segment auto-generates a branded 1200x630 card.
+        ...(images ? { images } : {}),
       },
       twitter: {
-        card: images ? 'summary_large_image' : 'summary',
+        card: 'summary_large_image',
         title,
         description,
-        images: data.banner_url ? [data.banner_url] : undefined,
+        // If we have a banner_url, override the convention with it on Twitter too.
+        ...(data.banner_url ? { images: [data.banner_url as string] } : {}),
       },
     };
   } catch {

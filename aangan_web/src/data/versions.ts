@@ -24,6 +24,24 @@ export interface ReleaseNote {
 
 export const RELEASES: ReleaseNote[] = [
   {
+    version: '0.9.11',
+    releasedAt: '2026-04-17T16:15:00+05:30',
+    stamp: '[4:15pm - 17Apr26]',
+    summary: 'Viral loop — dynamic OG images, referral attribution, PWA install on landing (incl. iOS), optional pg_cron runbook',
+    category: 'feature',
+    migration: 'supabase_migration_v0.9.11_referrals.sql + supabase_migration_v0.9.11_pg_cron_optional.sql',
+    highlights: [
+      'Dynamic 1200x630 OG image at /events/:id/opengraph-image (Next ImageResponse) — every shared event link now renders a branded preview card even when host did not upload a banner',
+      'Host-uploaded banner still wins when present; generic fallback covers the rest',
+      '?ref=<uid> captured on landing + login with first-touch attribution, 90-day cookie + sessionStorage',
+      'users.referred_by + referred_at columns (migration v0.9.11_referrals) — backfilled at profile-setup save',
+      'user_referral_leaderboard view (future /admin/referrals page)',
+      'PWAInstallPrompt moved from AppShell to root layout → landing + public pages now get install nudge',
+      'iOS Safari branch added: detects iPhone/iPad + no standalone mode + shows "Tap Share → Add to Home Screen" instructions (Android Chrome branch unchanged)',
+      'OPTIONAL pg_cron runbook (supabase_migration_v0.9.11_pg_cron_optional.sql) — lets Kumar enable 5-min scheduled-invite sweeps on free Supabase, sidestepping the Vercel Hobby daily-cron limit',
+    ],
+  },
+  {
     version: '0.9.10',
     releasedAt: '2026-04-17T15:55:00+05:30',
     stamp: '[3:55pm - 17Apr26]',

@@ -1,15 +1,12 @@
 'use client';
-import dynamic from 'next/dynamic';
 import SideNav from './SideNav';
 import BottomNav from './BottomNav';
 import TopBar from './TopBar';
 import FeedbackWidget from './FeedbackWidget';
 import { Toaster } from 'react-hot-toast';
 
-// PWA install banner only appears after the browser fires `beforeinstallprompt`
-// (and only for users who haven't installed/dismissed). No need to ship its
-// JS on the critical path — lazy-load it.
-const PWAInstallPrompt = dynamic(() => import('@/components/ui/PWAInstallPrompt'), { ssr: false });
+// PWAInstallPrompt moved to the root layout in v0.9.11 so landing + public
+// SEO pages also get the install nudge. No duplicate mount here.
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   return (
@@ -32,9 +29,6 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
       {/* Floating Feedback Button */}
       <FeedbackWidget />
-
-      {/* PWA Install Prompt */}
-      <PWAInstallPrompt />
 
       {/* Toast Notifications */}
       <Toaster position="top-center" toastOptions={{ className: 'font-body' }} />

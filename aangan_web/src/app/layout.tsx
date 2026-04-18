@@ -1,6 +1,12 @@
 import type { Metadata, Viewport } from 'next';
 import { Poppins, Tiro_Devanagari_Hindi } from 'next/font/google';
+import PWAInstallMount from '@/components/ui/PWAInstallMount';
 import './globals.css';
+
+// PWAInstallMount is a tiny client island that ssr:false-loads the install
+// prompt. Mounted here so landing + public SEO pages (highest-intent first
+// visit from a share) get the install CTA too — previously only authenticated
+// routes inside AppShell saw it.
 
 const poppins = Poppins({
   subsets: ['latin'],
@@ -162,7 +168,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
       </head>
-      <body className={poppins.className}>{children}</body>
+      <body className={poppins.className}>
+        {children}
+        <PWAInstallMount />
+      </body>
     </html>
   );
 }

@@ -3,6 +3,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase/client';
+import { captureReferralFromUrl } from '@/lib/utils/referral';
 
 function useInView(ref: React.RefObject<HTMLElement | null>, threshold = 0.15) {
   const [isVisible, setIsVisible] = useState(false);
@@ -118,6 +119,11 @@ export default function LandingPage() {
   };
 
   useEffect(() => {
+    // Capture ?ref= on first touch so the inviter gets credited even if the
+    // user takes their time bouncing through login. First-touch attribution:
+    // later bare visits won't overwrite the original inviter.
+    captureReferralFromUrl();
+
     let cancelled = false;
     // Still do the session redirect — but without blocking the initial paint.
     supabase.auth.getSession().then(
