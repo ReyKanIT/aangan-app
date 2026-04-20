@@ -3,47 +3,53 @@
 > Submitted to vilpower.in on **2026-04-19 ~18:00 IST** under PEID `VI-1100093984`,
 > Header `AANGFM`, Brand `Aangan` (approved 2026-04-19).
 >
-> All currently **Pending** (Vi review = 24–72 hours). Once approved, set as
-> Supabase secrets so MSG91 edge functions can reference them.
+> **Update 2026-04-20:** Vi reviewer disapproved 5 of 6 on first pass with
+> specific category guidance. Resubmitted with corrected types. See "Rejection
+> + Resubmit" section at bottom for the diagnosis trail.
 
 ---
 
-## Live Template IDs
+## Live Template IDs (current status)
 
 | # | Template Name | Type | Template ID | Status | Env var |
 |---|---|---|---|---|---|
-| 1 | **Aangan OTP** | Service-Implicit | `1107177660181979501` | Pending | `MSG91_TEMPLATE_OTP` |
-| 2 | **Aangan Event Invite** | Service-Implicit | `1107177660212465624` | Pending | `MSG91_TEMPLATE_EVENT_INVITE` |
-| 3 | **Aangan RSVP Confirm** | Service-Implicit | `1107177660234341845` | Pending | `MSG91_TEMPLATE_RSVP_CONFIRM` |
-| 4 | **Aangan Event Reminder 24h** | Service-Implicit | `1107177660290782243` | Pending | `MSG91_TEMPLATE_REMIND_24H` |
-| 5 | **Aangan Event Reminder 2h** | Service-Implicit | `1107177660323100746` | Pending | `MSG91_TEMPLATE_REMIND_2H` |
-| 6 | **Aangan Family Join** | Service-Implicit | `1107177660343986635` | Pending | `MSG91_TEMPLATE_FAMILY_JOIN` |
+| 1 | **Aangan OTP** | **Transactional** | `1107177660181979501` | Pending (resubmit 20-Apr) | `MSG91_TEMPLATE_OTP` |
+| 2 | **Aangan Event Invite** | **Service-Explicit** | `1107177660212465624` | Pending (resubmit 20-Apr) | `MSG91_TEMPLATE_EVENT_INVITE` |
+| 3 | **Aangan RSVP Confirm** | **Service-Explicit** | `1107177660234341845` | Pending (resubmit 20-Apr) | `MSG91_TEMPLATE_RSVP_CONFIRM` |
+| 4 | **Aangan Event Reminder 24h** | Service-Implicit | `1107177660290782243` | **✅ APPROVED** | `MSG91_TEMPLATE_REMIND_24H` |
+| 5 | **Aangan Event Reminder 2h** | **Service-Explicit** | `1107177660323100746` | Pending (resubmit 20-Apr) | `MSG91_TEMPLATE_REMIND_2H` |
+| 6 | **Aangan Family Join** | **Service-Explicit** | `1107177660343986635` | Pending (resubmit 20-Apr) | `MSG91_TEMPLATE_FAMILY_JOIN` |
 
 All six are Category `Communication/Broadcasting/Entertainment/IT`, single-SMS,
-Roman-Hindi transliteration (no Devanagari Unicode).
+Roman-Hindi transliteration (no Devanagari Unicode). Template IDs are stable
+across edit/resubmit (Vi keeps the same ID, only status changes).
 
 ---
 
-## Approved template content (what Vi has)
+## Approved template content (what Vi has after resubmit)
+
+**Note:** Vi auto-appends `-<BrandName>` at the end when a brand is selected,
+so the resubmit drops the manual `- AANGFM` trailer. The final SMS body each
+user sees ends with `-Aangan` appended by Vi's platform.
 
 ```
-# 1. OTP
-Aapka Aangan OTP {#numeric#} hai. 10 minute ke liye valid. Kisi ke saath share na karein. - AANGFM
+# 1. OTP  (Transactional)
+Aapka Aangan OTP {#numeric#} hai. 10 minute ke liye valid. Kisi ke saath share na karein.
 
-# 2. Event Invite
-{#alphanumeric#} ne aapko {#alphanumeric#} mein bulaya hai. {#alphanumeric#} ko {#alphanumeric#} par. RSVP: {#url#} - AANGFM
+# 2. Event Invite  (Service-Explicit)
+{#alphanumeric#} ne aapko {#alphanumeric#} mein bulaya hai. {#alphanumeric#} ko {#alphanumeric#} par. RSVP: {#url#}
 
-# 3. RSVP Confirm
-Aapka RSVP {#alphanumeric#} event ke liye confirm ho gaya. Tarikh {#alphanumeric#}. Details: {#url#} - AANGFM
+# 3. RSVP Confirm  (Service-Explicit)
+Aapka RSVP {#alphanumeric#} event ke liye confirm ho gaya. Tarikh {#alphanumeric#}. Details: {#url#}
 
-# 4. Event Reminder 24h
+# 4. Event Reminder 24h  (Service-Implicit — APPROVED as-is)
 Kal {#alphanumeric#} par {#alphanumeric#} hai. Samay {#alphanumeric#}. Pata: {#alphanumeric#}. Dekhein: {#url#} - AANGFM
 
-# 5. Event Reminder 2h
-Yaad dilaane ke liye: {#alphanumeric#} 2 ghante mein shuru hoga. {#alphanumeric#} par. Dekhein: {#url#} - AANGFM
+# 5. Event Reminder 2h  (Service-Explicit)
+Yaad dilaane ke liye: {#alphanumeric#} 2 ghante mein shuru hoga. {#alphanumeric#} par. Dekhein: {#url#}
 
-# 6. Family Join
-{#alphanumeric#} ne Aangan join kar liya hai aur aapke family tree mein jud gaye. Dekhein: {#url#} - AANGFM
+# 6. Family Join  (Service-Explicit)
+{#alphanumeric#} ne Aangan join kar liya hai aur aapke family tree mein jud gaye. Dekhein: {#url#}
 ```
 
 **Variable type cheat sheet (Vi DLT typed variables):**
@@ -132,4 +138,41 @@ If Vi rejects a template:
 
 ---
 
-*[6:28pm - 19Apr26] · Aangan v0.9.14 · ReyKan IT Private Limited · PEID VI-1100093984 · Header AANGFM*
+## Rejection + Resubmit trail (2026-04-20)
+
+On 2026-04-20 ~12:21 IST Vi reviewed the initial batch. Five of six were
+disapproved. Reviewer remarks (from template detail modal → "Reason" field):
+
+| Template | Initially submitted as | Vi remark | Corrected to |
+|---|---|---|---|
+| OTP | Service-Implicit | "Should be transactional" | **Transactional** |
+| Event Invite | Service-Implicit | "Should be service explicit" | **Service-Explicit** |
+| RSVP Confirm | Service-Implicit | "Should be service explicit" | **Service-Explicit** |
+| Event Reminder 24h | Service-Implicit | *(Approved — no remark)* | *(unchanged, approved)* |
+| Event Reminder 2h | Service-Implicit | "Should be service explicit" | **Service-Explicit** |
+| Family Join | Service-Implicit | "Should be service explicit" | **Service-Explicit** |
+
+**Vi's categorization pattern (learned):**
+- **Transactional** is the correct type for OTPs — not Service-Implicit as the
+  initial TRAI guidance implied. Vi's reviewer applies Transactional strictly
+  to authentication codes.
+- **Service-Explicit** is demanded for almost everything else that goes to a
+  user — even "triggered by a user action" flows like RSVP confirmations and
+  event invites. Explicit here means "user consented at signup" (implicit in
+  accepting Aangan's ToS during phone-OTP signup), which covers these cases.
+- **Service-Implicit** is very narrowly applied. Reviewers accepted Event
+  Reminder 24h but rejected Event Reminder 2h — inconsistent; looks like
+  reviewer discretion more than a hard rule.
+
+**All five rejected templates were edited via the Disapproved row "Edit" link**
+(keeps same Template ID), Consent Type flipped from Implicit → Explicit (or
+top-level type changed to Transactional for OTP), Header re-selected (Vi
+clears the header field on type change), sample values re-entered, Save +
+Submit. Expect another 24–72 hours for re-review.
+
+Do not edit the approved Event Reminder 24h template — touching it would move
+it back to Pending.
+
+---
+
+*Initial submit: [6:28pm - 19Apr26] · Resubmit + doc update: [8:40am - 20Apr26] · Aangan v0.9.14 · ReyKan IT Private Limited · PEID VI-1100093984 · Header AANGFM*
