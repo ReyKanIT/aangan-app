@@ -7,6 +7,7 @@ import GoldButton from '@/components/ui/GoldButton';
 import InputField from '@/components/ui/InputField';
 import AvatarCircle from '@/components/ui/AvatarCircle';
 import { uploadAvatar } from '@/lib/utils/uploadMedia';
+import { RELEASES } from '@/data/versions';
 
 const FEEDBACK_CATEGORIES = [
   { value: 'feature_request', label: 'सुझाव — Feature Request', emoji: '💡' },
@@ -307,7 +308,7 @@ export default function SettingsPage() {
       </GoldButton>
 
       {/* Version */}
-      <p className="font-body text-sm text-brown-light text-center mt-6">Aangan v0.9.0</p>
+      <p className="font-body text-sm text-brown-light text-center mt-6">Aangan v{RELEASES[0].version}</p>
     </div>
   );
 }

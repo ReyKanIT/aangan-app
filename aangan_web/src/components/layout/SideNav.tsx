@@ -4,6 +4,7 @@ import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils/cn';
 import { useNotificationStore } from '@/stores/notificationStore';
 import { useMessageStore } from '@/stores/messageStore';
+import { RELEASES } from '@/data/versions';
 
 const NAV_ITEMS = [
   { href: '/feed', emoji: '🏠', hindi: 'घर', english: 'Home' },
@@ -71,7 +72,7 @@ export default function SideNav() {
 
       {/* Version Footer */}
       <div className="px-6 py-4 border-t border-cream-dark">
-        <p className="font-body text-sm text-brown-light">v0.9.0 — Panchang, Tithi Reminders, Feedback</p>
+        <p className="font-body text-sm text-brown-light">v{RELEASES[0].version} — {RELEASES[0].summary.split(/[—:]/)[0].trim().slice(0, 50)}</p>
       </div>
     </nav>
   );
