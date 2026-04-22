@@ -23,7 +23,7 @@ const REVIEWER_PHONES = new Set<string>([
   '919886110312',  // Indus App Store reviewer (primary)
   '919000000001',  // Google Play pre-launch reviewer
   '919000000002',  // App Store Connect reviewer (iOS)
-  '919886110313',  // Internal QA
+  '919886146312',  // Internal QA (Kumar's phone)
 ]);
 
 Deno.serve(async (req: Request) => {

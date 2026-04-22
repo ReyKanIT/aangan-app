@@ -51,7 +51,7 @@ export const RELEASES: ReleaseNote[] = [
     category: 'fix',
     highlights: [
       'Indus App Store flagged signup as broken because OTP never arrives (DLT template pending → MSG91 400s)',
-      '[auth.sms.test_otp] map in supabase/config.toml: 4 reviewer phones + fixed OTPs (Indus 9886110312→123456, Play 9000000001→654321, App Store 9000000002→246810, QA 9886110313→111222)',
+      '[auth.sms.test_otp] map in supabase/config.toml: 4 reviewer phones + fixed OTPs (Indus 9886110312→123456, Play 9000000001→654321, App Store 9000000002→246810, QA 9886146312→111222)',
       'send-otp-sms edge function short-circuits for those numbers before hitting MSG91 (belt-and-braces fallback if dashboard test_otp map gets out of sync)',
       'RN LoginScreen surfaces the real authStore error instead of generic "OTP नहीं भेज पाया" so reviewers/QA see the actual cause',
       'TESTING_INDUS_APP_STORE.md — ready-to-paste reviewer note for Indus "Edit Details" page',

@@ -9,7 +9,7 @@
 ## Symptom
 
 - Reviewer phone `9886110312` + OTP `123456` → works ✓
-- Reviewer phones `9886110313` / `9000000001` / `9000000002` → Supabase `/auth/v1/otp` returns `{}` (empty), verify with the documented OTP returns `403 {"code":"otp_expired","message":"Token has expired or is invalid"}`.
+- Reviewer phones `9886146312` / `9000000001` / `9000000002` → Supabase `/auth/v1/otp` returns `{}` (empty), verify with the documented OTP returns `403 {"code":"otp_expired","message":"Token has expired or is invalid"}`.
 
 That 403 means Supabase didn't short-circuit via test_otp — it went to the normal SMS path and generated its own random OTP. Since MSG91 delivery is still blocked by pending DLT re-review, no SMS arrives, and the documented fixed OTP fails to match.
 
@@ -25,7 +25,7 @@ That 403 means Supabase didn't short-circuit via test_otp — it went to the nor
 |---|---|
 | `+919000000001` | `654321` |
 | `+919000000002` | `246810` |
-| `+919886110313` | `111222` |
+| `+919886146312` | `111222` |
 
 4. Click **Save**
 5. Wait ~10 seconds for config to propagate
@@ -43,7 +43,7 @@ In any browser on [aangan.app/login](https://aangan.app/login):
 | Phone | OTP | Expected |
 |---|---|---|
 | 9886110312 | 123456 | /profile-setup or /feed |
-| 9886110313 | 111222 | /profile-setup or /feed |
+| 9886146312 | 111222 | /profile-setup or /feed |
 | 9000000001 | 654321 | /profile-setup or /feed |
 | 9000000002 | 246810 | /profile-setup or /feed |
 

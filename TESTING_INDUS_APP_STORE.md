@@ -44,7 +44,7 @@ member to an event):
 
 | Phone | OTP |
 |---|---|
-| 9886110313 | 111222 |
+| 9886146312 | 111222 |
 | 9000000001 | 654321 |
 
 ---
@@ -97,7 +97,7 @@ them to Supabase Auth so Supabase short-circuits *before* calling the hook:
    | `+919886110312` | `123456` |
    | `+919000000001` | `654321` |
    | `+919000000002` | `246810` |
-   | `+919886110313` | `111222` |
+   | `+919886146312` | `111222` |
 4. Save
 
 Once set, reviewers and real users are handled by separate paths:
