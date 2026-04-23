@@ -13,18 +13,13 @@ const MSG91_TEMPLATE_ID = Deno.env.get('MSG91_TEMPLATE_ID') ?? '';
 const MSG91_SENDER_ID   = Deno.env.get('MSG91_SENDER_ID') ?? 'AANGFM';
 const WEBHOOK_SECRET    = Deno.env.get('SUPABASE_WEBHOOK_SECRET') ?? '';
 
-// Reviewer test numbers — belt-and-braces bypass so external store reviewers
-// (Indus, Play pre-launch, App Store Connect) can verify signup flows even
-// when DLT template approval is pending and MSG91 would 400 every real OTP.
-// These same numbers are registered in supabase/config.toml [auth.sms.test_otp]
-// so Supabase Auth short-circuits BEFORE invoking this hook. This list is a
-// second line of defence in case the dashboard test_otp map isn't synced.
-const REVIEWER_PHONES = new Set<string>([
-  '919886110312',  // Indus App Store reviewer (primary)
-  '919000000001',  // Google Play pre-launch reviewer
-  '919000000002',  // App Store Connect reviewer (iOS)
-  '919886146312',  // Internal QA (Kumar's phone)
-]);
+// Reviewer bypass DISABLED 2026-04-23 per Kumar's instruction — every
+// incoming OTP request now goes through MSG91 + Vi DLT. This lets us
+// validate the real-user pipeline end-to-end. To re-enable (e.g. for a
+// store submission deadline when DLT is rejecting), repopulate this Set
+// AND add matching rows in Supabase Dashboard → Auth → Phone → Test
+// phone numbers (Dashboard is authoritative in prod).
+const REVIEWER_PHONES = new Set<string>([]);
 
 Deno.serve(async (req: Request) => {
   if (req.method !== 'POST') {

@@ -1,72 +1,90 @@
-# OTP Fix — Supabase Dashboard test phone numbers
+# Reviewer Bypass — DISABLED 2026-04-23
 
-> Diagnosed 2026-04-22 in CEO Mode end-to-end test.
->
-> **TL;DR:** Kumar added `+919886110312` to Supabase Dashboard → Auth → Phone → Test phone numbers (so Indus reviewer flow works). The **other 3 reviewer phones are missing** from the same map. They're declared in `supabase/config.toml`, but config.toml is local-only — prod Supabase uses Dashboard.
-
----
-
-## Symptom
-
-- Reviewer phone `9886110312` + OTP `123456` → works ✓
-- Reviewer phones `9886146312` / `9000000001` / `9000000002` → Supabase `/auth/v1/otp` returns `{}` (empty), verify with the documented OTP returns `403 {"code":"otp_expired","message":"Token has expired or is invalid"}`.
-
-That 403 means Supabase didn't short-circuit via test_otp — it went to the normal SMS path and generated its own random OTP. Since MSG91 delivery is still blocked by pending DLT re-review, no SMS arrives, and the documented fixed OTP fails to match.
+> Previously this doc walked Kumar through adding reviewer phone numbers to
+> Supabase Dashboard. **That bypass is now disabled** per Kumar's instruction
+> once the Vi DLT OTP template was approved. Real SMS via MSG91 is the only
+> authentication path.
 
 ---
 
-## The 2-minute fix
+## What changed
+
+- `supabase/config.toml` — `[auth.sms.test_otp]` section emptied
+- `supabase/functions/send-otp-sms/index.ts` — `REVIEWER_PHONES` Set emptied
+- Supabase Dashboard → Authentication → Phone → Test phone numbers — Kumar
+  must manually delete all 4 rows (Dashboard is authoritative in prod;
+  config.toml doesn't push)
+
+---
+
+## Kumar — manual Supabase Dashboard cleanup
 
 1. Open Supabase Dashboard → **Authentication** → **Sign In / Providers** → **Phone**
-2. Scroll to **Test phone numbers** section
-3. Add **exactly** these 3 rows (alongside the existing `+919886110312 → 123456`):
-
-| Phone number | OTP |
-|---|---|
-| `+919000000001` | `654321` |
-| `+919000000002` | `246810` |
-| `+919886146312` | `111222` |
-
+2. Scroll to **Test phone numbers**
+3. Delete each row:
+   - `+919886110312`
+   - `+919000000001`
+   - `+919000000002`
+   - `+919886146312`
 4. Click **Save**
 5. Wait ~10 seconds for config to propagate
 
-**Format matters:**
-- Phone must be in full E.164 form — `+91` prefix, no spaces or dashes.
-- OTP must be exactly 6 digits.
+**Once Dashboard is cleared, every incoming OTP goes to MSG91 + Vi DLT.**
+Any valid Indian mobile will receive a real SMS.
 
 ---
 
-## Verify after save
+## Verify real OTP end-to-end
 
-In any browser on [aangan.app/login](https://aangan.app/login):
-
-| Phone | OTP | Expected |
-|---|---|---|
-| 9886110312 | 123456 | /profile-setup or /feed |
-| 9886146312 | 111222 | /profile-setup or /feed |
-| 9000000001 | 654321 | /profile-setup or /feed |
-| 9000000002 | 246810 | /profile-setup or /feed |
-
-All four should land on /profile-setup (for first-time login) or /feed (returning user) without seeing the "गलत OTP है" error.
+1. Open [aangan.app/login](https://aangan.app/login) in a fresh browser
+2. Enter any valid Indian mobile (not on DND for transactional SMS)
+3. Tap **OTP भेजें / Send OTP**
+4. Within 5–15 seconds: SMS from **AANGFM** reading
+   *"Aapka Aangan OTP NNNNNN hai. 10 minute ke liye valid. Kisi ke saath share na karein. -Aangan"*
+5. Enter the 6-digit OTP → tap **Verify** → lands on /profile-setup (new user)
+   or /feed (returning user)
 
 ---
 
-## Why config.toml isn't enough
+## If OTP doesn't arrive
 
-`supabase/config.toml` is **only applied when you run `supabase start` locally**. It does NOT push settings to the production Supabase project. Every change to `auth.sms.test_otp` in config.toml must be manually mirrored in the production Dashboard.
+Check in this order:
 
-This is a Supabase limitation (no config push from CLI to cloud), not a bug in our code.
+1. **Phone on DND?** TRAI DND registry blocks transactional SMS unless the
+   subscriber opts in to commercial category. Test with a phone known to
+   receive bank/transactional SMS.
+2. **MSG91 delivery log** → msg91.com → Logs → filter by mobile `91<number>`
+   → check status (Delivered / Failed / Rejected). If Rejected, the reason
+   column shows whether it was Vi (DLT mismatch) or telco (DND / invalid).
+3. **Supabase edge function logs** → Dashboard → Edge Functions →
+   `send-otp-sms` → Logs. Look for:
+   - `Hook invoked, phone: ***NNNN` — Supabase reached the hook ✓
+   - `OTP sent to ***NNNN via MSG91, request_id: ...` — MSG91 accepted ✓
+   - `MSG91 error: ...` — MSG91 rejected with reason
+   - `MSG91 secrets not configured` — `MSG91_AUTH_KEY` or
+     `MSG91_TEMPLATE_ID` missing from edge-function secrets
+4. **Template ID match** — `MSG91_TEMPLATE_ID` secret must equal the exact
+   Vi-approved Template ID `1107177660181979501`. A wrong ID returns 200
+   from MSG91 but telco silently drops the SMS for DLT mismatch.
+5. **Sender ID match** — `MSG91_SENDER_ID` defaults to `AANGFM`. If MSG91
+   account has a different registered sender, SMS is sent but Vi rejects
+   at the telco gateway.
 
 ---
 
-## Real-user OTP (non-reviewer phones)
+## Re-enabling bypass (if ever needed)
 
-Still blocked on Vi DLT template re-review. 5 templates Pending (including OTP as Transactional), 1 approved (Event Reminder 24h). Once Vi approves the OTP template:
-1. Set `supabase secrets set MSG91_TEMPLATE_OTP=1107177660181979501`
-2. Real-user OTPs via MSG91 start flowing
+If a store submission or emergency requires bypass again:
+1. Add entries to `[auth.sms.test_otp]` in `supabase/config.toml`
+2. Add same phones (country-code-prefixed, without `+`) to `REVIEWER_PHONES`
+   in `supabase/functions/send-otp-sms/index.ts`
+3. Deploy: `supabase functions deploy send-otp-sms --project-ref okzmeuhxodzkbdilvkyu`
+4. Add matching rows in Supabase Dashboard → Auth → Phone → Test numbers
+   (Dashboard is authoritative — without this step the bypass won't work in prod)
 
-Until then, real users on non-reviewer phones will get stuck on /otp with no SMS arriving. The reviewer test_otp map is the only working path.
+All three must match. Dashboard alone is sufficient for prod; config.toml
+and the Set are belt-and-braces for local dev + edge function hygiene.
 
 ---
 
-*Diagnosed [9:25am - 22Apr26] · Aangan v0.9.14 · Kumar to apply Supabase Dashboard change*
+*[9:55am - 22Apr26] · Aangan v0.9.14 · Real SMS live, reviewer bypass retired*

@@ -5,47 +5,22 @@
 
 ---
 
-## Reviewer test credentials
+## Reviewer test credentials — DEPRECATED 2026-04-23
 
-The app uses phone OTP authentication via MSG91 (Vi DLT registered,
-PEID VI-1100093984). Our DLT content template is in the final approval
-queue with Vi. While approval completes, please use the following
-reviewer bypass number to verify the full signup + login flow:
+The reviewer OTP bypass was disabled on 2026-04-23 because the Vi DLT
+OTP template is now approved and real SMS delivery via MSG91 is live.
 
-| Field | Value |
-|---|---|
-| Phone | **9886110312** |
-| Country | India (+91) |
-| OTP | **123456** |
+If you're a reviewer and need to test the app, please:
+- Use any **valid Indian mobile number** with access to SMS
+- Enter the number on the login screen → tap **OTP भेजें / Send OTP**
+- Within ~5–15 seconds you will receive an SMS from sender **AANGFM**
+  reading "Aapka Aangan OTP NNNNNN hai. 10 minute ke liye valid. Kisi
+  ke saath share na karein. - AANGFM"
+- Enter that 6-digit code → tap **सत्यापित करें / Verify**
 
-### Steps
-
-1. Open the Aangan app
-2. On the login screen, enter phone **9886110312**
-3. Tap **Continue / OTP भेजें**
-4. On the OTP screen, enter **123456**
-5. Tap **Verify / सत्यापित करें**
-6. You're logged in. No real SMS is sent — this is a preregistered
-   reviewer-only bypass on our Supabase Auth config.
-
-### Why the bypass exists
-
-Real users get a genuine SMS OTP via MSG91 (DLT-compliant). Reviewers,
-however, don't have an Indian SIM registered with us and the DLT
-template approval is still completing — so a bypass was the only way
-to let external reviewers test signup end-to-end. Once Vi DLT template
-goes live (expected within 72 hours), real SMS flows to every non-
-reviewer number immediately; no app update needed.
-
-### Additional QA numbers
-
-If you'd like to test with a second identity (e.g., inviting a family
-member to an event):
-
-| Phone | OTP |
-|---|---|
-| 9886146312 | 111222 |
-| 9000000001 | 654321 |
+Please reach out to `support@aangan.app` if the OTP does not arrive
+within 60 seconds — we can investigate telco-side delivery issues
+(DND status, carrier blocking) from MSG91 logs.
 
 ---
 
@@ -53,16 +28,15 @@ member to an event):
 
 > **Issue 1:** Users do not receive a verification email/OTP after signing up.
 
-**Root cause:** Aangan is phone-OTP only (no email signup). Real OTP
-delivery is gated on final Vi DLT template approval. Until then, the
-reviewer numbers above bypass MSG91 entirely and complete signup.
+**Status update (2026-04-23):** Real SMS delivery via MSG91 is live —
+Vi DLT OTP template is approved. Any valid Indian mobile receives an
+SMS from sender AANGFM within 5–15 seconds.
 
 > **Issue 2:** Sign up option is not functional.
 
-**Root cause:** Without OTP delivery, the "Continue" button's
-downstream verification step couldn't complete in testing. Using the
-reviewer phone (**9886110312** + OTP **123456**) makes the full
-signup → profile setup → feed flow work.
+**Status update (2026-04-23):** With real OTP delivery live, the full
+signup flow works end-to-end for any valid Indian mobile. No special
+test numbers required.
 
 ---
 
@@ -83,26 +57,20 @@ Bigger feature set than what you last reviewed:
 
 ---
 
-## Kumar — one-time Supabase Dashboard step (required)
+## Kumar — reviewer bypass was DISABLED on 2026-04-23
 
-The edge-function bypass in `send-otp-sms/index.ts` handles reviewer phones
-if Supabase routes them to the hook. For absolute bulletproofing, also add
-them to Supabase Auth so Supabase short-circuits *before* calling the hook:
+All rows in Supabase Dashboard → Authentication → Phone → Test phone
+numbers should be **removed**. Likewise, `supabase/config.toml` is
+cleared of `[auth.sms.test_otp]` entries and the edge function's
+`REVIEWER_PHONES` Set is empty.
 
-1. Supabase Dashboard → **Authentication** → **Sign-In / Up** → **Phone**
-2. Scroll to **Test phone numbers**
-3. Add each row:
-   | Phone number | OTP |
-   |---|---|
-   | `+919886110312` | `123456` |
-   | `+919000000001` | `654321` |
-   | `+919000000002` | `246810` |
-   | `+919886146312` | `111222` |
-4. Save
-
-Once set, reviewers and real users are handled by separate paths:
-- Real numbers → MSG91 (DLT template when approved)
-- Reviewer numbers → fixed OTP, no SMS ever fires
+Every OTP request now flows: client → Supabase Auth → `send-otp-sms`
+hook → MSG91 → Vi DLT → real SMS. If a submission deadline forces us
+to re-enable the bypass (e.g. another store takes Vi down), repopulate:
+1. `supabase/config.toml` `[auth.sms.test_otp]`
+2. `supabase/functions/send-otp-sms/index.ts` `REVIEWER_PHONES` Set
+3. Supabase Dashboard → Auth → Phone → Test phone numbers (authoritative)
+…all three must match for the bypass to work.
 
 ---
 
