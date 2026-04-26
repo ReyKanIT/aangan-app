@@ -23,20 +23,12 @@ const MSG91_TEMPLATE_ID =
 const MSG91_SENDER_ID   = Deno.env.get('MSG91_SENDER_ID') ?? 'AANGFM';
 const WEBHOOK_SECRET    = Deno.env.get('SUPABASE_WEBHOOK_SECRET') ?? '';
 
-// Founder/QA bypass — restored 2026-04-26. Vi DLT OTP template is now
-// approved, but the deployed function had been reading the wrong env-var
-// name (`MSG91_TEMPLATE_ID` vs the runbook's `MSG91_TEMPLATE_OTP`), so
-// every send returned 503 "SMS provider not configured" and the bypass
-// is the only way Kumar can log in until the new deployment + secrets
-// land. Once a real Vi SMS reaches Kumar's phone end-to-end, this set
-// can be emptied again.
-//
-// Prod pairing requirement: Supabase Dashboard → Authentication →
-// Phone → Test phone numbers must hold the matching `+91...` → `OTP`
-// rows; otherwise verifyOtp will still reject the fixed code.
-const REVIEWER_PHONES = new Set<string>([
-  '919886146312', // Kumar (QA / founder)
-]);
+// No bypass. Real SMS via MSG91 + Vi DLT is the only authentication
+// path — works for every Indian mobile, like any standard app. If you
+// ever need a temp bypass again, repopulate this Set AND mirror the
+// rows in Supabase Dashboard → Auth → Phone → Test phone numbers
+// (Dashboard is authoritative in prod).
+const REVIEWER_PHONES = new Set<string>([]);
 
 Deno.serve(async (req: Request) => {
   if (req.method !== 'POST') {
