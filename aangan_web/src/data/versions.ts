@@ -24,6 +24,36 @@ export interface ReleaseNote {
 
 export const RELEASES: ReleaseNote[] = [
   {
+    version: '0.10.1',
+    releasedAt: '2026-04-26T14:30:00+05:30',
+    stamp: '[2:30pm - 26Apr26]',
+    summary: 'Mobile OTP fix — env-var name bug + email fallback + raw error surfacing',
+    highlights: [
+      'send-otp-sms edge function was reading `MSG91_TEMPLATE_ID` but the runbook documents the secret as `MSG91_TEMPLATE_OTP` — every send was returning 503 "SMS provider not configured" silently. Function now reads MSG91_TEMPLATE_OTP first, falls back to MSG91_TEMPLATE_ID, defaults to the known Vi-approved template ID 1107177660181979501.',
+      'Verified via vilpower.in dashboard: all 6 Aangan DLT templates are APPROVED (incl. Aangan OTP transactional, Header AANGFM)',
+      'Restored Kumar QA phone bypass (+919886146312 → 111222) in REVIEWER_PHONES + config.toml so founder can log in for testing while real-SMS pipeline is being verified end-to-end',
+      'Login page: added "ईमेल से लॉगिन / Email login" fallback link below phone form so users still have a passwordless path if SMS fails (Vi pending, MSG91 outage, DND, etc.)',
+      '/otp page: re-enabled email-OTP mode so the email fallback flow actually completes verification',
+      'authStore: added rawError field that preserves the original Supabase / hook message; login page surfaces it via "विवरण दिखाएं — Show details" toggle so future SMS failures are diagnosable instead of hidden behind friendlyError mapping',
+    ],
+    category: 'fix',
+  },
+  {
+    version: '0.10.0',
+    releasedAt: '2026-04-24T10:55:00+05:30',
+    stamp: '[10:55am - 24Apr26]',
+    summary: 'WhatsApp-style login — phone-only with country picker + number confirmation modal',
+    highlights: [
+      'Login page rewritten to mirror WhatsApp flow: country picker → phone → "Is this number correct?" confirmation modal → SMS OTP',
+      'Removed Google / Apple / Email / Password options from the login page (phone-only, like WhatsApp)',
+      'Added 12-country dial-code picker (IN default, plus US/UK/CA/AE/AU/SG/NP/BD/LK/DE/NZ) for Indian diaspora',
+      'authStore.sendOtp / verifyOtp now accept full E.164 numbers (dial code no longer hardcoded to +91)',
+      'OTP screen auto-verifies the moment all 6 digits are entered (no need to tap Verify)',
+      'OTP screen shows the full international number (e.g. +91 98765 43210) so Dadi can spot a typo',
+    ],
+    category: 'feature',
+  },
+  {
     version: '0.9.14',
     releasedAt: '2026-04-19T11:30:00+05:30',
     stamp: '[11:30am - 19Apr26]',

@@ -10,6 +10,11 @@ interface AuthState {
   isLoading: boolean;
   isNewUser: boolean;
   error: string | null;
+  // Raw backend error (Supabase / hook) — kept alongside the friendly
+  // `error` so the login page can show a "Show details" diagnostic when
+  // OTP delivery fails. Helps Kumar see "phone signup disabled" or
+  // "SMS provider error 503" instead of just "OTP नहीं भेज पाए".
+  rawError: string | null;
 
   initialize: () => Promise<void>;
   sendOtp: (phone: string) => Promise<boolean>;
@@ -34,6 +39,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   isLoading: true,
   isNewUser: false,
   error: null,
+  rawError: null,
 
   initialize: async () => {
     try {
@@ -57,27 +63,32 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
   },
 
+  // `phone` is a full E.164 number (e.g. "+919876543210"). The login page
+  // composes it from the country picker + national number. Do not prepend any
+  // dial code here.
   sendOtp: async (phone) => {
-    set({ error: null });
+    set({ error: null, rawError: null });
     try {
-      const { error } = await supabase.auth.signInWithOtp({ phone: `+91${phone}` });
-      if (error) { set({ error: friendlyError(error.message) }); return false; }
+      const { error } = await supabase.auth.signInWithOtp({ phone });
+      if (error) { set({ error: friendlyError(error.message), rawError: error.message }); return false; }
       return true;
     } catch (e: unknown) {
-      set({ error: friendlyError(e instanceof Error ? e.message : 'Failed to send OTP') });
+      const raw = e instanceof Error ? e.message : 'Failed to send OTP';
+      set({ error: friendlyError(raw), rawError: raw });
       return false;
     }
   },
 
   verifyOtp: async (phone, token) => {
-    set({ error: null });
+    set({ error: null, rawError: null });
     try {
-      const { data, error } = await supabase.auth.verifyOtp({ phone: `+91${phone}`, token, type: 'sms' });
-      if (error) { set({ error: friendlyError(error.message) }); return false; }
+      const { data, error } = await supabase.auth.verifyOtp({ phone, token, type: 'sms' });
+      if (error) { set({ error: friendlyError(error.message), rawError: error.message }); return false; }
       if (data.session) { set({ session: data.session }); await get().fetchProfile(); return true; }
       return false;
     } catch (e: unknown) {
-      set({ error: friendlyError(e instanceof Error ? e.message : 'Verification failed') });
+      const raw = e instanceof Error ? e.message : 'Verification failed';
+      set({ error: friendlyError(raw), rawError: raw });
       return false;
     }
   },

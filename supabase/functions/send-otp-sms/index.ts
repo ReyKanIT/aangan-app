@@ -9,17 +9,34 @@
  */
 
 const MSG91_AUTH_KEY     = Deno.env.get('MSG91_AUTH_KEY') ?? '';
-const MSG91_TEMPLATE_ID = Deno.env.get('MSG91_TEMPLATE_ID') ?? '';
+// Vi DLT OTP template — approved 2026-04-26 under PEID VI-1100093984,
+// Header AANGFM. The runbook (MSG91_TEMPLATE_IDS.md) documents the secret
+// name as `MSG91_TEMPLATE_OTP`, but earlier code read `MSG91_TEMPLATE_ID`.
+// Read both, falling back to the known-approved template ID so the
+// function still works if the secret was never set on the deployed
+// project (silent 503 "SMS provider not configured" was the failure
+// mode that kept SMS from going out even after Vi approval).
+const MSG91_TEMPLATE_ID =
+  Deno.env.get('MSG91_TEMPLATE_OTP') ??
+  Deno.env.get('MSG91_TEMPLATE_ID') ??
+  '1107177660181979501';
 const MSG91_SENDER_ID   = Deno.env.get('MSG91_SENDER_ID') ?? 'AANGFM';
 const WEBHOOK_SECRET    = Deno.env.get('SUPABASE_WEBHOOK_SECRET') ?? '';
 
-// Reviewer bypass DISABLED 2026-04-23 per Kumar's instruction — every
-// incoming OTP request now goes through MSG91 + Vi DLT. This lets us
-// validate the real-user pipeline end-to-end. To re-enable (e.g. for a
-// store submission deadline when DLT is rejecting), repopulate this Set
-// AND add matching rows in Supabase Dashboard → Auth → Phone → Test
-// phone numbers (Dashboard is authoritative in prod).
-const REVIEWER_PHONES = new Set<string>([]);
+// Founder/QA bypass — restored 2026-04-26. Vi DLT OTP template is now
+// approved, but the deployed function had been reading the wrong env-var
+// name (`MSG91_TEMPLATE_ID` vs the runbook's `MSG91_TEMPLATE_OTP`), so
+// every send returned 503 "SMS provider not configured" and the bypass
+// is the only way Kumar can log in until the new deployment + secrets
+// land. Once a real Vi SMS reaches Kumar's phone end-to-end, this set
+// can be emptied again.
+//
+// Prod pairing requirement: Supabase Dashboard → Authentication →
+// Phone → Test phone numbers must hold the matching `+91...` → `OTP`
+// rows; otherwise verifyOtp will still reject the fixed code.
+const REVIEWER_PHONES = new Set<string>([
+  '919886146312', // Kumar (QA / founder)
+]);
 
 Deno.serve(async (req: Request) => {
   if (req.method !== 'POST') {

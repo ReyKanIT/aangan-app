@@ -1,31 +1,47 @@
 'use client';
-import { useState, useRef, useEffect, Suspense } from 'react';
+import { useState, useRef, useEffect, useCallback, Suspense } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/stores/authStore';
 import GoldButton from '@/components/ui/GoldButton';
 import { VALIDATION } from '@/lib/constants';
 
+function formatDisplay(phone: string, dial: string): string {
+  if (!phone) return '';
+  const national = phone.startsWith(dial) ? phone.slice(dial.length) : phone;
+  if (dial === '+91' && national.length === 10) return `+91 ${national.slice(0, 5)} ${national.slice(5)}`;
+  if (dial === '+1' && national.length === 10) return `+1 (${national.slice(0, 3)}) ${national.slice(3, 6)}-${national.slice(6)}`;
+  if (national.length > 5) return `${dial} ${national.slice(0, national.length - 5)} ${national.slice(-5)}`;
+  return `${dial} ${national}`;
+}
+
 function OtpForm() {
   const router = useRouter();
   const [phone, setPhone] = useState<string | null>(null);
-  const [email, setEmail] = useState<string | null>(null);
-  const isEmail = !!email;
+  const [emailAddr, setEmailAddr] = useState<string | null>(null);
+  const [dial, setDial] = useState<string>('+91');
 
-  useEffect(() => {
-    const storedPhone = sessionStorage.getItem('otp_phone');
-    const storedEmail = sessionStorage.getItem('otp_email');
-    if (storedPhone) setPhone(storedPhone);
-    else if (storedEmail) setEmail(storedEmail);
-    else router.replace('/login');
-    // Autofocus first OTP box so Dadi doesn't have to tap it
-    setTimeout(() => refs.current[0]?.focus(), 50);
-  }, [router]);
-
-  const { verifyOtp, verifyEmailOtp, sendOtp, sendEmailOtp, session, isNewUser, isLoading, error, setError } = useAuthStore();
+  const { verifyOtp, sendOtp, verifyEmailOtp, sendEmailOtp, session, isNewUser, isLoading, error, setError } = useAuthStore();
   const [digits, setDigits] = useState<string[]>(Array(VALIDATION.otpLength).fill(''));
   const [isVerifying, setIsVerifying] = useState(false);
   const [resendTimer, setResendTimer] = useState(VALIDATION.otpTimer);
   const refs = useRef<(HTMLInputElement | null)[]>([]);
+
+  useEffect(() => {
+    const storedPhone = sessionStorage.getItem('otp_phone');
+    const storedEmail = sessionStorage.getItem('otp_email');
+    const storedDial = sessionStorage.getItem('otp_country_dial');
+    if (storedPhone) {
+      setPhone(storedPhone);
+      if (storedDial) setDial(storedDial);
+    } else if (storedEmail) {
+      setEmailAddr(storedEmail);
+    } else {
+      router.replace('/login');
+      return;
+    }
+    // Autofocus first OTP box so Dadi doesn't have to tap it
+    setTimeout(() => refs.current[0]?.focus(), 50);
+  }, [router]);
 
   useEffect(() => {
     if (session && !isLoading) {
@@ -37,6 +53,33 @@ function OtpForm() {
     const t = setInterval(() => setResendTimer((prev) => Math.max(0, prev - 1)), 1000);
     return () => clearInterval(t);
   }, []);
+
+  const otp = digits.join('');
+  const isComplete = otp.length === VALIDATION.otpLength;
+
+  const handleVerify = useCallback(async () => {
+    if (otp.length !== VALIDATION.otpLength || isVerifying) return;
+    if (!phone && !emailAddr) return;
+    setIsVerifying(true);
+    setError(null);
+    const ok = phone
+      ? await verifyOtp(phone, otp)
+      : await verifyEmailOtp(emailAddr!, otp);
+    if (ok) {
+      sessionStorage.removeItem('otp_phone');
+      sessionStorage.removeItem('otp_country_dial');
+      sessionStorage.removeItem('otp_email');
+    }
+    setIsVerifying(false);
+    if (!ok) setError('गलत OTP है। कृपया फिर से कोशिश करें।');
+  }, [phone, emailAddr, otp, isVerifying, verifyOtp, verifyEmailOtp, setError]);
+
+  // WhatsApp-style: auto-verify as soon as all 6 digits are entered
+  useEffect(() => {
+    if (isComplete && !isVerifying && (phone || emailAddr)) {
+      handleVerify();
+    }
+  }, [isComplete, isVerifying, phone, emailAddr, handleVerify]);
 
   const handleChange = (i: number, val: string) => {
     // Handle SMS auto-fill: if full 6 digits dumped into one input, split them
@@ -76,30 +119,19 @@ function OtpForm() {
     }
   };
 
-  const otp = digits.join('');
-  const isComplete = otp.length === VALIDATION.otpLength;
-
-  const handleVerify = async () => {
-    if (!isComplete || isVerifying) return;
-    setIsVerifying(true);
-    setError(null);
-    let ok = false;
-    if (isEmail && email) ok = await verifyEmailOtp(email, otp);
-    else if (phone) ok = await verifyOtp(phone, otp);
-    if (ok) {
-      sessionStorage.removeItem('otp_phone');
-      sessionStorage.removeItem('otp_email');
-    }
-    setIsVerifying(false);
-    if (!ok) setError('गलत OTP है। कृपया फिर से कोशिश करें।');
-  };
-
   const handleResend = async () => {
     if (resendTimer > 0) return;
+    if (!phone && !emailAddr) return;
     setResendTimer(VALIDATION.otpTimer);
-    if (isEmail && email) await sendEmailOtp(email);
-    else if (phone) await sendOtp(phone);
+    setDigits(Array(VALIDATION.otpLength).fill(''));
+    setError(null);
+    if (phone) await sendOtp(phone);
+    else if (emailAddr) await sendEmailOtp(emailAddr);
+    refs.current[0]?.focus();
   };
+
+  const displayPhone = phone ? formatDisplay(phone, dial) : '';
+  const displayTarget = phone ? displayPhone : (emailAddr ?? '');
 
   return (
     <div className="bg-white rounded-2xl shadow-sm p-8">
@@ -109,17 +141,15 @@ function OtpForm() {
       <h2 className="font-heading text-2xl text-brown mb-2">OTP दर्ज करें</h2>
       <p className="font-body text-base text-brown-light mb-1">Enter OTP</p>
       <p className="font-body text-base text-brown-light mb-2">
-        {isEmail
-          ? `${email} पर भेजा गया`
-          : `+91 ${phone} पर भेजा गया`}
+        {displayTarget} पर भेजा गया
       </p>
       <p className="font-body text-base text-brown-light/70 mb-6">
-        {isEmail
-          ? 'ईमेल में 6 अंकों का कोड आया है — वो यहाँ डालें'
-          : 'SMS में 6 अंकों का कोड आया है — वो यहाँ डालें'}
+        {phone
+          ? 'SMS में 6 अंकों का कोड आया है — वो यहाँ डालें'
+          : 'ईमेल में 6 अंकों का कोड आया है — वो यहाँ डालें'}
         <br />
         <span className="text-base">
-          {isEmail ? 'Check your email for a 6-digit code' : 'Check your SMS for a 6-digit code'}
+          {phone ? 'Check your SMS for a 6-digit code' : 'Check your email for a 6-digit code'}
         </span>
       </p>
 
