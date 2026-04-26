@@ -16,20 +16,48 @@
 
 ---
 
-## Root cause (the one-liner)
+## Root cause (revised [11:05am - 27Apr26])
 
-**Environment variable name mismatch.** The deployed
-`send-otp-sms` edge function read `Deno.env.get('MSG91_TEMPLATE_ID')`,
-but the runbook (`MSG91_TEMPLATE_IDS.md` step "Post-approval wiring")
-told Kumar to set the secret as `MSG91_TEMPLATE_OTP`. Whichever name
-was actually set on the project, *one of them was empty*, the function
-fell into the `if (!MSG91_AUTH_KEY || !MSG91_TEMPLATE_ID) → 503 "SMS
-provider not configured"` branch, and Supabase surfaced it as a
-generic "OTP failed". No SMS was ever attempted.
+**Two independent bugs — both required to be fixed.**
 
-Vi DLT was a red herring — verified live on vilpower.in dashboard
-[2:30pm - 26Apr26] that **all 6** Aangan templates including
-`1107177660181979501` Aangan OTP (Transactional) are **APPROVED**.
+### Bug 1 — env-var name + wrong template ID type (fixed [Apr 26])
+The deployed `send-otp-sms` edge function was sending the **Vi DLT
+template ID** `1107177660181979501` to the MSG91 v5 OTP API as
+`template_id`, but MSG91 expects its own internal **ObjectID**
+`69d0acea4401dcf53a0b4f82`. Compounded by an env-var name mismatch
+(`MSG91_TEMPLATE_ID` vs `MSG91_TEMPLATE_OTP`). Result: MSG91 returned
+`type: error` code 400 ("Invalid template_id"). Fixed by setting the
+secret to MSG91's ObjectID and patching the function to log the raw
+MSG91 response body. After this fix, MSG91 returns `type: success`
+with `request_id` for every call.
+
+### Bug 2 — Vi DLT chain incomplete (open as of [11:00am - 27Apr26])
+Even after MSG91 accepts and forwards, **Vi telco silently drops the
+SMS** because the **PE-TM Chain** does not exist on vilpower.in. The
+PE+Header+Templates ARE all approved; only the TM-PE binding step
+remains. Verified by direct AJAX queries against vilpower.in
+endpoints (the visual filter dropdowns on the portal don't actually
+update the underlying AJAX `Apprstatus` param, which is why earlier
+visual checks made it look like nothing was registered):
+
+| Component | Status | ID |
+|---|---|---|
+| PE — ReyKan Information Technologies pvt Ltd | ✅ Approved | `1101455800000093984` (Reg# VI-1100093984) |
+| Header — **AANGFM** (not "AANGAN") | ✅ Approved 17-Apr-2026 14:26 IST · Permanent | DLT Header ID `1105177634147076603` |
+| Aangan OTP (Transactional) | ✅ Approved 20-Apr-2026 | `1107177660181979501` |
+| Aangan Event Invite (Service-Explicit) | ✅ Approved | `1107177660212465624` |
+| Aangan RSVP Confirm (Service-Explicit) | ✅ Approved | `1107177660234341845` |
+| Aangan Event Reminder 24h (Service-Implicit) | ✅ Approved | `1107177660290782243` |
+| Aangan Event Reminder 2h (Service-Explicit) | ✅ Approved | `1107177660323100746` |
+| Aangan Family Join (Service-Explicit) | ✅ Approved | `1107177660343986635` |
+| TM — WALKOVER WEB SOLUTIONS PRIVATE LIMITED | ❌ **Pending** | `1302157225275643280` |
+| **PE-TM Chain** | ❌ **Not Registered** — server rejects creation: *"Unable to process request now."* | — |
+
+> Sender-ID/Header string note: the original runbook used "AANGFM"
+> (factually correct — Vi-approved). Some text in this doc and in
+> earlier versions of the function header comment referred to
+> "AANGAN" — that was wrong. Vi DLT is authoritative; **AANGFM** is
+> the correct sender ID.
 
 ---
 
@@ -127,14 +155,48 @@ Once a real SMS lands on a non-bypass Indian number end-to-end and the
 MSG91 logs show Delivered:
 
 1. Empty `REVIEWER_PHONES` in `send-otp-sms/index.ts` back to
-   `new Set<string>([])`.
-2. Empty `[auth.sms.test_otp]` in `supabase/config.toml`.
+   `new Set<string>([])`. *(already empty as of [27Apr26])*
+2. Empty `[auth.sms.test_otp]` in `supabase/config.toml`. *(already
+   empty as of [27Apr26])*
 3. Delete the matching rows in Supabase Dashboard → Auth → Phone →
    Test phone numbers.
 4. Re-deploy the function.
 
-Until then, the bypass exists and Kumar's phone short-circuits MSG91.
+---
+
+## Open follow-up [11:05am - 27Apr26]
+
+Two emails sent (drafts kept in `EMAIL_DRAFT_DLT_APPROVAL.md`):
+
+1. **`support@msg91.com`** — asking WALKOVER (TM `1302157225275643280`)
+   to log into vilpower.in as the TM and **accept** the binding from
+   PE `1101455800000093984` so the TM moves Pending → Approved.
+2. **`support@vilpower.in`** (Cc Wasim Ahmed L2 escalation) — asking
+   Vi DLT to confirm whether the Pending is on Vi side or WALKOVER
+   side, and expedite.
+
+When WALKOVER moves to Approved:
+
+1. On vilpower.in: `/pe_tm_binding/addchain/` → create chain
+   "Aangan-WALKOVER" pointing PE `1101455800000093984` → TM
+   `1302157225275643280`. Wait for TM-side accept; chain becomes
+   Approved.
+2. On MSG91 panel (Angular SPA — must be done in foreground browser
+   tab; lazy-loaded route doesn't render in background): SMS →
+   Sender ID → AANGFM → India edit → set DLT Entity / PE ID
+   `1101455800000093984` and DLT Template (OTP)
+   `1107177660181979501`. Save.
+3. From a non-bypass Indian number, trigger an OTP from
+   `aangan.app/login`. Tail edge function logs (expect MSG91
+   `type: success`). MSG91 console → Logs → expect
+   `Status: Delivered`. SMS lands on phone.
+4. If `Delivered` but no SMS on phone: TRAI/sender-ID-vs-PE
+   mismatch — re-check the AANGFM ↔ PE `1101455800000093984` ↔
+   template `1107177660181979501` triplet on MSG91 panel.
+
+Until WALKOVER is Approved and the chain is built, **no further code
+changes** to the OTP path. Bypasses remain off.
 
 ---
 
-*[2:45pm - 26Apr26] · Aangan v0.10.1 · ReyKan IT Private Limited*
+*[11:05am - 27Apr26] · Aangan v0.10.2 · ReyKan IT Private Limited*

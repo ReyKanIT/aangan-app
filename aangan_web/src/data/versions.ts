@@ -24,6 +24,20 @@ export interface ReleaseNote {
 
 export const RELEASES: ReleaseNote[] = [
   {
+    version: '0.10.2',
+    releasedAt: '2026-04-27T11:05:00+05:30',
+    stamp: '[11:05am - 27Apr26]',
+    summary: 'Vi DLT chain audit — root cause of OTP drop is missing PE-TM Chain (TM WALKOVER pending)',
+    highlights: [
+      'Direct AJAX queries against vilpower.in (the visual filters on the portal don\'t actually update the AJAX `Apprstatus` param) confirmed: PE 1101455800000093984 (ReyKan IT), Header AANGFM (1105177634147076603, Approved 17-Apr-2026, Permanent), and all 6 Content Templates (incl. OTP 1107177660181979501) are Approved.',
+      'Telemarketer WALKOVER WEB SOLUTIONS (1302157225275643280) is in Pending status; PE-TM Chain creation server-rejects with "Unable to process request now." — this is why Vi telco silently drops every OTP MSG91 forwards.',
+      'Two approval-request emails sent (drafts saved in EMAIL_DRAFT_DLT_APPROVAL.md): support@msg91.com asking WALKOVER to accept the TM-PE binding, and support@vilpower.in (Cc Wasim Ahmed L2) to confirm/expedite Vi-side approval. No bypass added per founder directive.',
+      'OTP_POSTMORTEM_2026-04-26.md updated with corrected DLT chain status, MSG91 ObjectID vs Vi DLT Template ID distinction, vilpower escalation matrix, and the closeout steps for once WALKOVER moves to Approved.',
+      'No code changes to the OTP path — REVIEWER_PHONES stays empty, [auth.sms.test_otp] stays empty. Real SMS via MSG91 + Vi DLT remains the only auth path.',
+    ],
+    category: 'chore',
+  },
+  {
     version: '0.10.1',
     releasedAt: '2026-04-26T14:30:00+05:30',
     stamp: '[2:30pm - 26Apr26]',
