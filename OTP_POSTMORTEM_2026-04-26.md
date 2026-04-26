@@ -149,6 +149,54 @@ If step 1 logs `MSG91 secrets not configured` → step 4 above.
 
 ---
 
+## MSG91 reply received [1:11am - 28Apr26]
+
+MSG91 Client Experience Team responded to the support email sent in
+v0.10.2. Verbatim:
+
+> We understand that you are facing an issue with your SMS delivery to
+> Vi numbers due to a pending PE-TM (Principal Entity-Telemarketer)
+> binding status on the DLT platform.
+>
+> For our team to approve the pending request on the Vi DLT portal
+> ([vilpower.in](http://vilpower.in)), please follow the instructions
+> outlined in our help document. This guide explains the necessary
+> steps when the status is "Pending at TM."
+>
+> You can find the detailed process here: PE-TM Chain Binding on DLT
+>
+> Once the PE-TM binding is approved on the DLT platform, we will
+> ensure that your Sender ID (AANGFM) is correctly mapped to your
+> Principal Entity ID (1101455800000093984) and the corresponding DLT
+> Template ID on our end.
+>
+> To discuss this case further, you can call at 07316914364.
+> Alternatively, provide two preferred callback times.
+
+**Translation:** the ball is back on Kumar (PE side). MSG91 cannot
+push the binding from their side until Kumar follows their PE-TM Chain
+Binding doc on vilpower.in to either re-submit or accept the chain
+request. Once vilpower.in shows the chain status as
+**Approved/Active** (instead of "Pending at TM"), MSG91 will finalize
+the AANGFM ↔ PE `1101455800000093984` ↔ Template
+`1107177660181979501` mapping on their end.
+
+### Action items (added to the v0.10.2 punch list)
+
+| # | Action | Where | Owner |
+|---|---|---|---|
+| 8a | Open MSG91's "PE-TM Chain Binding on DLT" help doc (link in their email) | email | Kumar |
+| 8b | Log in to [vilpower.in](http://vilpower.in) → Header/Template/Chain Binding section → find pending request to WALKOVER WEB SOLUTIONS (`1302157225275643280`) → action it per MSG91 doc | vilpower.in | Kumar |
+| 8c | Confirm vilpower.in chain status flips to Approved/Active | vilpower.in | Kumar |
+| 8d | Reply to MSG91 thread confirming step 8c so they map AANGFM on their side | email | Kumar |
+| 8e | If doc is unclear, call MSG91 at **07316914364** or reply with two callback slots — DLT portal UX is famously confusing, a 10-min phone call beats email ping-pong | phone | Kumar |
+
+Until 8d closes, real SMS will continue to silently drop on Vi
+numbers. Email-OTP fallback (landed in v0.10.1) remains the only
+working path for real users on Vi.
+
+---
+
 ## Closing the loop
 
 Once a real SMS lands on a non-bypass Indian number end-to-end and the
