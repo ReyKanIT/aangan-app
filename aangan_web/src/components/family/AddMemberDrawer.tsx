@@ -1,10 +1,15 @@
 'use client';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { useFamilyStore } from '@/stores/familyStore';
 import AvatarCircle from '@/components/ui/AvatarCircle';
 import GoldButton from '@/components/ui/GoldButton';
 import InputField from '@/components/ui/InputField';
-import { RELATIONSHIP_MAP } from '@/lib/constants';
+import {
+  RELATIONSHIP_MAP,
+  RELATIONSHIP_OPTIONS,
+  GENDER_OPTIONS,
+  getRelationshipLevel,
+} from '@/lib/constants';
 import type { User } from '@/types/database';
 import { supabase } from '@/lib/supabase/client';
 import { friendlyError } from '@/lib/errorMessages';
@@ -25,6 +30,16 @@ const REVERSE_MAP: Record<string, string> = {
   other: 'other',
 };
 
+const GROUP_LABELS: Record<string, string> = {
+  immediate:    'सीधा परिवार — Immediate Family (L1)',
+  grandparents: 'दादा-दादी / पोता-पोती — Grandparents & Grandchildren (L2)',
+  in_laws:      'ससुराल — In-laws (L2)',
+  great:        'पर-दादा-दादी — Great-grandparents (L3)',
+  extended:     'चाचा-मामा / भतीजा-भांजा / चचेरे — Extended (L3)',
+  other:        'अन्य — Other',
+};
+const GROUP_ORDER = ['immediate', 'grandparents', 'in_laws', 'great', 'extended', 'other'] as const;
+
 type Tab = 'search' | 'manual';
 
 interface Props { onClose: () => void; }
@@ -38,18 +53,45 @@ export default function AddMemberDrawer({ onClose }: Props) {
   const [selected, setSelected] = useState<User | null>(null);
   const debounce = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Manual tab state
+  // Manual tab state — basic
   const [manualName, setManualName] = useState('');
   const [manualNameHindi, setManualNameHindi] = useState('');
   const [isDeceased, setIsDeceased] = useState(false);
-  const [manualVillage, setManualVillage] = useState('');
+
+  // Manual tab state — extended profile
+  const [mobile, setMobile] = useState('');
+  const [email, setEmail] = useState('');
+  const [dob, setDob] = useState('');
+  const [dod, setDod] = useState('');
+  const [gender, setGender] = useState('');
+  const [occupation, setOccupation] = useState('');
+  const [village, setVillage] = useState('');
+  const [address, setAddress] = useState('');
+  const [notes, setNotes] = useState('');
+
+  // Photo upload state
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [photoPreview, setPhotoPreview] = useState<string>('');
+  const photoInputRef = useRef<HTMLInputElement>(null);
 
   // Shared state
   const [relType, setRelType] = useState('');
-  const [level, setLevel] = useState(1);
+  const [customRelLabel, setCustomRelLabel] = useState('');
   const [isAdding, setIsAdding] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+
+  // Auto-derived level from relationship type
+  const level = useMemo(() => (relType ? getRelationshipLevel(relType) : 1), [relType]);
+
+  // Group relationships for the dropdown
+  const grouped = useMemo(() => {
+    const out: Record<string, typeof RELATIONSHIP_OPTIONS> = {};
+    for (const opt of RELATIONSHIP_OPTIONS) {
+      (out[opt.group] ||= []).push(opt);
+    }
+    return out;
+  }, []);
 
   useEffect(() => {
     if (debounce.current) clearTimeout(debounce.current);
@@ -58,6 +100,15 @@ export default function AddMemberDrawer({ onClose }: Props) {
       else clearSearch();
     }, 300);
   }, [query, searchUsers, clearSearch]);
+
+  const onPhotoChosen = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0];
+    if (!f) return;
+    if (f.size > 5 * 1024 * 1024) { setError('फ़ोटो 5MB से बड़ी है — Photo larger than 5MB'); return; }
+    setPhotoFile(f);
+    setPhotoPreview(URL.createObjectURL(f));
+    setError('');
+  };
 
   // ── Add existing user as family member ──
   const handleAddExisting = async () => {
@@ -76,15 +127,44 @@ export default function AddMemberDrawer({ onClose }: Props) {
   const handleAddManual = async () => {
     if (!manualName.trim()) { setError('नाम डालें — Enter name'); return; }
     if (!relType) { setError('रिश्ता चुनें — Select relationship'); return; }
+    if (relType === 'other' && !customRelLabel.trim()) {
+      setError('रिश्ता लिखें — Type the custom relationship name'); return;
+    }
+    if (mobile && !/^[6-9]\d{9}$/.test(mobile.replace(/\D/g, ''))) {
+      setError('मोबाइल नंबर सही नहीं — Invalid mobile number'); return;
+    }
+
     setIsAdding(true);
     setError('');
 
     try {
-      // Insert into offline_family_members table
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.user) { setError('लॉगिन करें — Please login first'); setIsAdding(false); return; }
 
-      const relHindi = RELATIONSHIP_MAP[relType] ?? relType;
+      // 1) Upload photo first (if any)
+      let avatarUrl: string | null = null;
+      if (photoFile) {
+        const ext = photoFile.name.split('.').pop() || 'jpg';
+        const path = `${session.user.id}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+        const { error: upErr } = await supabase.storage
+          .from('family-photos')
+          .upload(path, photoFile, { contentType: photoFile.type, upsert: false });
+        if (upErr) {
+          if (upErr.message?.toLowerCase().includes('bucket') || upErr.message?.toLowerCase().includes('not found')) {
+            setError('फ़ोटो सेवा तैयार हो रही है — Photo storage not ready yet (run migration)');
+          } else {
+            setError(friendlyError(upErr.message));
+          }
+          setIsAdding(false);
+          return;
+        }
+        const { data: pub } = supabase.storage.from('family-photos').getPublicUrl(path);
+        avatarUrl = pub.publicUrl;
+      }
+
+      const relHindi = relType === 'other'
+        ? customRelLabel.trim()
+        : (RELATIONSHIP_MAP[relType] ?? relType);
 
       const { error: dbError } = await supabase.from('offline_family_members').insert({
         added_by: session.user.id,
@@ -92,15 +172,28 @@ export default function AddMemberDrawer({ onClose }: Props) {
         display_name_hindi: manualNameHindi.trim() || null,
         relationship_type: relType,
         relationship_label_hindi: relHindi,
+        custom_relationship_label: relType === 'other' ? customRelLabel.trim() : null,
         connection_level: level,
         is_deceased: isDeceased,
-        village_city: manualVillage.trim() || null,
+        village_city: village.trim() || null,
+        current_address: address.trim() || null,
+        avatar_url: avatarUrl,
+        mobile_number: mobile.trim() || null,
+        email: email.trim() || null,
+        date_of_birth: dob || null,
+        date_of_death: isDeceased ? (dod || null) : null,
+        birth_year: dob ? Number(dob.slice(0, 4)) : null,
+        death_year: isDeceased && dod ? Number(dod.slice(0, 4)) : null,
+        gender: gender || null,
+        occupation: occupation.trim() || null,
+        notes: notes.trim() || null,
       });
 
       if (dbError) {
-        // If table doesn't exist yet, show helpful message
         if (dbError.message?.includes('does not exist') || dbError.code === '42P01') {
-          setError('यह सुविधा जल्दी आ रही है! — This feature is coming soon. Table setup pending.');
+          setError('यह सुविधा जल्दी आ रही है! — Run the latest migration first.');
+        } else if (dbError.code === '42703') {
+          setError('नए field तैयार नहीं — Run migration 20260427_family_member_extended_fields.sql');
         } else {
           setError(friendlyError(dbError.message));
         }
@@ -116,36 +209,58 @@ export default function AddMemberDrawer({ onClose }: Props) {
     setIsAdding(false);
   };
 
-  // ── Relationship + Level picker (shared between tabs) ──
+  // ── Relationship picker — grouped, with locked auto-derived level chip ──
   const renderRelationshipPicker = () => (
-    <>
+    <div className="mb-4">
       <label className="block font-body font-semibold text-brown mb-2">रिश्ता — Relationship</label>
       <select
         value={relType}
         onChange={(e) => setRelType(e.target.value)}
-        className="w-full border-2 border-gray-300 rounded-xl px-4 py-3 font-body text-base focus:border-haldi-gold focus:outline-none mb-4 bg-white"
+        className="w-full border-2 border-gray-300 rounded-xl px-4 py-3 font-body text-base focus:border-haldi-gold focus:outline-none bg-white"
       >
         <option value="">रिश्ता चुनें — Select Relationship</option>
-        {Object.entries(RELATIONSHIP_MAP).map(([key, val]) => (
-          <option key={key} value={key}>{val} — {key.replace(/_/g, ' ')}</option>
+        {GROUP_ORDER.map((g) => (
+          grouped[g] && grouped[g].length > 0 && (
+            <optgroup key={g} label={GROUP_LABELS[g]}>
+              {grouped[g].map((opt) => (
+                <option key={opt.key} value={opt.key}>
+                  {opt.hindi} — {opt.english}
+                </option>
+              ))}
+            </optgroup>
+          )
         ))}
       </select>
 
-      <label className="block font-body font-semibold text-brown mb-2">स्तर — Connection Level</label>
-      <div className="flex items-center gap-4 mb-4">
-        <button onClick={() => setLevel((l) => Math.max(1, l - 1))} className="w-12 h-12 rounded-xl bg-cream-dark text-brown font-bold text-xl min-h-dadi min-w-dadi flex items-center justify-center">−</button>
-        <span className="font-body font-bold text-2xl text-haldi-gold">{level}</span>
-        <button onClick={() => setLevel((l) => Math.min(3, l + 1))} className="w-12 h-12 rounded-xl bg-cream-dark text-brown font-bold text-xl min-h-dadi min-w-dadi flex items-center justify-center">+</button>
-        <span className="font-body text-base text-brown-light">
-          {level === 1 ? 'सीधा — Direct' : level === 2 ? 'करीबी — Close' : 'विस्तारित — Extended'}
+      {relType === 'other' && (
+        <div className="mt-3">
+          <InputField
+            label="रिश्ते का नाम लिखें"
+            sublabel="Custom relationship name"
+            value={customRelLabel}
+            onChange={(e) => setCustomRelLabel(e.target.value)}
+            placeholder="e.g. गुरु, मित्र, धर्मपिता…"
+          />
+        </div>
+      )}
+
+      {/* Auto-derived level — read-only chip */}
+      <div className="mt-3 flex items-center gap-3 bg-cream-dark/50 rounded-xl px-4 py-3">
+        <span className="font-body text-base text-brown-light">स्तर — Level</span>
+        <span className="bg-haldi-gold-light text-haldi-gold-dark font-bold px-3 py-1 rounded-full text-base">
+          L{level}
         </span>
+        <span className="font-body text-base text-brown-light">
+          {level === 1 ? 'सीधा परिवार — Direct' : level === 2 ? 'करीबी — Close' : 'विस्तारित — Extended'}
+        </span>
+        <span className="ml-auto text-base text-brown-light italic">रिश्ते से तय</span>
       </div>
-    </>
+    </div>
   );
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40" onClick={onClose}>
-      <div className="w-full max-w-md bg-white rounded-2xl p-6 mx-4 max-h-[85vh] overflow-y-auto shadow-xl" onClick={(e) => e.stopPropagation()}>
+      <div className="w-full max-w-md bg-white rounded-2xl p-6 mx-4 max-h-[90vh] overflow-y-auto shadow-xl" onClick={(e) => e.stopPropagation()}>
         {/* Header */}
         <div className="flex justify-between items-center mb-4">
           <h3 className="font-heading text-xl text-brown">परिवार जोड़ें</h3>
@@ -170,16 +285,11 @@ export default function AddMemberDrawer({ onClose }: Props) {
           </button>
         </div>
 
-        {/* Error / Success */}
         {error && (
-          <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 mb-4 font-body text-base text-error">
-            {error}
-          </div>
+          <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 mb-4 font-body text-base text-error">{error}</div>
         )}
         {success && (
-          <div className="bg-green-50 border border-green-200 rounded-xl px-4 py-3 mb-4 font-body text-base text-mehndi-green">
-            ✅ {success}
-          </div>
+          <div className="bg-green-50 border border-green-200 rounded-xl px-4 py-3 mb-4 font-body text-base text-mehndi-green">✅ {success}</div>
         )}
 
         {/* ═══ SEARCH TAB ═══ */}
@@ -224,7 +334,6 @@ export default function AddMemberDrawer({ onClose }: Props) {
               </div>
             ) : (
               <div>
-                {/* Selected user card */}
                 <div className="flex items-center gap-3 bg-cream-dark rounded-xl p-3 mb-4">
                   <AvatarCircle src={selected.avatar_url} name={selected.display_name_hindi ?? selected.display_name} size={48} />
                   <div>
@@ -249,8 +358,48 @@ export default function AddMemberDrawer({ onClose }: Props) {
             <p className="font-body text-base text-brown-light mb-2">
               जो ऐप पर नहीं हैं या जो अब नहीं रहे, उन्हें यहाँ जोड़ें
               <br />
-              <span className="text-brown-light/70">Add members not on the app, or who have passed away</span>
+              <span className="text-brown-light/70">Add members not on the app, or who have passed away (photo allowed)</span>
             </p>
+
+            {/* Photo upload */}
+            <div className="flex items-center gap-4">
+              <button
+                type="button"
+                onClick={() => photoInputRef.current?.click()}
+                className="w-20 h-20 rounded-full border-2 border-dashed border-haldi-gold flex items-center justify-center bg-cream-dark/40 hover:bg-cream-dark transition-colors overflow-hidden"
+                aria-label="फ़ोटो जोड़ें — Upload photo"
+              >
+                {photoPreview ? (
+                  /* eslint-disable-next-line @next/next/no-img-element */
+                  <img src={photoPreview} alt="preview" className="w-full h-full object-cover" />
+                ) : (
+                  <span className="text-3xl">📷</span>
+                )}
+              </button>
+              <div>
+                <p className="font-body font-semibold text-brown text-base">
+                  {photoFile ? 'फ़ोटो चुनी गई' : 'फ़ोटो जोड़ें'}
+                </p>
+                <p className="font-body text-base text-brown-light">
+                  {photoFile ? 'Tap to change' : 'Optional — works for everyone, including 🕊️'}
+                </p>
+                {photoFile && (
+                  <button
+                    onClick={() => { setPhotoFile(null); setPhotoPreview(''); if (photoInputRef.current) photoInputRef.current.value = ''; }}
+                    className="font-body text-base text-error mt-1 underline"
+                  >
+                    हटाएं — Remove
+                  </button>
+                )}
+              </div>
+              <input
+                ref={photoInputRef}
+                type="file"
+                accept="image/*"
+                onChange={onPhotoChosen}
+                className="hidden"
+              />
+            </div>
 
             <InputField
               label="नाम"
@@ -258,7 +407,6 @@ export default function AddMemberDrawer({ onClose }: Props) {
               value={manualName}
               onChange={(e) => setManualName(e.target.value)}
               placeholder="e.g. Ramesh Kumar"
-              autoFocus
             />
 
             <InputField
@@ -269,13 +417,8 @@ export default function AddMemberDrawer({ onClose }: Props) {
               placeholder="e.g. रमेश कुमार"
             />
 
-            <InputField
-              label="गाँव / शहर"
-              sublabel="Village / City (optional)"
-              value={manualVillage}
-              onChange={(e) => setManualVillage(e.target.value)}
-              placeholder="e.g. Jaipur"
-            />
+            {/* Relationship + auto level */}
+            {renderRelationshipPicker()}
 
             {/* Deceased toggle */}
             <div className="flex items-center gap-3 bg-cream/50 rounded-xl p-4 border border-gray-100">
@@ -296,7 +439,98 @@ export default function AddMemberDrawer({ onClose }: Props) {
               {isDeceased && <span className="ml-auto text-2xl">🕊️</span>}
             </div>
 
-            {renderRelationshipPicker()}
+            {/* Contact */}
+            <InputField
+              label="मोबाइल नंबर"
+              sublabel="Mobile (optional)"
+              prefix="+91"
+              value={mobile}
+              onChange={(e) => setMobile(e.target.value)}
+              placeholder="10-digit mobile"
+              inputMode="numeric"
+              maxLength={10}
+            />
+
+            <InputField
+              label="ईमेल"
+              sublabel="Email (optional)"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="name@example.com"
+            />
+
+            {/* Dates */}
+            <InputField
+              label="जन्म तिथि"
+              sublabel="Date of birth (optional)"
+              type="date"
+              value={dob}
+              onChange={(e) => setDob(e.target.value)}
+            />
+
+            {isDeceased && (
+              <InputField
+                label="मृत्यु तिथि"
+                sublabel="Date of passing (optional)"
+                type="date"
+                value={dod}
+                onChange={(e) => setDod(e.target.value)}
+              />
+            )}
+
+            {/* Gender */}
+            <div>
+              <label className="block font-body font-semibold text-brown mb-2">लिंग — Gender</label>
+              <div className="flex gap-2">
+                {GENDER_OPTIONS.map((g) => (
+                  <button
+                    key={g.value}
+                    type="button"
+                    onClick={() => setGender(g.value)}
+                    className={`flex-1 py-3 rounded-xl font-body text-base font-semibold border-2 transition-all min-h-dadi ${gender === g.value ? 'border-haldi-gold bg-haldi-gold-light text-haldi-gold-dark' : 'border-gray-200 bg-white text-brown-light'}`}
+                  >
+                    {g.hindi}
+                    <span className="block text-base font-normal opacity-70">{g.english}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <InputField
+              label="व्यवसाय"
+              sublabel="Occupation (optional)"
+              value={occupation}
+              onChange={(e) => setOccupation(e.target.value)}
+              placeholder="e.g. Farmer, Teacher, Retired"
+            />
+
+            <InputField
+              label="गाँव / पैतृक स्थान"
+              sublabel="Native village / city (optional)"
+              value={village}
+              onChange={(e) => setVillage(e.target.value)}
+              placeholder="e.g. Jaipur"
+            />
+
+            <InputField
+              label="वर्तमान पता"
+              sublabel="Current address (optional)"
+              value={address}
+              onChange={(e) => setAddress(e.target.value)}
+              placeholder="House, street, city"
+            />
+
+            <div>
+              <label className="block font-body font-semibold text-brown mb-2">नोट्स — Notes (optional)</label>
+              <textarea
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                rows={3}
+                placeholder="कोई याद, विशेष बात…"
+                className="w-full border-2 border-gray-300 rounded-xl px-4 py-3 font-body text-base focus:border-haldi-gold focus:outline-none bg-white resize-none"
+              />
+            </div>
 
             <GoldButton className="w-full" loading={isAdding} onClick={handleAddManual}>
               {isDeceased ? '🕊️ स्मृति में जोड़ें — Add in Memory' : '✍️ परिवार में जोड़ें — Add to Family'}
