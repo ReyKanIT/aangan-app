@@ -3,8 +3,12 @@
 import { useState, useEffect, useCallback } from 'react';
 import {
   loadEvents,
+  loadEventsFromSupabase,
   addEvent,
+  addEventToSupabase,
   deleteEvent,
+  deleteEventFromSupabase,
+  migrateLocalToSupabase,
   buildEventFromGregorian,
   upcoming,
   formatEventLabel,
@@ -40,9 +44,22 @@ export default function TithiRemindersPage() {
   const [upcomingList, setUpcomingList] = useState<UpcomingMatch[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [storageMode, setStorageMode] = useState<'supabase' | 'local'>('local');
 
-  const refresh = useCallback(() => {
-    const all = loadEvents();
+  const refresh = useCallback(async () => {
+    // Try Supabase first; fall back to localStorage if the table isn't ready
+    const remote = await loadEventsFromSupabase();
+    let all: TithiEvent[];
+    if (remote !== null) {
+      // Best-effort: push any localStorage items into Supabase on first sync
+      await migrateLocalToSupabase();
+      const after = await loadEventsFromSupabase();
+      all = after ?? remote;
+      setStorageMode('supabase');
+    } else {
+      all = loadEvents();
+      setStorageMode('local');
+    }
     setEvents(all);
     // Compute upcoming — runs ~60 panchang calls per event, may take a beat
     const up = upcoming(all, 60);
@@ -52,8 +69,12 @@ export default function TithiRemindersPage() {
 
   useEffect(() => { refresh(); }, [refresh]);
 
-  function handleDelete(id: string) {
-    deleteEvent(id);
+  async function handleDelete(id: string) {
+    if (storageMode === 'supabase') {
+      await deleteEventFromSupabase(id);
+    } else {
+      deleteEvent(id);
+    }
     refresh();
   }
 
@@ -80,6 +101,7 @@ export default function TithiRemindersPage() {
       {/* Add form */}
       {showForm && (
         <AddEventForm
+          storageMode={storageMode}
           onSave={() => { refresh(); setShowForm(false); }}
           onCancel={() => setShowForm(false)}
         />
@@ -119,6 +141,11 @@ export default function TithiRemindersPage() {
                   <p className="text-xs text-brown-light/70">
                     {u.date.toLocaleDateString('hi-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
                   </p>
+                  {u.calendarSource && (
+                    <span className={`inline-block mt-1 px-2 py-0.5 rounded-full text-xs font-semibold ${u.calendarSource === 'tithi' ? 'bg-mehndi-green/15 text-mehndi-green' : 'bg-haldi-gold-light text-haldi-gold-dark'}`}>
+                      {u.calendarSource === 'tithi' ? '🌙 तिथि' : '📅 तारीख़'}
+                    </span>
+                  )}
                 </div>
               </div>
             ))}
@@ -191,8 +218,15 @@ export default function TithiRemindersPage() {
           (lunar day), not the Gregorian calendar date. This tool automatically finds when
           your events recur each year.
         </p>
-        <p className="text-xs text-brown-light/50 mt-3">
-          Data stored locally on this device. Supabase sync coming soon.
+        <p className="font-body text-base text-brown-light leading-relaxed mt-2">
+          <strong>दोहरी कैलेंडर सूचना:</strong> ग्रेगोरियन तारीख़ के साथ event जोड़ने पर
+          हर साल हिंदी तिथि <em>और</em> English date — दोनों दिन reminder मिलेगा।
+          (e.g., 15-Aug-1980 birthday → हर 15-Aug को AND उस दिन की तिथि पर हर साल)
+        </p>
+        <p className="text-xs text-brown-light/60 mt-3">
+          {storageMode === 'supabase'
+            ? '✅ Supabase synced — reminders fire from server cron daily'
+            : '⚠️ localStorage only — apply migration 20260428b_tithi_events_apply.sql to enable cross-device sync + push notifications'}
         </p>
       </div>
     </div>
@@ -201,7 +235,7 @@ export default function TithiRemindersPage() {
 
 // ─── Add Event Form ───────────────────────────────────────────────────────────
 
-function AddEventForm({ onSave, onCancel }: { onSave: () => void; onCancel: () => void }) {
+function AddEventForm({ storageMode, onSave, onCancel }: { storageMode: 'supabase' | 'local'; onSave: () => void; onCancel: () => void }) {
   const [name, setName] = useState('');
   const [type, setType] = useState<TithiEventType>('birthday');
   const [mode, setMode] = useState<'gregorian' | 'manual'>('gregorian');
@@ -224,25 +258,31 @@ function AddEventForm({ onSave, onCancel }: { onSave: () => void; onCancel: () =
     }
   }, [gregDate, mode]);
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!name.trim()) return;
 
+    let draft: Omit<TithiEvent, 'id' | 'createdAt'>;
     if (mode === 'gregorian') {
       if (!gregDate) return;
       const d = new Date(gregDate + 'T06:00:00+05:30');
-      const draft = buildEventFromGregorian(name.trim(), type, d, { note: note.trim() || undefined });
-      addEvent(draft);
+      draft = buildEventFromGregorian(name.trim(), type, d, { note: note.trim() || undefined });
     } else {
       const paksha: 'shukla' | 'krishna' = tithiNum <= 15 ? 'shukla' : 'krishna';
-      addEvent({
+      draft = {
         name: name.trim(),
         type,
         tithiNumber: tithiNum,
         paksha,
         masa,
         note: note.trim() || undefined,
-      });
+      };
+    }
+
+    if (storageMode === 'supabase') {
+      await addEventToSupabase(draft);
+    } else {
+      addEvent(draft);
     }
     onSave();
   }

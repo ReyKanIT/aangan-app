@@ -9,6 +9,10 @@ import {
   istDateStr,
   addDaysIST,
 } from '@/lib/festivals';
+import {
+  upcoming as upcomingTithiEvents,
+  type TithiEvent,
+} from '@/services/tithiEventService';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Daily Panchang + Festival nudge cron
@@ -329,14 +333,14 @@ export async function GET(request: NextRequest) {
     if (dailyRows.length > 0) dailyInserted = await insertBatched(dailyRows);
     if (dedupedFestivalRows.length > 0) festivalInserted = await insertBatched(dedupedFestivalRows);
 
-    // ─── Push notifications: daily broadcast + festival reminders ───
+    // ─── Push setup (declared early so Pass C can append festival-style
+    // pushes too — actual send happens at the bottom of the handler) ───
     let pushSent = 0;
     const pushTokenByUser = new Map(
       allUsers
         .filter((u) => u.push_token && u.push_token.startsWith('ExponentPushToken'))
         .map((u) => [u.id, u.push_token!])
     );
-
     const pushBatch: { to: string; title: string; body: string; data: Record<string, unknown>; sound: 'default'; channelId: string }[] = [];
     if (!dailyAlreadySent) {
       for (const [, token] of pushTokenByUser) {
@@ -363,6 +367,121 @@ export async function GET(request: NextRequest) {
       });
     }
 
+    // ─── Pass C: per-user personal events (birthdays/anniversaries/shraddha)
+    // Dual-calendar: each user's tithi_events fire on BOTH the next tithi
+    // anniversary AND the next Gregorian (English-date) anniversary, when
+    // either falls within the event's notify_days_before window.
+    let personalInserted = 0;
+    let personalEventsLoaded = 0;
+    try {
+      const { data: tithiEventRows } = await supabase
+        .from('tithi_events')
+        .select('id, user_id, name, type, tithi_number, paksha, masa, gregorian_ref, note, notify_days_before')
+        .eq('is_active', true);
+
+      type TithiRow = {
+        id: string; user_id: string; name: string; type: TithiEvent['type'];
+        tithi_number: number; paksha: 'shukla' | 'krishna'; masa: number;
+        gregorian_ref: string | null; note: string | null; notify_days_before: number;
+      };
+      personalEventsLoaded = (tithiEventRows ?? []).length;
+
+      // Group by user
+      const eventsByUser = new Map<string, { row: TithiRow; event: TithiEvent }[]>();
+      for (const r of (tithiEventRows ?? []) as TithiRow[]) {
+        const event: TithiEvent = {
+          id: r.id, name: r.name, type: r.type,
+          tithiNumber: r.tithi_number, paksha: r.paksha, masa: r.masa,
+          gregorianReference: r.gregorian_ref ?? undefined,
+          note: r.note ?? undefined,
+          createdAt: '',
+        };
+        if (!eventsByUser.has(r.user_id)) eventsByUser.set(r.user_id, []);
+        eventsByUser.get(r.user_id)!.push({ row: r, event });
+      }
+
+      const todayDate = new Date(todayStr + 'T06:00:00+05:30');
+      const personalRows: NotificationRow[] = [];
+      const personalKeys: { user_id: string; event_id: string; date: string; src: string }[] = [];
+
+      for (const user of allUsers) {
+        const userEvents = eventsByUser.get(user.id);
+        if (!userEvents || userEvents.length === 0) continue;
+        // Compute upcoming (both tithi + Gregorian) within next 14 days
+        const matches = upcomingTithiEvents(userEvents.map((x) => x.event), 14, todayDate);
+        for (const m of matches) {
+          const er = userEvents.find((x) => x.event.id === m.event.id)?.row;
+          if (!er) continue;
+          // Apply per-event lead time
+          if (m.daysAway > er.notify_days_before) continue;
+
+          const icon = er.type === 'birthday' ? '🎂' : er.type === 'anniversary' ? '💍' :
+                       er.type === 'shraddha' ? '🙏' : er.type === 'festival' ? '🎉' : '📌';
+          const calendarTagHi = m.calendarSource === 'tithi' ? '(तिथि)' : '(तारीख़)';
+          const calendarTagEn = m.calendarSource === 'tithi' ? '(by tithi)' : '(by date)';
+          const daysHi = m.daysAway === 0 ? 'आज' : m.daysAway === 1 ? 'कल' : `${m.daysAway} दिन बाद`;
+          const daysEn = m.daysAway === 0 ? 'today' : m.daysAway === 1 ? 'tomorrow' : `in ${m.daysAway} days`;
+
+          const dateKey = istDateStr(m.date);
+          const srcKey = m.calendarSource ?? 'tithi';
+          personalRows.push({
+            user_id: user.id,
+            type: 'general',
+            title: `${icon} ${er.name} — ${daysHi} ${calendarTagHi}`,
+            title_hindi: `${icon} ${er.name} — ${daysHi} ${calendarTagHi}`,
+            body: `${er.name} ${daysEn} ${calendarTagEn}${er.note ? ' — ' + er.note : ''}`,
+            body_hindi: `${er.name} ${daysHi} ${calendarTagHi}${er.note ? ' — ' + er.note : ''}`,
+            data: { nudge_type: 'tithi_event', event_id: er.id, date: dateKey, calendar_source: srcKey, days_until: m.daysAway },
+            is_read: false,
+          });
+          personalKeys.push({ user_id: user.id, event_id: er.id, date: dateKey, src: srcKey });
+        }
+      }
+
+      // Per (user, event, target-date, calendar) dedup — once a reminder
+      // fires for a specific anniversary date, don't fire it again on
+      // subsequent cron runs in the lead-window.
+      let dedupedPersonalRows = personalRows;
+      if (personalKeys.length > 0) {
+        const userIds = Array.from(new Set(personalKeys.map((k) => k.user_id)));
+        const { data: existing } = await supabase
+          .from('notifications')
+          .select('user_id, data')
+          .in('user_id', userIds)
+          .contains('data', { nudge_type: 'tithi_event' });
+        const seen = new Set<string>();
+        for (const row of (existing ?? []) as { user_id: string; data: { event_id?: string; date?: string; calendar_source?: string } }[]) {
+          if (row.data?.event_id && row.data?.date) {
+            seen.add(`${row.user_id}:${row.data.event_id}:${row.data.date}:${row.data.calendar_source ?? 'tithi'}`);
+          }
+        }
+        dedupedPersonalRows = personalRows.filter((_, i) => {
+          const k = personalKeys[i];
+          return !seen.has(`${k.user_id}:${k.event_id}:${k.date}:${k.src}`);
+        });
+      }
+
+      if (dedupedPersonalRows.length > 0) personalInserted = await insertBatched(dedupedPersonalRows);
+
+      // Push fan-out for personal events
+      for (const r of dedupedPersonalRows) {
+        const token = pushTokenByUser.get(r.user_id);
+        if (!token) continue;
+        pushBatch.push({
+          to: token,
+          title: r.title_hindi,
+          body: r.body_hindi,
+          data: { screen: 'TithiReminders', ...(r.data as Record<string, unknown>) },
+          sound: 'default',
+          channelId: 'reminders',
+        });
+      }
+    } catch (e) {
+      // Table may not be applied yet — log and skip Pass C gracefully.
+      console.error('Pass C (personal events) error:', e);
+    }
+
+    // ─── Send all queued push notifications (daily + festival + personal)
     if (pushBatch.length > 0) {
       const PUSH_BATCH = 100;
       for (let i = 0; i < pushBatch.length; i += PUSH_BATCH) {
@@ -381,7 +500,7 @@ export async function GET(request: NextRequest) {
     }
 
     return NextResponse.json({
-      message: 'Panchang + festival nudges processed',
+      message: 'Panchang + festival + personal-event nudges processed',
       stats: {
         usersTotal: allUsers.length,
         dailyAlreadySent,
@@ -389,6 +508,8 @@ export async function GET(request: NextRequest) {
         dailyInserted,
         festivalsLoaded: festivals.length,
         festivalRemindersInserted: festivalInserted,
+        personalEventsLoaded,
+        personalRemindersInserted: personalInserted,
         pushNotificationsSent: pushSent,
       },
     });

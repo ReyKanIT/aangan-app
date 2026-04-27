@@ -48,6 +48,9 @@ export interface UpcomingMatch {
   event: TithiEvent;
   date: Date;
   daysAway: number;
+  /** Which calendar produced this match — 'tithi' for the lunar
+   *  recurrence, 'gregorian' for the year-over-year English-date match. */
+  calendarSource?: 'tithi' | 'gregorian';
 }
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -175,7 +178,41 @@ export function nextOccurrence(
 }
 
 /**
+ * Find the next Gregorian-anniversary date (year-over-year on the same
+ * month+day as the original `gregorianReference`). Returns null if the
+ * event has no Gregorian reference set. Handles Feb 29 → Feb 28 fallback
+ * in non-leap years.
+ */
+export function nextGregorianAnniversary(
+  event: TithiEvent,
+  from: Date = new Date(),
+): Date | null {
+  if (!event.gregorianReference) return null;
+  const ref = new Date(event.gregorianReference + 'T00:00:00+05:30');
+  if (Number.isNaN(ref.getTime())) return null;
+  const refMonth = ref.getMonth();
+  const refDay = ref.getDate();
+
+  const fromMidnight = new Date(from);
+  fromMidnight.setHours(0, 0, 0, 0);
+
+  // Try this year first; if already past, roll to next year.
+  for (let yearOffset = 0; yearOffset < 2; yearOffset++) {
+    const year = fromMidnight.getFullYear() + yearOffset;
+    let candidate = new Date(year, refMonth, refDay);
+    // Feb 29 fallback to Feb 28 in non-leap years
+    if (candidate.getMonth() !== refMonth) {
+      candidate = new Date(year, refMonth, refDay - 1);
+    }
+    if (candidate >= fromMidnight) return candidate;
+  }
+  return null;
+}
+
+/**
  * Upcoming events sorted by nearest first, within `daysAhead` window.
+ * For each event we emit BOTH the next tithi-anniversary and the next
+ * Gregorian-anniversary (if the event has a `gregorianReference`).
  * Events with no match inside the window are excluded.
  */
 export function upcoming(
@@ -191,13 +228,142 @@ export function upcoming(
   horizon.setDate(horizon.getDate() + daysAhead);
 
   for (const event of events) {
-    const next = nextOccurrence(event, fromMidnight, location);
-    if (!next) continue;
-    if (next > horizon) continue;
-    const daysAway = Math.round((next.getTime() - fromMidnight.getTime()) / 86400000);
-    results.push({ event, date: next, daysAway });
+    // Tithi-calendar match (always)
+    const nextTithi = nextOccurrence(event, fromMidnight, location);
+    if (nextTithi && nextTithi <= horizon) {
+      const daysAway = Math.round((nextTithi.getTime() - fromMidnight.getTime()) / 86400000);
+      results.push({ event, date: nextTithi, daysAway, calendarSource: 'tithi' });
+    }
+    // Gregorian-calendar match (only when reference date is set)
+    const nextGreg = nextGregorianAnniversary(event, fromMidnight);
+    if (nextGreg && nextGreg <= horizon) {
+      const daysAway = Math.round((nextGreg.getTime() - fromMidnight.getTime()) / 86400000);
+      // Avoid duplicate entry if both calendars resolve to the SAME day
+      // (rare — only when birth year's tithi happens to land on the same
+      // Gregorian month/day as the original date).
+      const sameDayAsTithi = nextTithi && Math.abs(nextGreg.getTime() - nextTithi.getTime()) < 86400000;
+      if (!sameDayAsTithi) {
+        results.push({ event, date: nextGreg, daysAway, calendarSource: 'gregorian' });
+      }
+    }
   }
   return results.sort((a, b) => a.daysAway - b.daysAway);
+}
+
+// ─── Supabase storage (primary, when migration 20260428b is applied) ────────
+
+import { supabase } from '@/lib/supabase/client';
+
+interface TithiEventRow {
+  id: string;
+  user_id: string;
+  person_id: string | null;
+  name: string;
+  type: TithiEventType;
+  tithi_number: number;
+  paksha: 'shukla' | 'krishna';
+  masa: number;
+  gregorian_ref: string | null;
+  note: string | null;
+  notify_days_before: number;
+  is_active: boolean;
+  created_at: string;
+}
+
+function rowToEvent(r: TithiEventRow): TithiEvent {
+  return {
+    id: r.id,
+    name: r.name,
+    type: r.type,
+    tithiNumber: r.tithi_number,
+    paksha: r.paksha,
+    masa: r.masa,
+    gregorianReference: r.gregorian_ref ?? undefined,
+    note: r.note ?? undefined,
+    personId: r.person_id ?? undefined,
+    createdAt: r.created_at,
+  };
+}
+
+/**
+ * Load events from Supabase (returns null if the table does not exist
+ * yet — caller falls back to localStorage in that case).
+ */
+export async function loadEventsFromSupabase(): Promise<TithiEvent[] | null> {
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.user) return null;
+    const { data, error } = await supabase
+      .from('tithi_events')
+      .select('*')
+      .eq('user_id', session.user.id)
+      .eq('is_active', true)
+      .order('created_at', { ascending: true });
+    if (error) {
+      const msg = error.message || '';
+      if (msg.includes('does not exist') || msg.includes('relation') || error.code === '42P01') return null;
+      throw error;
+    }
+    return ((data ?? []) as TithiEventRow[]).map(rowToEvent);
+  } catch {
+    return null;
+  }
+}
+
+export async function addEventToSupabase(
+  draft: Omit<TithiEvent, 'id' | 'createdAt'>,
+): Promise<TithiEvent | null> {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session?.user) return null;
+  const { data, error } = await supabase
+    .from('tithi_events')
+    .insert({
+      user_id: session.user.id,
+      person_id: draft.personId ?? null,
+      name: draft.name,
+      type: draft.type,
+      tithi_number: draft.tithiNumber,
+      paksha: draft.paksha,
+      masa: draft.masa,
+      gregorian_ref: draft.gregorianReference ?? null,
+      note: draft.note ?? null,
+    })
+    .select('*')
+    .single();
+  if (error || !data) return null;
+  return rowToEvent(data as TithiEventRow);
+}
+
+export async function deleteEventFromSupabase(id: string): Promise<boolean> {
+  const { error } = await supabase.from('tithi_events').delete().eq('id', id);
+  return !error;
+}
+
+/**
+ * Best-effort migration: if there are localStorage events but the
+ * Supabase table is now reachable, push them up so the user keeps their
+ * data when the cron starts firing notifications. Idempotent — events
+ * already in Supabase are not duplicated (matched by name+tithi tuple).
+ */
+export async function migrateLocalToSupabase(): Promise<{ migrated: number; skipped: number } | null> {
+  const local = loadEvents();
+  if (local.length === 0) return { migrated: 0, skipped: 0 };
+  const remote = await loadEventsFromSupabase();
+  if (remote === null) return null; // table not ready
+  const remoteKeys = new Set(remote.map((e) => `${e.name}|${e.tithiNumber}|${e.paksha}|${e.masa}`));
+  let migrated = 0;
+  let skipped = 0;
+  for (const e of local) {
+    const key = `${e.name}|${e.tithiNumber}|${e.paksha}|${e.masa}`;
+    if (remoteKeys.has(key)) { skipped++; continue; }
+    const inserted = await addEventToSupabase({
+      name: e.name, type: e.type, tithiNumber: e.tithiNumber,
+      paksha: e.paksha, masa: e.masa,
+      gregorianReference: e.gregorianReference, note: e.note, personId: e.personId,
+    });
+    if (inserted) migrated++;
+  }
+  return { migrated, skipped };
 }
 
 // ─── Storage (localStorage MVP) ───────────────────────────────────────────────
