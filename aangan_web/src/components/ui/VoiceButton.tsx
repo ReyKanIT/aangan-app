@@ -63,7 +63,8 @@ export default function VoiceButton({ onResult, lang = 'hi-IN', className }: Voi
     recognitionRef.current = recognition;
 
     recognition.onresult = (event: SpeechRecognitionEvent) => {
-      const transcript = event.results[event.results.length - 1][0].transcript;
+      const last = event.results[event.results.length - 1];
+      const transcript = last?.[0]?.transcript ?? '';
       if (transcript.trim()) {
         onResult(transcript.trim());
       }

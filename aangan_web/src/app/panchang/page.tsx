@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { getPanchang, moonPhaseEmoji, yogaDescription, DELHI } from '@/services/panchangService';
 import PublicShareCTA from '@/components/ui/PublicShareCTA';
+import { RELEASES } from '@/data/versions';
 
 function formatDateHindi(d: Date): string {
   const months = [
@@ -189,7 +190,7 @@ export default function PanchangPage() {
             <a href="/privacy" className="hover:text-haldi-gold transition-colors">Privacy</a>
             <a href="/terms" className="hover:text-haldi-gold transition-colors">Terms</a>
           </div>
-          <p>&copy; 2026 ReyKan IT &middot; v0.12.1</p>
+          <p>&copy; 2026 ReyKan IT &middot; v{RELEASES[0].version}</p>
         </div>
       </footer>
 

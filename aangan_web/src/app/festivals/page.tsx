@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import PublicShareCTA from '@/components/ui/PublicShareCTA';
+import { RELEASES } from '@/data/versions';
 
 export const metadata: Metadata = {
   title: 'भारतीय त्योहार 2026 — Indian Festivals Calendar',
@@ -205,7 +206,7 @@ export default function FestivalsPage() {
             <a href="/privacy" className="hover:text-haldi-gold transition-colors">Privacy</a>
             <a href="/terms" className="hover:text-haldi-gold transition-colors">Terms</a>
           </div>
-          <p>&copy; 2026 ReyKan IT &middot; v0.12.1</p>
+          <p>&copy; 2026 ReyKan IT &middot; v{RELEASES[0].version}</p>
         </div>
       </footer>
 
