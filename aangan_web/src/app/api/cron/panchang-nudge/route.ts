@@ -1,73 +1,50 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { getPanchang, moonPhaseEmoji, yogaDescription, DELHI } from '@/services/panchangService';
 import { timingSafeEqual } from 'crypto';
+import {
+  type SystemFestival,
+  festivalAppliesToState,
+  daysBetween,
+  istDateStr,
+  addDaysIST,
+} from '@/lib/festivals';
 
-// ─── Festival data (2026–2027) ───────────────────────────────────────────────
-interface Festival {
-  name: string;
-  nameHindi: string;
-  date: string;
-  icon: string;
-}
+// ─────────────────────────────────────────────────────────────────────────────
+// Daily Panchang + Festival nudge cron
+//
+// Two-pass design:
+//   Pass A — Daily panchang broadcast: identical for everyone (today's tithi,
+//            nakshatra, vara message, special-tithi flag if applicable). Sent
+//            once per day, deduped by date.
+//   Pass B — Festival reminder, per-user: looks up active festivals in the
+//            next N days (default 7, overridable per-user), filters by
+//            state_code (regional festivals like Chhath/Karwa Chauth only fire
+//            for users in those states), and respects user_festival_prefs
+//            opt-outs. Per-user dedup via notifications.data->festival_id
+//            check, so each (user, festival) reminder only fires once.
+//
+// Schema source-of-truth: supabase/migrations/20260428_system_festivals.sql
+// ─────────────────────────────────────────────────────────────────────────────
 
-const FESTIVALS: Festival[] = [
-  { name: 'Ram Navami', nameHindi: 'राम नवमी', date: '2026-04-02', icon: '🏹' },
-  { name: 'Hanuman Jayanti', nameHindi: 'हनुमान जयंती', date: '2026-04-04', icon: '🙏' },
-  { name: 'Baisakhi', nameHindi: 'बैसाखी', date: '2026-04-14', icon: '🌾' },
-  { name: 'Akshaya Tritiya', nameHindi: 'अक्षय तृतीया', date: '2026-04-25', icon: '✨' },
-  { name: 'Buddha Purnima', nameHindi: 'बुद्ध पूर्णिमा', date: '2026-05-12', icon: '☸️' },
-  { name: 'Rath Yatra', nameHindi: 'रथ यात्रा', date: '2026-06-22', icon: '🛕' },
-  { name: 'Guru Purnima', nameHindi: 'गुरु पूर्णिमा', date: '2026-07-11', icon: '📿' },
-  { name: 'Raksha Bandhan', nameHindi: 'रक्षा बंधन', date: '2026-08-12', icon: '🎀' },
-  { name: 'Janmashtami', nameHindi: 'जन्माष्टमी', date: '2026-08-22', icon: '🪈' },
-  { name: 'Ganesh Chaturthi', nameHindi: 'गणेश चतुर्थी', date: '2026-09-07', icon: '🐘' },
-  { name: 'Navratri', nameHindi: 'नवरात्रि', date: '2026-10-08', icon: '🪔' },
-  { name: 'Dussehra', nameHindi: 'दशहरा', date: '2026-10-17', icon: '🔥' },
-  { name: 'Karwa Chauth', nameHindi: 'करवा चौथ', date: '2026-10-27', icon: '🌙' },
-  { name: 'Diwali', nameHindi: 'दिवाली', date: '2026-11-05', icon: '🪔' },
-  { name: 'Bhai Dooj', nameHindi: 'भाई दूज', date: '2026-11-07', icon: '👫' },
-  { name: 'Chhath Puja', nameHindi: 'छठ पूजा', date: '2026-11-09', icon: '☀️' },
-  { name: 'Makar Sankranti', nameHindi: 'मकर संक्रांति', date: '2027-01-14', icon: '🪁' },
-  { name: 'Republic Day', nameHindi: 'गणतंत्र दिवस', date: '2027-01-26', icon: '🇮🇳' },
-  { name: 'Maha Shivaratri', nameHindi: 'महा शिवरात्रि', date: '2027-02-17', icon: '🔱' },
-  { name: 'Holi', nameHindi: 'होली', date: '2027-03-04', icon: '🎨' },
-];
+interface SpecialMsg { hi: string; en: string; emoji: string; }
 
-// ─── Special tithi messages ──────────────────────────────────────────────────
-const SPECIAL_TITHI_MESSAGES: Record<string, { hi: string; en: string; emoji: string }> = {
+const SPECIAL_TITHI_MESSAGES: Record<string, SpecialMsg> = {
   'पूर्णिमा': { hi: 'आज पूर्णिमा है! चंद्रमा की पूर्ण छटा का आनंद लें।', en: 'Full Moon today! Enjoy the beautiful moonlight.', emoji: '🌕' },
   'अमावस्या': { hi: 'आज अमावस्या है। पितरों को याद करें।', en: 'New Moon today. Remember your ancestors.', emoji: '🌑' },
-  'एकादशी': { hi: 'आज एकादशी है — व्रत का दिन।', en: 'Ekadashi today — a day of fasting.', emoji: '🙏' },
+  'एकादशी':   { hi: 'आज एकादशी है — व्रत का दिन।',           en: 'Ekadashi today — a day of fasting.',          emoji: '🙏' },
 };
 
-// ─── Vara (day) special messages ─────────────────────────────────────────────
-const VARA_MESSAGES: Record<string, { hi: string; en: string; emoji: string }> = {
-  'रविवार': { hi: 'सूर्य देव को नमन करें।', en: 'Bow to Lord Surya.', emoji: '☀️' },
-  'सोमवार': { hi: 'शिव जी का दिन — ॐ नमः शिवाय।', en: "Lord Shiva's day — Om Namah Shivaya.", emoji: '🔱' },
-  'मंगलवार': { hi: 'हनुमान जी का दिन — जय बजरंग बली!', en: "Hanuman ji's day — Jai Bajrang Bali!", emoji: '🙏' },
-  'बुधवार': { hi: 'गणेश जी का आशीर्वाद आपके साथ।', en: "Lord Ganesha's blessings with you.", emoji: '🐘' },
-  'गुरुवार': { hi: 'गुरुवार — बृहस्पति देव का दिन।', en: 'Thursday — Day of Lord Brihaspati.', emoji: '📿' },
-  'शुक्रवार': { hi: 'माँ लक्ष्मी का दिन — शुभ लाभ!', en: "Goddess Lakshmi's day — Prosperity!", emoji: '🪷' },
-  'शनिवार': { hi: 'शनि देव का दिन — धैर्य रखें।', en: "Lord Shani's day — Stay patient.", emoji: '🪐' },
+const VARA_MESSAGES: Record<string, SpecialMsg> = {
+  'रविवार':   { hi: 'सूर्य देव को नमन करें।',          en: 'Bow to Lord Surya.',                   emoji: '☀️' },
+  'सोमवार':   { hi: 'शिव जी का दिन — ॐ नमः शिवाय।',   en: "Lord Shiva's day — Om Namah Shivaya.", emoji: '🔱' },
+  'मंगलवार':  { hi: 'हनुमान जी का दिन — जय बजरंग बली!', en: "Hanuman ji's day — Jai Bajrang Bali!", emoji: '🙏' },
+  'बुधवार':   { hi: 'गणेश जी का आशीर्वाद आपके साथ।',    en: "Lord Ganesha's blessings with you.",   emoji: '🐘' },
+  'गुरुवार':  { hi: 'गुरुवार — बृहस्पति देव का दिन।',   en: 'Thursday — Day of Lord Brihaspati.',    emoji: '📿' },
+  'शुक्रवार': { hi: 'माँ लक्ष्मी का दिन — शुभ लाभ!',    en: "Goddess Lakshmi's day — Prosperity!",  emoji: '🪷' },
+  'शनिवार':   { hi: 'शनि देव का दिन — धैर्य रखें।',     en: "Lord Shani's day — Stay patient.",     emoji: '🪐' },
 };
 
-// ─── IST date helper (reliable, no anti-pattern) ────────────────────────────
-function getISTDate(): { date: Date; dateStr: string } {
-  const now = new Date();
-  // IST = UTC + 5:30 = UTC + 330 minutes
-  const istOffsetMs = 330 * 60 * 1000;
-  const utcMs = now.getTime() + now.getTimezoneOffset() * 60 * 1000;
-  const istMs = utcMs + istOffsetMs;
-  const istDate = new Date(istMs);
-  // Format YYYY-MM-DD manually from IST components
-  const y = istDate.getFullYear();
-  const m = String(istDate.getMonth() + 1).padStart(2, '0');
-  const d = String(istDate.getDate()).padStart(2, '0');
-  return { date: istDate, dateStr: `${y}-${m}-${d}` };
-}
-
-// ─── Supabase service client ─────────────────────────────────────────────────
 function getServiceClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -77,7 +54,6 @@ function getServiceClient() {
   });
 }
 
-// ─── Secure comparison ──────────────────────────────────────────────────────
 function secureCompare(a: string, b: string): boolean {
   try {
     const bufA = Buffer.from(a);
@@ -89,42 +65,22 @@ function secureCompare(a: string, b: string): boolean {
   }
 }
 
-// ─── Build today's nudge message ─────────────────────────────────────────────
-function buildNudgeMessage(todayIST: Date, todayStr: string): {
+// ─── Pass A: build the daily broadcast nudge (identical for everyone) ──────
+
+interface DailyNudge {
   title: string;
   titleHindi: string;
   body: string;
   bodyHindi: string;
-  type: string;
-} {
-  const panchang = getPanchang(todayIST, DELHI);
+  type: 'panchang_special' | 'panchang_daily';
+}
+
+function buildDailyNudge(istDate: Date): DailyNudge {
+  const panchang = getPanchang(istDate, DELHI);
   const moonEmoji = moonPhaseEmoji(panchang.moonPhasePercent);
   const yogaNote = yogaDescription(panchang.yoga);
-
-  // Check for today's festival
-  const todayFestival = FESTIVALS.find(f => f.date === todayStr);
-
-  // Check for upcoming festival (next 3 days)
-  const todayMs = new Date(todayStr + 'T00:00:00+05:30').getTime();
-  const threeDaysMs = todayMs + 3 * 86400000;
-  const upcomingFestival = FESTIVALS.find(f => {
-    const fMs = new Date(f.date + 'T00:00:00+05:30').getTime();
-    return fMs > todayMs && fMs <= threeDaysMs;
-  });
-
-  // Special tithi check
   const specialTithi = SPECIAL_TITHI_MESSAGES[panchang.tithi];
-
-  // ─── Priority: Festival today > Special Tithi > Upcoming Festival > Daily Panchang
-  if (todayFestival) {
-    return {
-      title: `${todayFestival.icon} आज ${todayFestival.nameHindi} है!`,
-      titleHindi: `${todayFestival.icon} आज ${todayFestival.nameHindi} है!`,
-      body: `Happy ${todayFestival.name}! ${panchang.vara}, ${panchang.tithi} (${panchang.paksha}) | ${moonEmoji} Nakshatra: ${panchang.nakshatra}`,
-      bodyHindi: `${todayFestival.nameHindi} की हार्दिक शुभकामनाएँ! ${panchang.vara}, ${panchang.tithi} (${panchang.paksha}) | ${moonEmoji} नक्षत्र: ${panchang.nakshatra}`,
-      type: 'festival',
-    };
-  }
+  const varaMsg = VARA_MESSAGES[panchang.vara];
 
   if (specialTithi) {
     return {
@@ -136,21 +92,6 @@ function buildNudgeMessage(todayIST: Date, todayStr: string): {
     };
   }
 
-  if (upcomingFestival) {
-    const daysUntil = Math.ceil((new Date(upcomingFestival.date + 'T00:00:00+05:30').getTime() - todayMs) / 86400000);
-    const daysText = daysUntil === 1 ? 'कल' : `${daysUntil} दिन बाद`;
-    const daysTextEn = daysUntil === 1 ? 'tomorrow' : `in ${daysUntil} days`;
-    return {
-      title: `${moonEmoji} शुभ प्रभात — ${panchang.vara}`,
-      titleHindi: `${moonEmoji} शुभ प्रभात — ${panchang.vara}`,
-      body: `${panchang.tithi} (${panchang.paksha}) | ${upcomingFestival.icon} ${upcomingFestival.name} ${daysTextEn}! | Sunrise: ${panchang.sunrise}`,
-      bodyHindi: `${panchang.tithi} (${panchang.paksha}) | ${upcomingFestival.icon} ${upcomingFestival.nameHindi} ${daysText}! | सूर्योदय: ${panchang.sunrise}`,
-      type: 'panchang_upcoming',
-    };
-  }
-
-  // Default daily panchang nudge
-  const varaMsg = VARA_MESSAGES[panchang.vara];
   return {
     title: `${moonEmoji} शुभ प्रभात — ${panchang.vara}`,
     titleHindi: `${moonEmoji} शुभ प्रभात — ${panchang.vara}`,
@@ -160,9 +101,87 @@ function buildNudgeMessage(todayIST: Date, todayStr: string): {
   };
 }
 
+// ─── Pass B: per-user festival reminders ────────────────────────────────────
+
+interface UserRow {
+  id: string;
+  push_token: string | null;
+  state_code: string | null;
+}
+
+interface PrefRow {
+  user_id: string;
+  festival_id: string;
+  opt_in: boolean;
+  notify_days_before: number | null;
+}
+
+async function loadActiveFestivals(supabase: SupabaseClient, todayStr: string, maxLookahead: number): Promise<SystemFestival[]> {
+  const horizon = addDaysIST(todayStr, maxLookahead);
+  const { data, error } = await supabase
+    .from('system_festivals')
+    .select('*')
+    .eq('is_active', true)
+    .gte('date', todayStr)
+    .lte('date', horizon)
+    .order('date', { ascending: true });
+  if (error) throw error;
+  return (data ?? []) as SystemFestival[];
+}
+
+async function loadPrefs(supabase: SupabaseClient, userIds: string[]): Promise<Map<string, PrefRow[]>> {
+  if (userIds.length === 0) return new Map();
+  const { data, error } = await supabase
+    .from('user_festival_prefs')
+    .select('user_id, festival_id, opt_in, notify_days_before')
+    .in('user_id', userIds);
+  if (error) throw error;
+  const byUser = new Map<string, PrefRow[]>();
+  for (const row of (data ?? []) as PrefRow[]) {
+    if (!byUser.has(row.user_id)) byUser.set(row.user_id, []);
+    byUser.get(row.user_id)!.push(row);
+  }
+  return byUser;
+}
+
+function pickFestivalForUser(
+  user: UserRow,
+  festivals: SystemFestival[],
+  userPrefs: PrefRow[] | undefined,
+  todayStr: string
+): SystemFestival | null {
+  const optedOut = new Set((userPrefs ?? []).filter((p) => !p.opt_in).map((p) => p.festival_id));
+  const customLead = new Map((userPrefs ?? []).filter((p) => p.notify_days_before !== null).map((p) => [p.festival_id, p.notify_days_before as number]));
+
+  // Walk soonest-first; pick the first festival that:
+  //   - matches user's state
+  //   - is not opted-out
+  //   - is within the user's lead-time window
+  for (const f of festivals) {
+    if (optedOut.has(f.id)) continue;
+    if (!festivalAppliesToState(f.region, user.state_code)) continue;
+    const lead = customLead.get(f.id) ?? f.notify_days_before;
+    const days = daysBetween(todayStr, f.date);
+    if (days >= 0 && days <= lead) return f;
+  }
+  return null;
+}
+
+function buildFestivalNudge(festival: SystemFestival, daysUntil: number) {
+  const icon = festival.icon ?? '🎉';
+  const daysHi = daysUntil === 0 ? 'आज' : daysUntil === 1 ? 'कल' : `${daysUntil} दिन बाद`;
+  const daysEn = daysUntil === 0 ? 'today' : daysUntil === 1 ? 'tomorrow' : `in ${daysUntil} days`;
+  return {
+    title: `${icon} ${festival.name_hi} ${daysHi}!`,
+    titleHindi: `${icon} ${festival.name_hi} ${daysHi}!`,
+    body: `${festival.name_en} ${daysEn}${festival.description_en ? ' — ' + festival.description_en : ''}`,
+    bodyHindi: `${festival.name_hi} ${daysHi}${festival.description_hi ? ' — ' + festival.description_hi : ''}`,
+  };
+}
+
 // ─── API Route Handler ───────────────────────────────────────────────────────
+
 export async function GET(request: NextRequest) {
-  // ─── P0 FIX: CRON_SECRET must be configured ───
   const cronSecret = process.env.CRON_SECRET;
   if (!cronSecret) {
     console.error('CRON_SECRET environment variable is not configured');
@@ -176,49 +195,35 @@ export async function GET(request: NextRequest) {
 
   try {
     const supabase = getServiceClient();
+    const todayStr = istDateStr();
+    const istDate = new Date(todayStr + 'T08:00:00+05:30'); // 8 AM IST as nominal "today" for panchang
 
-    // ─── P1 FIX: Reliable IST date (no toLocaleString anti-pattern) ───
-    const { date: istDate, dateStr: todayStr } = getISTDate();
+    // ─── Pass A: daily broadcast nudge ───
+    const daily = buildDailyNudge(istDate);
 
-    // Build the nudge message
-    const nudge = buildNudgeMessage(istDate, todayStr);
-
-    // ─── P0 FIX: Date-based dedup (works for ALL nudge types) ───
-    const { data: existingNudge } = await supabase
+    // Date-based dedup — has any panchang nudge gone out today?
+    const { data: anyDailyToday } = await supabase
       .from('notifications')
       .select('id')
       .eq('type', 'general')
       .gte('created_at', `${todayStr}T00:00:00+05:30`)
       .lte('created_at', `${todayStr}T23:59:59+05:30`)
-      .contains('data', { nudge_type: nudge.type })
+      .or('data->nudge_type.eq.panchang_special,data->nudge_type.eq.panchang_daily')
       .limit(1);
+    const dailyAlreadySent = (anyDailyToday ?? []).length > 0;
 
-    // Also check for ANY panchang nudge today (prevents double-send if type changes)
-    const { data: anyNudgeToday } = await supabase
-      .from('notifications')
-      .select('id')
-      .eq('type', 'general')
-      .gte('created_at', `${todayStr}T00:00:00+05:30`)
-      .lte('created_at', `${todayStr}T23:59:59+05:30`)
-      .or('data->nudge_type.eq.festival,data->nudge_type.eq.panchang_special,data->nudge_type.eq.panchang_upcoming,data->nudge_type.eq.panchang_daily')
-      .limit(1);
-
-    if ((existingNudge && existingNudge.length > 0) || (anyNudgeToday && anyNudgeToday.length > 0)) {
-      return NextResponse.json({ message: 'Nudge already sent today', sent: 0 });
-    }
-
-    // Get all active users (paginated to avoid memory issues)
-    let allUsers: { id: string; push_token: string | null }[] = [];
+    // ─── Load all users + their festival prefs (paginated) ───
+    const allUsers: UserRow[] = [];
     let offset = 0;
     const PAGE_SIZE = 1000;
     while (true) {
       const { data: page, error: pageErr } = await supabase
         .from('users')
-        .select('id, push_token')
+        .select('id, push_token, state_code')
         .range(offset, offset + PAGE_SIZE - 1);
       if (pageErr) throw pageErr;
       if (!page || page.length === 0) break;
-      allUsers = allUsers.concat(page);
+      allUsers.push(...(page as UserRow[]));
       if (page.length < PAGE_SIZE) break;
       offset += PAGE_SIZE;
     }
@@ -227,56 +232,148 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ message: 'No users found', sent: 0 });
     }
 
-    // Insert in-app notifications in batches of 500
-    const BATCH_SIZE = 500;
-    let totalInserted = 0;
-    for (let i = 0; i < allUsers.length; i += BATCH_SIZE) {
-      const batch = allUsers.slice(i, i + BATCH_SIZE).map(user => ({
-        user_id: user.id,
-        type: 'general' as const,
-        title: nudge.title,
-        title_hindi: nudge.titleHindi,
-        body: nudge.body,
-        body_hindi: nudge.bodyHindi,
-        data: { nudge_type: nudge.type },
-        is_read: false,
-      }));
-      const { error: insertErr } = await supabase.from('notifications').insert(batch);
-      if (insertErr) {
-        console.error(`Batch insert error at offset ${i}:`, insertErr);
-      } else {
-        totalInserted += batch.length;
-      }
+    const MAX_LEAD = 30;
+    const festivals = await loadActiveFestivals(supabase, todayStr, MAX_LEAD);
+    const prefsByUser = await loadPrefs(supabase, allUsers.map((u) => u.id));
+
+    // ─── Pass A insert: daily broadcast (skip if already sent) ───
+    interface NotificationRow {
+      user_id: string;
+      type: 'general';
+      title: string;
+      title_hindi: string;
+      body: string;
+      body_hindi: string;
+      data: Record<string, unknown>;
+      is_read: boolean;
     }
-
-    // Send push notifications to users with Expo push tokens
-    const pushTokens = allUsers
-      .filter(u => u.push_token && u.push_token.startsWith('ExponentPushToken'))
-      .map(u => u.push_token!);
-
-    let pushSent = 0;
-    if (pushTokens.length > 0) {
-      const PUSH_BATCH = 100;
-      for (let i = 0; i < pushTokens.length; i += PUSH_BATCH) {
-        const batch = pushTokens.slice(i, i + PUSH_BATCH).map(token => ({
-          to: token,
-          title: nudge.titleHindi,
-          body: nudge.bodyHindi,
-          data: { screen: 'Panchang', nudge_type: nudge.type },
-          sound: 'default' as const,
-          channelId: 'reminders',
+    const dailyRows: NotificationRow[] = dailyAlreadySent
+      ? []
+      : allUsers.map((u) => ({
+          user_id: u.id,
+          type: 'general',
+          title: daily.title,
+          title_hindi: daily.titleHindi,
+          body: daily.body,
+          body_hindi: daily.bodyHindi,
+          data: { nudge_type: daily.type },
+          is_read: false,
         }));
 
+    // ─── Pass B insert: per-user festival reminders ───
+    type Row = NotificationRow;
+    const festivalRows: Row[] = [];
+    const festivalReminderUsers: { user: UserRow; festivalId: string; daysUntil: number }[] = [];
+    for (const user of allUsers) {
+      const f = pickFestivalForUser(user, festivals, prefsByUser.get(user.id), todayStr);
+      if (!f) continue;
+      const daysUntil = daysBetween(todayStr, f.date);
+      const fnudge = buildFestivalNudge(f, daysUntil);
+      festivalRows.push({
+        user_id: user.id,
+        type: 'general' as const,
+        title: fnudge.title,
+        title_hindi: fnudge.titleHindi,
+        body: fnudge.body,
+        body_hindi: fnudge.bodyHindi,
+        data: { nudge_type: 'festival', festival_id: f.id, days_until: daysUntil },
+        is_read: false,
+      });
+      festivalReminderUsers.push({ user, festivalId: f.id, daysUntil });
+    }
+
+    // Per-user, per-festival dedup — filter out (user, festival) pairs that
+    // already received a reminder for this festival_id on any prior day.
+    let dedupedFestivalRows = festivalRows;
+    if (festivalReminderUsers.length > 0) {
+      const candidates = festivalReminderUsers.map((r) => ({ uid: r.user.id, fid: r.festivalId }));
+      // Pull existing festival reminders for any of the candidate (user, festival)
+      // pairs. Postgres OR can get long — chunk to keep the query reasonable.
+      const seen = new Set<string>();
+      const CHUNK = 200;
+      for (let i = 0; i < candidates.length; i += CHUNK) {
+        const slice = candidates.slice(i, i + CHUNK);
+        const userIds = Array.from(new Set(slice.map((c) => c.uid)));
+        const festIds = Array.from(new Set(slice.map((c) => c.fid)));
+        const { data: existing } = await supabase
+          .from('notifications')
+          .select('user_id, data')
+          .in('user_id', userIds)
+          .contains('data', { nudge_type: 'festival' });
+        for (const row of (existing ?? []) as { user_id: string; data: { festival_id?: string } }[]) {
+          const fid = row.data?.festival_id;
+          if (fid && festIds.includes(fid)) seen.add(`${row.user_id}:${fid}`);
+        }
+      }
+      dedupedFestivalRows = festivalRows.filter((r) => {
+        const fid = (r.data as { festival_id?: string }).festival_id;
+        return fid && !seen.has(`${r.user_id}:${fid}`);
+      });
+    }
+
+    // ─── Insert (batched) ───
+    const BATCH_SIZE = 500;
+    let dailyInserted = 0;
+    let festivalInserted = 0;
+    const insertBatched = async (rows: Row[]): Promise<number> => {
+      let total = 0;
+      for (let i = 0; i < rows.length; i += BATCH_SIZE) {
+        const batch = rows.slice(i, i + BATCH_SIZE);
+        const { error } = await supabase.from('notifications').insert(batch);
+        if (error) console.error(`Batch insert error at offset ${i}:`, error);
+        else total += batch.length;
+      }
+      return total;
+    };
+
+    if (dailyRows.length > 0) dailyInserted = await insertBatched(dailyRows);
+    if (dedupedFestivalRows.length > 0) festivalInserted = await insertBatched(dedupedFestivalRows);
+
+    // ─── Push notifications: daily broadcast + festival reminders ───
+    let pushSent = 0;
+    const pushTokenByUser = new Map(
+      allUsers
+        .filter((u) => u.push_token && u.push_token.startsWith('ExponentPushToken'))
+        .map((u) => [u.id, u.push_token!])
+    );
+
+    const pushBatch: { to: string; title: string; body: string; data: Record<string, unknown>; sound: 'default'; channelId: string }[] = [];
+    if (!dailyAlreadySent) {
+      for (const [, token] of pushTokenByUser) {
+        pushBatch.push({
+          to: token,
+          title: daily.titleHindi,
+          body: daily.bodyHindi,
+          data: { screen: 'Panchang', nudge_type: daily.type },
+          sound: 'default',
+          channelId: 'reminders',
+        });
+      }
+    }
+    for (const r of dedupedFestivalRows) {
+      const token = pushTokenByUser.get(r.user_id);
+      if (!token) continue;
+      pushBatch.push({
+        to: token,
+        title: r.title_hindi,
+        body: r.body_hindi,
+        data: { screen: 'Festivals', ...(r.data as Record<string, unknown>) },
+        sound: 'default',
+        channelId: 'reminders',
+      });
+    }
+
+    if (pushBatch.length > 0) {
+      const PUSH_BATCH = 100;
+      for (let i = 0; i < pushBatch.length; i += PUSH_BATCH) {
+        const slice = pushBatch.slice(i, i + PUSH_BATCH);
         try {
           const resp = await fetch('https://exp.host/--/api/v2/push/send', {
             method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Accept': 'application/json',
-            },
-            body: JSON.stringify(batch),
+            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+            body: JSON.stringify(slice),
           });
-          if (resp.ok) pushSent += batch.length;
+          if (resp.ok) pushSent += slice.length;
         } catch (e) {
           console.error('Push send error:', e);
         }
@@ -284,21 +381,19 @@ export async function GET(request: NextRequest) {
     }
 
     return NextResponse.json({
-      message: 'Panchang nudge sent',
-      type: nudge.type,
+      message: 'Panchang + festival nudges processed',
       stats: {
         usersTotal: allUsers.length,
-        notificationsInserted: totalInserted,
+        dailyAlreadySent,
+        dailyType: daily.type,
+        dailyInserted,
+        festivalsLoaded: festivals.length,
+        festivalRemindersInserted: festivalInserted,
         pushNotificationsSent: pushSent,
       },
     });
   } catch (error) {
-    // Log full error server-side; return generic message to caller so
-    // DB error details / stack traces don't leak through the response.
     console.error('Panchang nudge error:', error);
-    return NextResponse.json(
-      { error: 'Internal error' },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: 'Internal error' }, { status: 500 });
   }
 }

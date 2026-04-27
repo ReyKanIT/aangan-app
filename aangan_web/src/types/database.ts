@@ -24,6 +24,9 @@ export interface User {
   kuldevta_temple_location: string | null;
   puja_paddhati: string | null;
   puja_niyam: string | null;
+  state_code: string | null;
+  gps_lat: number | null;
+  gps_lng: number | null;
 }
 
 export interface FamilyMember {

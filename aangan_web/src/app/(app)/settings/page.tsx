@@ -8,6 +8,7 @@ import InputField from '@/components/ui/InputField';
 import AvatarCircle from '@/components/ui/AvatarCircle';
 import { uploadAvatar } from '@/lib/utils/uploadMedia';
 import { RELEASES } from '@/data/versions';
+import FestivalNotificationsSettings from '@/components/festivals/FestivalNotificationsSettings';
 
 const FEEDBACK_CATEGORIES = [
   { value: 'feature_request', label: 'सुझाव — Feature Request', emoji: '💡' },
@@ -211,6 +212,9 @@ export default function SettingsPage() {
           </li>
         </ul>
       </div>
+
+      {/* ─── Festival Notifications Section ─── */}
+      <FestivalNotificationsSettings />
 
       {/* ─── Feedback Section ─── */}
       <div className="bg-white rounded-2xl p-5 mb-4 border border-haldi-gold/20 shadow-sm">

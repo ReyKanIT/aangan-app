@@ -13,6 +13,7 @@ import EmptyState from '@/components/ui/EmptyState';
 // Split it off so the initial /feed paint on 3G doesn't block on it.
 const PanchangWidget = dynamic(() => import('@/components/feed/PanchangWidget'), { ssr: false });
 const PostComposer = dynamic(() => import('@/components/feed/PostComposer'), { ssr: false });
+const NextFestivalBanner = dynamic(() => import('@/components/festivals/NextFestivalBanner'), { ssr: false });
 
 export default function FeedPage() {
   const { posts, fetchPosts, isLoading, isFetching, hasMore, error } = usePostStore();
@@ -46,6 +47,9 @@ export default function FeedPage() {
           + पोस्ट करें
         </GoldButton>
       </div>
+
+      {/* Next Festival Banner — surfaces upcoming tithi/festival in 14d window */}
+      <NextFestivalBanner />
 
       {/* Panchang Widget */}
       <PanchangWidget />
