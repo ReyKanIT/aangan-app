@@ -205,7 +205,7 @@ export default function FestivalsPage() {
             <a href="/privacy" className="hover:text-haldi-gold transition-colors">Privacy</a>
             <a href="/terms" className="hover:text-haldi-gold transition-colors">Terms</a>
           </div>
-          <p>&copy; 2026 ReyKan IT &middot; v0.9.10</p>
+          <p>&copy; 2026 ReyKan IT &middot; v0.12.1</p>
         </div>
       </footer>
 

@@ -24,6 +24,53 @@ export interface ReleaseNote {
 
 export const RELEASES: ReleaseNote[] = [
   {
+    version: '0.12.1',
+    releasedAt: '2026-04-28T10:00:00+05:30',
+    stamp: '[10:00am - 28Apr26]',
+    summary: 'Dual-calendar reminders — birthdays/anniversaries fire on both tithi AND English date',
+    category: 'feature',
+    migration: '20260428b_tithi_events_apply.sql + 20260428d_recurring_panchang_events.sql',
+    highlights: [
+      'Each tithi_event now fires two reminders: one on the lunar (tithi) anniversary and one on the Gregorian anniversary — families who track both calendars never miss a milestone',
+      'upcomingTithiEvents() returns calendarSource tag (\'tithi\' | \'gregorian\') so notifications show "(तिथि)" or "(तारीख़)" suffix',
+      'Panchang-nudge cron Pass C dedup key extended to (user_id, event_id, target_date, calendar_source) — prevents duplicate notifications if cron runs multiple times per day',
+      'Recurring panchang events seeded: 22 Ekadashis, 10 Purnimasyas, 11 Amavasyasyas, 24 Pradosh Vrats, 12 Sankashti + 9 Vinayak Chaturthi, 11 Masik Shivratri, 11 Sankrantis, plus 25+ special one-time events (Onam, Pongal, Chaitra Navratri, Baisakhi, Vishu, Poila Boishakh, etc.)',
+    ],
+  },
+  {
+    version: '0.12.0',
+    releasedAt: '2026-04-28T07:00:00+05:30',
+    stamp: '[7:00am - 28Apr26]',
+    summary: 'Festival notifications — DB-backed catalogue, regional opt-in, "Next Festival" home banner',
+    category: 'feature',
+    migration: '20260428_system_festivals.sql',
+    highlights: [
+      'system_festivals table: 32 festivals seeded (May 2026 → Apr 2027) with region codes, importance (major/medium/minor), lead-time, bilingual names + descriptions',
+      'user_festival_prefs table: per-user opt-in/out and per-festival lead-time override',
+      'users table: state_code + gps_lat/gps_lng columns for regional festival filtering (Chhath fires only in IN-BR/IN-UP/IN-JH; Karwa Chauth in north-India bloc)',
+      'Panchang-nudge cron Pass B: per-user festival reminder with region match + opt-out + dedup so each (user, festival) pair fires only once',
+      '"Next Festival" banner on home feed: shows nearest upcoming festival within 14 days that matches user\'s state',
+      'Festival notification settings page at /profile/festival-settings — state picker (GPS or manual), per-festival toggle + lead-time',
+      'FestivalNotificationsSettings component: full INDIAN_STATES list, reverse-geocode via OpenStreetMap Nominatim, grouped by importance',
+    ],
+  },
+  {
+    version: '0.11.0',
+    releasedAt: '2026-04-27T09:00:00+05:30',
+    stamp: '[9:00am - 27Apr26]',
+    summary: 'Family tree overhaul — zoomable diagram, exhaustive relationships, full profile fields',
+    category: 'feature',
+    migration: '20260427_family_member_extended_fields.sql',
+    highlights: [
+      'Family tree diagram (react-zoom-pan-pinch) — pinch/scroll to zoom, drag to pan, works on mobile',
+      'Exhaustive relationship types covering all Hindi family roles: दादा/दादी, नाना/नानी, चाचा/चाची, मामा/मामी, फूफा/बुआ, मौसा/मौसी, देवर/जेठ, ननद/भाभी, and more',
+      'Extended family member profile: gotra, native place (मूल निवास), kuldevi, occupation, education, and blood group fields',
+      'Deceased member flag with death date — shown with 🙏 in the tree',
+      'Offline members (no Aangan account) fully supported in the diagram',
+      'Family tree migration adds 12 new columns to family_members table',
+    ],
+  },
+  {
     version: '0.10.2',
     releasedAt: '2026-04-27T11:05:00+05:30',
     stamp: '[11:05am - 27Apr26]',
