@@ -197,6 +197,48 @@ working path for real users on Vi.
 
 ---
 
+## PE-TM Chain CREATED on Vi DLT [7:59am - 28Apr26]
+
+Driven via Claude-in-Chrome on Kumar's vilpower.in session — chain
+created end-to-end in one go (8a–8c collapsed):
+
+| Field | Value |
+|---|---|
+| **Chain ID** | `1115177724853137338` |
+| **Chain Name** | `AanganMSG91OTP` *(alphanumeric only — `Aangan-MSG91-OTP` was rejected as "Enter Valid Chain Name")* |
+| Created | 27-Apr-2026 05:38:51 IST |
+| First Telemarketer | WALKOVER WEB SOLUTIONS PRIVATE LIMITED |
+| First TM ID | `1302157225275643280` (matches MSG91's TM) |
+| Number of TMs | 1 |
+| **Pending With** | TM (`1302157225275643280` = MSG91/WALKOVER) |
+| Approval Status | **Pending** |
+| Status | -- (not yet active) |
+
+**Key learning vs the v0.10.2 audit:** the "Unable to process request
+now." server block is gone. WALKOVER WEB SOLUTIONS was selectable in
+the TM dropdown and the chain submitted cleanly on the proper UI flow
+(injecting Select2 values via JS still triggers the old error — must
+go through actual click + AJAX-driven autofill).
+
+**Now blocked on MSG91 (8d):** they need to log into their DLT side
+and accept the binding for chain `1115177724853137338`. Once they do,
+the chain flips to **Approved + Active** and MSG91 can finalize the
+AANGFM ↔ PE ↔ OTP-template mapping internally.
+
+**Next email to MSG91** should reference the chain ID directly so
+their team can find it without a search:
+
+> Hi MSG91 team, following up on ticket [original ID] —
+> we've created the PE-TM chain on vilpower.in as you requested.
+> Chain ID: **1115177724853137338**, Chain Name: AanganMSG91OTP,
+> bound to your TM 1302157225275643280 (WALKOVER WEB SOLUTIONS).
+> Status on our side: Pending with TM. Please accept on your end so
+> the binding becomes Active and you can finalize the AANGFM ↔ PE
+> 1101455800000093984 ↔ template 1107177660181979501 mapping.
+> Thanks.
+
+---
+
 ## Closing the loop
 
 Once a real SMS lands on a non-bypass Indian number end-to-end and the
