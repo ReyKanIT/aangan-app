@@ -45,7 +45,7 @@ type Tab = 'search' | 'manual';
 interface Props { onClose: () => void; }
 
 export default function AddMemberDrawer({ onClose }: Props) {
-  const { searchUsers, searchResults, addMember, clearSearch } = useFamilyStore();
+  const { searchUsers, searchResults, addMember, clearSearch, error: storeError } = useFamilyStore();
   const [activeTab, setActiveTab] = useState<Tab>('search');
 
   // Search tab state
@@ -120,7 +120,7 @@ export default function AddMemberDrawer({ onClose }: Props) {
     const ok = await addMember(selected.id, relType, relHindi, level, reverseType);
     setIsAdding(false);
     if (ok) onClose();
-    else setError('सदस्य नहीं जोड़ पाए — Could not add member');
+    else setError(storeError || 'सदस्य नहीं जोड़ पाए — Could not add member');
   };
 
   // ── Add offline/deceased family member manually ──

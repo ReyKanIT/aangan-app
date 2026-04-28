@@ -24,6 +24,19 @@ export interface ReleaseNote {
 
 export const RELEASES: ReleaseNote[] = [
   {
+    version: '0.12.4',
+    releasedAt: '2026-04-28T22:30:00+05:30',
+    stamp: '[10:30pm - 28Apr26]',
+    summary: 'Fix: family tree scroll/zoom, grandfather addition error surfacing',
+    category: 'fix',
+    highlights: [
+      'FamilyTreeDiagram: removed react-zoom-pan-pinch (was hijacking wheel scroll and turning it into zoom) — replaced with native browser overflow-auto scroll',
+      'Family tree now scrolls normally on mobile and desktop; up/down = page scroll, left/right = horizontal tree scroll',
+      'AddMemberDrawer: surface actual RPC error from familyStore when online member addition fails instead of generic message',
+      'Grandfather data confirmed in DB — was always there, just invisible due to zoom-pan interception bug',
+    ],
+  },
+  {
     version: '0.12.3',
     releasedAt: '2026-04-28T21:47:00+05:30',
     stamp: '[9:47pm - 28Apr26]',

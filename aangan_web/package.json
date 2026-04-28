@@ -1,6 +1,6 @@
 {
   "name": "aangan-web",
-  "version": "0.12.3",
+  "version": "0.12.4",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -21,7 +21,6 @@
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-hot-toast": "^2.6.0",
-    "react-zoom-pan-pinch": "^4.0.3",
     "tailwind-merge": "^2.5.0",
     "zustand": "^5.0.0"
   },
