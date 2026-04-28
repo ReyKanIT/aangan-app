@@ -78,15 +78,18 @@ export default function PanchangWidget() {
           <span className="text-brown-light text-base">{expanded ? '▲' : '▼'}</span>
         </div>
 
-        {/* Tithi highlight bar with end-time */}
-        <div className="flex flex-wrap items-center gap-2 bg-cream rounded-xl px-4 py-2 mt-1">
-          <span className="text-base text-brown-light font-heading">तिथि:</span>
-          <span className="text-base font-semibold text-haldi-gold font-heading">{panchang.tithi}</span>
-          <span className="text-xs text-brown-light/80">{panchang.tithiEndTime} तक</span>
-          <span className="text-brown-light mx-1">&middot;</span>
-          <span className="text-base text-brown-light font-heading">नक्षत्र:</span>
-          <span className="text-base font-semibold text-haldi-gold font-heading">{panchang.nakshatra}</span>
-          <span className="text-xs text-brown-light/80">{panchang.nakshatraEndTime} तक</span>
+        {/* Tithi + Nakshatra summary — two clean rows, no wrapping */}
+        <div className="grid grid-cols-2 gap-1.5 bg-cream rounded-xl px-4 py-2.5 mt-1">
+          <div>
+            <span className="text-xs text-brown-light/70 font-heading block">तिथि / Tithi</span>
+            <span className="text-base font-semibold text-haldi-gold font-heading leading-tight">{panchang.tithi}</span>
+            <span className="text-xs text-brown-light/60 block">{panchang.tithiEndTime} तक</span>
+          </div>
+          <div>
+            <span className="text-xs text-brown-light/70 font-heading block">नक्षत्र / Nakshatra</span>
+            <span className="text-base font-semibold text-haldi-gold font-heading leading-tight">{panchang.nakshatra}</span>
+            <span className="text-xs text-brown-light/60 block">{panchang.nakshatraEndTime} तक</span>
+          </div>
         </div>
       </button>
 
