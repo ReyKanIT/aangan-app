@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@supabase/supabase-js';
 import { PutObjectCommand } from '@aws-sdk/client-s3';
 import { b2Client, B2_BUCKET, B2_CDN_URL } from '@/lib/b2/client';
 import { createSupabaseServer } from '@/lib/supabase/server';
@@ -7,9 +8,12 @@ const MAX_FILE_SIZE = 25 * 1024 * 1024; // 25 MB
 const ALLOWED_TYPES = [
   'image/jpeg', 'image/png', 'image/webp', 'image/gif',
   'video/mp4', 'video/quicktime',
-  // Voice invite audio — browser MediaRecorder emits webm on Chrome/Firefox, mp4/m4a on Safari
   'audio/webm', 'audio/ogg', 'audio/mpeg', 'audio/mp4', 'audio/mp3', 'audio/x-m4a',
 ];
+
+// Buckets that use Supabase Storage (service role) rather than B2.
+// B2 credentials are local-only; Supabase service key is always on Vercel.
+const SUPABASE_STORAGE_FOLDERS = ['avatars'];
 
 export async function POST(request: NextRequest) {
   // Auth check
@@ -38,13 +42,39 @@ export async function POST(request: NextRequest) {
   const ext = file.name.split('.').pop() ?? 'jpg';
   const timestamp = Date.now();
   const random = Math.random().toString(36).slice(2, 8);
-  const key = `${folder}/${user.id}/${timestamp}_${random}.${ext}`;
+  const key = `${user.id}/${timestamp}_${random}.${ext}`;
 
   const buffer = Buffer.from(await file.arrayBuffer());
 
+  // ── Supabase Storage path (avatars) ──────────────────────────────────────
+  if (SUPABASE_STORAGE_FOLDERS.includes(folder)) {
+    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!serviceKey) {
+      return NextResponse.json({ error: 'Storage not configured' }, { status: 500 });
+    }
+    const admin = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, serviceKey);
+
+    // Create bucket if missing (idempotent — errors if already exists, which is fine)
+    await admin.storage.createBucket(folder, { public: true }).catch(() => {});
+
+    const { error: upErr } = await admin.storage
+      .from(folder)
+      .upload(key, buffer, { contentType: file.type, upsert: true });
+
+    if (upErr) {
+      console.error('[upload] Supabase storage error:', upErr.message);
+      return NextResponse.json({ error: upErr.message }, { status: 500 });
+    }
+
+    const { data: { publicUrl } } = admin.storage.from(folder).getPublicUrl(key);
+    return NextResponse.json({ url: publicUrl, key });
+  }
+
+  // ── Backblaze B2 path (posts, event-covers, event-audio, …) ─────────────
+  const b2Key = `${folder}/${key}`;
   const command = new PutObjectCommand({
     Bucket: B2_BUCKET,
-    Key: key,
+    Key: b2Key,
     Body: buffer,
     ContentType: file.type,
   });
@@ -52,13 +82,10 @@ export async function POST(request: NextRequest) {
   try {
     await b2Client.send(command);
   } catch (err) {
-    console.error('B2 upload error:', err);
+    console.error('[upload] B2 error:', err);
     return NextResponse.json({ error: 'Upload failed' }, { status: 500 });
   }
 
-  // B2 friendly URL format: /file/{bucket}/{key}
-  // Cloudflare proxies media.aangan.app → f005.backblazeb2.com
-  const url = `${B2_CDN_URL}/file/${B2_BUCKET}/${key}`;
-
-  return NextResponse.json({ url, key });
+  const url = `${B2_CDN_URL}/file/${B2_BUCKET}/${b2Key}`;
+  return NextResponse.json({ url, key: b2Key });
 }
