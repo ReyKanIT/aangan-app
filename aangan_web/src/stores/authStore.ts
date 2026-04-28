@@ -265,9 +265,12 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     const { session } = get();
     if (!session?.user) return false;
     try {
+      // upsert (not update) so new phone-auth users who have no row yet in
+      // public.users get one created here — there is no DB trigger that
+      // auto-inserts from auth.users, so a plain .update() would silently
+      // affect 0 rows and leave isNewUser stuck as true forever.
       const { error } = await supabase.from('users')
-        .update({ ...data, updated_at: new Date().toISOString() })
-        .eq('id', session.user.id);
+        .upsert({ id: session.user.id, ...data, updated_at: new Date().toISOString() });
       if (error) { set({ error: friendlyError(error.message) }); return false; }
       await get().fetchProfile();
       set({ isNewUser: false });

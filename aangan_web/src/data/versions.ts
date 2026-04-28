@@ -24,6 +24,17 @@ export interface ReleaseNote {
 
 export const RELEASES: ReleaseNote[] = [
   {
+    version: '0.12.2',
+    releasedAt: '2026-04-28T21:20:00+05:30',
+    stamp: '[9:20pm - 28Apr26]',
+    summary: 'Fix: new users stuck on profile-setup — updateProfile now upserts so first save creates the row',
+    category: 'fix',
+    highlights: [
+      'authStore.updateProfile switched from .update() to .upsert() — new phone-auth users have no row in public.users (no DB trigger creates one), so the old UPDATE silently affected 0 rows, leaving isNewUser=true forever and trapping users in /profile-setup',
+      'Returning users unaffected (upsert on existing row behaves identically to update)',
+    ],
+  },
+  {
     version: '0.12.1',
     releasedAt: '2026-04-28T10:00:00+05:30',
     stamp: '[10:00am - 28Apr26]',
