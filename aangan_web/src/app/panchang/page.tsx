@@ -11,8 +11,11 @@ function formatDateHindi(d: Date): string {
   return `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
 }
 
-function formatDateEnglish(d: Date): string {
-  return d.toLocaleDateString('en-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: 'Asia/Kolkata' });
+function formatDateEnglish(): string {
+  // Always format from real UTC now — the fake-IST Date used elsewhere
+  // already has +5:30 baked in; passing it here would double-convert and
+  // show tomorrow's date on Vercel (UTC) servers after ~18:30 UTC.
+  return new Date().toLocaleDateString('en-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: 'Asia/Kolkata' });
 }
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -62,7 +65,7 @@ export default function PanchangPage() {
   const moonEmoji = moonPhaseEmoji(panchang.moonPhasePercent);
   const yogaNote = yogaDescription(panchang.yoga);
   const dateHindi = formatDateHindi(now);
-  const dateEnglish = formatDateEnglish(now);
+  const dateEnglish = formatDateEnglish();
 
   const rows = [
     { label: 'तिथि / Tithi', value: `${panchang.paksha} ${panchang.tithi}`, sub: `${panchang.tithiEndTime} तक` },
