@@ -32,6 +32,7 @@ export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   themeColor: '#C8A84B',
+  viewportFit: 'cover', // iOS Safari full-screen: enables env(safe-area-inset-*)
 };
 
 export const metadata: Metadata = {

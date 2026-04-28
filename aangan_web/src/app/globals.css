@@ -6,10 +6,15 @@
   html {
     font-family: var(--font-poppins), 'Poppins', sans-serif;
     -webkit-font-smoothing: antialiased;
+    /* iOS Safari: prevent layout shrink when URL bar appears/disappears */
+    height: -webkit-fill-available;
   }
 
   body {
     @apply bg-cream text-brown;
+    min-height: -webkit-fill-available;
+    /* Modern browsers: use smallest viewport height so content never hides under browser chrome */
+    min-height: 100dvh;
   }
 
   * {
@@ -20,6 +25,10 @@
 @layer utilities {
   .safe-area-pb {
     padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  /* iOS Safari: main content clears bottom nav (56px) + home indicator safe area */
+  .pb-safe-nav {
+    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 5rem);
   }
   .font-heading {
     font-family: var(--font-tiro), 'Tiro Devanagari Hindi', serif;

@@ -1,3 +1,5 @@
+'use client';
+import { useState } from 'react';
 import Image from 'next/image';
 import { cn } from '@/lib/utils/cn';
 
@@ -9,6 +11,8 @@ interface AvatarCircleProps {
 }
 
 export default function AvatarCircle({ src, name, size = 40, className }: AvatarCircleProps) {
+  const [imgError, setImgError] = useState(false);
+
   const initials = name
     ? name.trim().split(/\s+/).map((w) => w[0]).slice(0, 2).join('').toUpperCase()
     : '?';
@@ -18,8 +22,15 @@ export default function AvatarCircle({ src, name, size = 40, className }: Avatar
       className={cn('relative rounded-full overflow-hidden bg-haldi-gold flex items-center justify-center flex-shrink-0', className)}
       style={{ width: size, height: size }}
     >
-      {src ? (
-        <Image src={src} alt={name ?? 'Avatar'} fill className="object-cover" />
+      {src && !imgError ? (
+        <Image
+          src={src}
+          alt={name ?? 'Avatar'}
+          fill
+          sizes={`${size}px`}
+          className="object-cover"
+          onError={() => setImgError(true)}
+        />
       ) : (
         <span className="text-white font-body font-bold" style={{ fontSize: size * 0.38 }}>
           {initials}

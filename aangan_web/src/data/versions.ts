@@ -24,6 +24,19 @@ export interface ReleaseNote {
 
 export const RELEASES: ReleaseNote[] = [
   {
+    version: '0.12.3',
+    releasedAt: '2026-04-28T21:47:00+05:30',
+    stamp: '[9:47pm - 28Apr26]',
+    summary: 'Fix: GPS blocked on iOS Safari, profile photo fallback, iOS viewport/safe-area layout',
+    category: 'fix',
+    highlights: [
+      'GPS check-in was blocked by Permissions-Policy: geolocation=() header — changed to geolocation=(self) so the feature actually works',
+      'AvatarCircle: added onError fallback to initials when image fails, and proper sizes prop for next/image fill',
+      'iOS Safari: added viewport-fit=cover, -webkit-fill-available on html/body, min-h-[100dvh] on AppShell — eliminates URL-bar layout shift',
+      'AppShell main: pb-20 → pb-safe-nav (calc(env(safe-area-inset-bottom)+5rem)) so content clears bottom nav + home indicator on iPhone X+',
+    ],
+  },
+  {
     version: '0.12.2',
     releasedAt: '2026-04-28T21:20:00+05:30',
     stamp: '[9:20pm - 28Apr26]',
