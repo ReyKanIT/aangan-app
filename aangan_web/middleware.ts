@@ -30,6 +30,7 @@ const PUBLIC_ROUTES = [
   '/demo',
   '/upload',
   '/invite',
+  '/join',
   '/tithi-reminders',
   '/support',
   '/auth/callback',
@@ -136,6 +137,6 @@ export const config = {
      * /profile-setup, /auth/* (other than /auth/callback). These are the
      * paths that need session enforcement.
      */
-    '/((?!_next/static|_next/image|favicon.ico|manifest.json|og-image|apple-touch-icon|robots.txt|sitemap.xml|api/|auth/callback|upload/|panchang|festivals|demo|privacy|terms|invite|tithi-reminders|support).*)',
+    '/((?!_next/static|_next/image|favicon.ico|manifest.json|og-image|apple-touch-icon|robots.txt|sitemap.xml|api/|auth/callback|upload/|panchang|festivals|demo|privacy|terms|invite|join/|tithi-reminders|support).*)',
   ],
 };

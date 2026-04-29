@@ -47,6 +47,7 @@ import KuldeviScreen from '../screens/settings/KuldeviScreen';
 // Family sub-screens
 import AddLifeEventScreen from '../screens/family/AddLifeEventScreen';
 import ImportantDatesScreen from '../screens/family/ImportantDatesScreen';
+import JoinFamilyScreen from '../screens/family/JoinFamilyScreen';
 
 // Support Screens
 import SupportChatScreen from '../screens/support/SupportChatScreen';
@@ -82,6 +83,7 @@ export type RootStackParamList = {
   Kuldevi: undefined;
   AddLifeEvent: { eventId?: string } | undefined;
   ImportantDates: undefined;
+  JoinFamily: { code: string };
   SupportChat: undefined;
   MyTickets: undefined;
   TicketDetail: { ticketId: string };
@@ -183,12 +185,30 @@ function MainTabs() {
   );
 }
 
+// React Navigation deep-link config — maps `aangan://join/<code>` and
+// `https://aangan.app/join/<code>` to the JoinFamily screen automatically.
+// The OAuth deep link (aangan://auth-callback) keeps its existing handler in
+// App.tsx and is intentionally NOT mapped here so navigation doesn't try to
+// route a token-bearing URL into a route.
+const linking = {
+  prefixes: [
+    'aangan://',
+    'https://aangan.app',
+    'https://www.aangan.app',
+  ],
+  config: {
+    screens: {
+      JoinFamily: 'join/:code',
+    },
+  },
+};
+
 export default function AppNavigator() {
   const navigationRef = useNavigationContainerRef();
   const session = useAuthStore((s) => s.session);
 
   return (
-    <NavigationContainer ref={navigationRef}>
+    <NavigationContainer ref={navigationRef} linking={linking}>
       <Stack.Navigator
         initialRouteName="Splash"
         screenOptions={{
@@ -246,6 +266,9 @@ export default function AppNavigator() {
           options={{ presentation: 'modal', animation: 'slide_from_bottom' }}
         />
         <Stack.Screen name="ImportantDates" component={ImportantDatesScreen} />
+
+        {/* Family Invite (deep link target) — aangan://join/<code> */}
+        <Stack.Screen name="JoinFamily" component={JoinFamilyScreen} />
 
         {/* Support */}
         <Stack.Screen name="SupportChat" component={SupportChatScreen} />

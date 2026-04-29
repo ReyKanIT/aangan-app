@@ -1,6 +1,6 @@
 # Aangan (आँगन) — Product Requirements Document
 
-> **Living document.** Updated after every release. Last updated: 2026-04-29
+> **Living document.** Updated after every release. Last updated: 2026-04-29 (v0.13.0)
 
 ---
 
@@ -29,6 +29,7 @@
 | v0.12.3 | Apr 28     | Avatar uploads → Supabase Storage (was leaking to B2), 2-column tithi/nakshatra UI |
 | v0.12.4 | Apr 28     | Family-tree native scroll, PublicShareCTA hydration fix, RN crash-proofing pass |
 | v0.12.5 | Apr 29     | **Production-readiness sweep** — RLS lockdown (Phase A), audience-respecting RLS, notification recipient validation, search_path hardening on 18 SECURITY DEFINER functions, corrected v0.2.2 indexes, storage bucket size+MIME limits, JWT-verified edge functions, new `send-push` edge function, web `middleware.ts` deduped + server-side profile-completeness check, `users(*)` joins trimmed across stores, RN version sync 0.9.14 → 0.9.15, `secureLog` migration, Sentry-ready binding, **`daily-reminders` `aangan_events` → `events` fix (event reminders had been silently dead since v0.8.0)**, privacy policy expanded to cover applicable Indian privacy law |
+| v0.13.0 / RN v0.10.0 | Apr 29 | **WhatsApp deep-link family invites** — new `family_invites` table with one-time-use 6-char codes (grandma-safe alphabet, 30-day expiry), three SECURITY DEFINER RPCs (`create_family_invite` / `lookup_invite` (anon-callable) / `claim_family_invite`), `family_invite_clicks` funnel tracker, web `/join/[code]` SSR page with dynamic OG metadata for forwarded WhatsApp previews, RN `JoinFamilyScreen` with auth-flow-survival via AsyncStorage, RN `InviteWithCodeModal` with 25 curated Hindi relationship chips, React Navigation `linking` config maps `aangan://join/<code>` → `JoinFamily`. Existing `/invite` page + add-by-phone flow untouched — both coexist. Migration: `supabase/migrations/20260429i_family_invites.sql` |
 
 ---
 
@@ -493,17 +494,22 @@ Honest re-assessment: **Expo Push is fine until ~10K MAU.** FCM migration is a m
 - Notification grouping by type.
 - Deep links from notification tap → open relevant screen.
 
-### 9.3 WhatsApp Invite Deep Links — 🔴 Not started (HIGH-ROI)
+### 9.3 WhatsApp Invite Deep Links — ✅ SHIPPED v0.13.0
 
-Highest-leverage growth lever in §9 and not started. Spec:
+Highest-leverage growth lever in §9 — landed 2026-04-29. As-built shape:
 
-- Generate shareable invite: `https://aangan.app/join/{family_code}`
-- Family code = 6-char alphanumeric on `families.invite_code` (new column).
-- WhatsApp share button with pre-filled Hindi message:
-  > "🏡 आँगन पर हमारे परिवार से जुड़ें! अभी डाउनलोड करें: [link]"
-- Deep link handling: web `/join/{code}` → install CTA → on app open after auth, auto-add as family member with invitee → inviter relationship.
-- Invite tracking: `invites` table with `inviter_id`, `invitee_phone`, `code`, `created_at`, `claimed_at`, conversion rate.
-- QR code generation for in-person invites (shaadi cards, family gatherings).
+- **Codes:** 6-char alphanumeric on `family_invites.code` with grandma-safe alphabet (no `O`, `0`, `I`, `1`). One-time-use, 30-day default expiry, inviter can revoke.
+- **Three RPCs:**
+  - `create_family_invite(rel_type, rel_label_hi, level, reverse_rel_type, reverse_rel_label_hi)` — authed inviter generates a code with the reciprocal relationship pre-set.
+  - `lookup_invite(code)` — **anon-callable** SECURITY DEFINER. Returns `{state, inviter_display_name, inviter_avatar_url, relationship_label_hindi, reverse_relationship_label_hindi, expires_at}`. Records a row in `family_invite_clicks` for the funnel.
+  - `claim_family_invite(code)` — auth-required, atomic (`FOR UPDATE` lock). Creates the bidirectional `family_members` rows on success. Idempotent for the same claimer.
+- **Web `/join/[code]` page** — server-rendered with dynamic OG metadata. Forwarded WhatsApp/iMessage links preview as "Inviter Name ने आपको [रिश्ता] के रूप में बुलाया है". On mobile UA: primary CTA is "Aangan ऐप में खोलें" (deep link `aangan://join/<code>`). On desktop: Play Store + APK + Indus buttons.
+- **RN deep-link routing** — React Navigation `linking` config maps `aangan://join/<code>` and `https://aangan.app/join/<code>` to `JoinFamily` screen. Existing OAuth deep-link handler in `App.tsx` is untouched.
+- **JoinFamilyScreen** — calls `lookup_invite` on mount (works pre-auth via anon RPC), shows the inviter card with bilingual relationship preview, "हाँ, जुड़ें" / "लॉगिन करें और जुड़ें" CTA. If user not signed in, persists code to `AsyncStorage @aangan/pending_join_code` and routes to Login. SplashScreen post-auth handler restores the code and pushes JoinFamily.
+- **InviteWithCodeModal** on Family tab — relationship picker with 25 curated Hindi chips grouped by L1/L2/L3, reverse-relationship preview, then opens WhatsApp share sheet with pre-filled Hindi message + the magic link.
+- **Funnel tracking** — `family_invite_clicks` rows are RLS-readable by the inviter only (they see how many people clicked their link).
+- **Coexists with the existing generic `/invite` page** — that page sends a referral-style share without a pre-set relationship; this new flow is for inviting a specific family member with the relationship locked in. Both flows kept.
+- **QR code generation** — deferred to v0.13.1 (in-person shaadi-card / family-gathering use case; the WhatsApp + universal-link path covers the 95% remote-invite case).
 
 ### 9.4 Photo Albums per Event — 🔴 Not started
 

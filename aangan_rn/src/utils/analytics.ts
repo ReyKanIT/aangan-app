@@ -23,10 +23,15 @@ import { secureLog } from './security';
 
 // Dynamically resolve Sentry so this module compiles without the dep
 // installed. Kept across the module lifetime — the require runs at most once.
-let SentryNS: typeof import('@sentry/react-native') | null = null;
+// `any` here is intentional — the package is an optional, late-installed dep
+// (see file header). Once Kumar runs `npx expo install @sentry/react-native`
+// these can be tightened to `typeof import('@sentry/react-native')`.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let SentryNS: any = null;
 let initialized = false;
 
-function loadSentry(): typeof import('@sentry/react-native') | null {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function loadSentry(): any {
   if (SentryNS) return SentryNS;
   try {
     // eslint-disable-next-line @typescript-eslint/no-require-imports

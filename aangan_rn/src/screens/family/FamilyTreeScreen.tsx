@@ -25,6 +25,8 @@ import { useFamilyStore } from '../../stores/familyStore';
 import { useLanguageStore } from '../../stores/languageStore';
 import { RELATIONSHIP_MAP } from '../../config/constants';
 import LifeEventsList from '../../components/family/LifeEventsList';
+import InviteWithCodeModal from '../../components/family/InviteWithCodeModal';
+import { useAuthStore } from '../../stores/authStore';
 import type { FamilyMember, User } from '../../types/database';
 import VoiceMicButton from '../../components/voice/VoiceMicButton';
 
@@ -711,7 +713,9 @@ export default function FamilyTreeScreen({ navigation }: Props) {
   const [activeTab, setActiveTab] = useState<TabKey>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showInviteModal, setShowInviteModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const currentUser = useAuthStore((s) => s.user);
 
   useEffect(() => {
     fetchMembers();
@@ -907,16 +911,26 @@ export default function FamilyTreeScreen({ navigation }: Props) {
 
       {/* Invite Banner — hidden on events tab (has its own FAB) */}
       {activeTab !== 'events' && (
-        <View style={[styles.inviteBanner, { paddingBottom: insets.bottom + Spacing.md }]}>
+        <View style={[styles.inviteBanner, { paddingBottom: insets.bottom + Spacing.md, flexDirection: 'row', gap: Spacing.sm }]}>
           <TouchableOpacity
-            style={styles.inviteButton}
+            style={[styles.inviteButton, { flex: 1 }]}
             onPress={() => setShowAddModal(true)}
             activeOpacity={0.8}
             accessibilityRole="button"
             accessibilityLabel="Add family member"
           >
             <Text style={styles.inviteIcon}>{'👨‍👩‍👧‍👦'}</Text>
-            <Text style={styles.inviteText}>{isHindi ? 'परिवार जोड़ें' : 'Add Family'}</Text>
+            <Text style={styles.inviteText}>{isHindi ? 'जोड़ें' : 'Add'}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.inviteButton, { flex: 1, backgroundColor: Colors.mehndiGreen }]}
+            onPress={() => setShowInviteModal(true)}
+            activeOpacity={0.8}
+            accessibilityRole="button"
+            accessibilityLabel="Invite family via WhatsApp"
+          >
+            <Text style={styles.inviteIcon}>{'📱'}</Text>
+            <Text style={styles.inviteText}>{isHindi ? 'WhatsApp आमंत्रण' : 'WhatsApp Invite'}</Text>
           </TouchableOpacity>
         </View>
       )}
@@ -927,6 +941,13 @@ export default function FamilyTreeScreen({ navigation }: Props) {
         onClose={() => setShowAddModal(false)}
         onSubmit={handleAddMember}
         isSubmitting={isSubmitting}
+      />
+
+      {/* WhatsApp coded-invite modal (v0.13.0) */}
+      <InviteWithCodeModal
+        visible={showInviteModal}
+        onClose={() => setShowInviteModal(false)}
+        inviterDisplayName={currentUser?.display_name_hindi || currentUser?.display_name || undefined}
       />
     </View>
   );

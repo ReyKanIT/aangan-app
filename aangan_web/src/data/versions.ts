@@ -24,6 +24,25 @@ export interface ReleaseNote {
 
 export const RELEASES: ReleaseNote[] = [
   {
+    version: '0.13.0',
+    releasedAt: '2026-04-29T20:55:00+05:30',
+    stamp: '[8:55pm - 29Apr26]',
+    summary: 'Growth: WhatsApp deep-link family invites — one-tap join with pre-set relationship',
+    category: 'feature',
+    highlights: [
+      'New family_invites table — 6-char one-time-use codes (grandma-safe alphabet, no O/0/I/1), 30-day expiry, atomic claim',
+      'create_family_invite / lookup_invite (anon-callable) / claim_family_invite SECURITY DEFINER RPCs',
+      'family_invite_clicks tracker for the conversion funnel (inviter sees clicks via RLS)',
+      'New web /join/[code] page — server-rendered with dynamic OG metadata so forwarded WhatsApp links show "Inviter ने आपको ... बुलाया है" preview',
+      'New RN JoinFamilyScreen — claims invite if signed in, persists code through auth flow if not',
+      'New RN InviteWithCodeModal on Family tab — pick relationship from 25 curated Hindi options (L1/L2/L3) → opens WhatsApp share with pre-filled Hindi message + magic link',
+      'React Navigation linking config maps aangan://join/<code> and https://aangan.app/join/<code> to JoinFamily; existing OAuth deep-link handler in App.tsx untouched',
+      'SplashScreen post-auth hand-off restores pending join code via AsyncStorage',
+      'Existing /invite page (generic referral share) and add-by-phone family-add flow are untouched — both flows now coexist',
+    ],
+    migration: 'supabase/migrations/20260429i_family_invites.sql',
+  },
+  {
     version: '0.12.5',
     releasedAt: '2026-04-29T20:10:00+05:30',
     stamp: '[8:10pm - 29Apr26]',

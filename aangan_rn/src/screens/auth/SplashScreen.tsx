@@ -10,6 +10,10 @@ import { Colors } from '../../theme/colors';
 import { Typography } from '../../theme/typography';
 import { Spacing } from '../../theme/spacing';
 import { useAuthStore } from '../../stores/authStore';
+import {
+  getPendingJoinCode,
+  setPendingJoinCode,
+} from '../family/JoinFamilyScreen';
 
 type Props = NativeStackScreenProps<any, 'Splash'>;
 
@@ -24,12 +28,21 @@ export default function SplashScreen({ navigation }: Props) {
   useEffect(() => {
     if (isLoading) return;
 
-    timerRef.current = setTimeout(() => {
+    timerRef.current = setTimeout(async () => {
       if (session) {
         if (isNewUser) {
           navigation.replace('ProfileSetup');
         } else {
+          // After session-positive routing to Main, check for a pending
+          // family-invite code stored before the auth flow. If found, push
+          // JoinFamily on top so the user lands on their invite, not a
+          // generic feed.
           navigation.replace('Main');
+          const pending = await getPendingJoinCode();
+          if (pending) {
+            await setPendingJoinCode(null);
+            navigation.navigate('JoinFamily', { code: pending });
+          }
         }
       } else {
         navigation.replace('Login');
