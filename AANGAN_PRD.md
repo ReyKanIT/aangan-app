@@ -1,6 +1,6 @@
 # Aangan (आँगन) — Product Requirements Document
 
-> **Living document.** Updated after every release. Last updated: 2026-04-11
+> **Living document.** Updated after every release. Last updated: 2026-04-29
 
 ---
 
@@ -19,7 +19,16 @@
 | v0.5.0  | 2026-04-04 | Voice Enabled — voice-to-text on all text inputs (Hindi + English), voice commands for hands-free navigation (8 commands), voice messages in chat (WhatsApp-style audio notes), language selector on login screen |
 | v0.6.0  | 2026-04-09 | Media & Storage — B2 cloud storage with Cloudflare CDN (media.aangan.app), post likes persistence (Supabase post_likes table + auto-count trigger), client-side image compression (max 1MB, 1920px, WebP), version bump for all platforms |
 | v0.7.0  | 2026-04-10 | AI & Communication — Aangan chatbot (family assistant), DMs/messaging enhancements, notification system improvements |
-| v0.8.0  | 2026-04-11 | **SHIPPED** — Play Store submission + Vercel web deploy. Admin dashboard, Expo SDK 36 upgrade, Dadi Test compliance audit pass |
+| v0.8.0  | 2026-04-11 | Play Store submission + Vercel web deploy. Admin dashboard, Expo SDK 36 upgrade, Dadi Test compliance audit pass |
+| v0.9.x  | Apr 13–25  | Growth unlock — landing SSR, public share CTAs, dynamic OG images for events, referral attribution, PWA install, viral-loop CEO sweep, MSG91/Vi DLT chain approval, Indus reviewer flow, family tree overhaul (zoomable diagram + exhaustive relationships) |
+| v0.10.x | Apr 26     | OTP postmortem fix — env-var name mismatch, real SMS for all Indian mobiles, reviewer-bypass disabled, settings footer auto-version |
+| v0.11.0 | Apr 27     | Family tree visual overhaul — full profile fields per member |
+| v0.12.0 | Apr 28     | Festival notifications — DB-backed catalogue, regional + opt-in, "Next Festival" banner |
+| v0.12.1 | Apr 28     | Recurring panchang events migration + dual-calendar reminders (tithi AND English date) for personal events |
+| v0.12.2 | Apr 28     | Bug-fix sweep — new-user upsert, panchang TZ, GPS-blocked fallback, iOS Safari safe-area |
+| v0.12.3 | Apr 28     | Avatar uploads → Supabase Storage (was leaking to B2), 2-column tithi/nakshatra UI |
+| v0.12.4 | Apr 28     | Family-tree native scroll, PublicShareCTA hydration fix, RN crash-proofing pass |
+| v0.12.5 | Apr 29     | **Production-readiness sweep** — RLS lockdown (Phase A), audience-respecting RLS, notification recipient validation, search_path hardening on 18 SECURITY DEFINER functions, corrected v0.2.2 indexes, storage bucket size+MIME limits, JWT-verified edge functions, new `send-push` edge function, web `middleware.ts` deduped + server-side profile-completeness check, `users(*)` joins trimmed across stores, RN version sync 0.9.14 → 0.9.15, `secureLog` migration, Sentry-ready binding, **`daily-reminders` `aangan_events` → `events` fix (event reminders had been silently dead since v0.8.0)**, privacy policy expanded to cover applicable Indian privacy law |
 
 ---
 
@@ -132,16 +141,20 @@
 - Mark individual / mark all read
 - Real-time via Supabase Realtime subscription
 
-**Family reminders (v0.4.4)**
+**Family reminders (v0.4.4 + v0.12.1 dual-calendar + v0.12.5 fix)**
 - Daily 08:00 IST automated push to all family members for:
   - Birthdays (from `date_of_birth`)
   - Wedding anniversaries
   - Custom important dates: birthday / anniversary / barsi / annual puja / other
+  - Upcoming family events (next 7 days)
 - Notification windows: same day, 1 day before, 3 days before, 7 days before
 - Per-date toggle to pause without deleting
 - Per-date choice: notify family (L1+L2) or self only
 - Dedup log — never sends same reminder twice per day
 - Upcoming occasions banner on ImportantDates screen
+- v0.12.1 — personal-event reminders fire on **both** the Hindu tithi and the English calendar date (dual-calendar)
+- v0.12.5 — **bug fix:** the upcoming-events branch of the cron queried a non-existent table `aangan_events` (real table is `events`), so event reminders had been silently dead from v0.8.0 (Apr 11) until 2026-04-29. Birthday + anniversary reminders had been working throughout. Fix landed in commit `1e3d84a`.
+- v0.12.5 — `daily-reminders` edge function now requires a `CRON_SECRET` bearer token; configure via `supabase secrets set CRON_SECRET=…` and pass it from the cron caller
 
 ### 4.6 Messaging
 
@@ -248,11 +261,89 @@
 
 ### 4.11 Web App
 
-- Next.js 15 + Tailwind CSS
-- Phone OTP login
-- Admin panel
-- Guest upload portal (QR scan → upload photos to event, no login required)
-- Supabase Auth SSR with middleware
+- Next.js 15 + Tailwind CSS, deployed on Vercel at https://aangan.app
+- Phone OTP + email + Google OAuth login
+- Supabase Auth SSR with middleware (server-side profile-completeness check + protected-route gating)
+- PWA-installable, dynamic OG images on event share links
+- Sentry instrumentation (client + edge + server runtimes)
+
+#### 4.11.1 Authenticated routes (full feature parity with mobile)
+
+The web app is **not** a thin admin tool — it is a full secondary front-end. Every authenticated mobile screen has a web counterpart:
+
+| Web route | Purpose |
+|---|---|
+| `/feed` | Family feed with posts, polls, stories, reactions, threaded comments |
+| `/family` | Family tree (zoomable diagram), member list with L1/L2/L3 tabs, add by phone search, add new members |
+| `/events` | Event listing, event detail page, RSVP, ceremonies, photo gallery, gift register |
+| `/events/[eventId]` | Server-rendered with dynamic OG images for WhatsApp/iMessage previews |
+| `/messages` | 1-on-1 chat with realtime updates and read receipts |
+| `/notifications` | Filtered notification feed |
+| `/kuldevi` | Kuldevi/Kuldevta config page |
+| `/tithi-reminders` | Manage important dates with dual-calendar (tithi + English) reminders |
+| `/chatbot` | Aangan family assistant (v0.7) |
+| `/settings` | Language toggle, theme, notification prefs, profile, storage usage, referral, legal |
+| `/profile-setup` | Post-OTP profile completion (Hindi+English name, photo, village, state, DOB, gotra, family role, wedding anniversary) |
+
+#### 4.11.2 Public / SEO routes (no auth required)
+
+| Web route | Purpose |
+|---|---|
+| `/` | Landing — Hindi-first hero, feature grid, Dadi Test cards, download CTAs (APK + Indus + iOS-coming-soon) |
+| `/login`, `/otp` | Phone OTP auth flow |
+| `/invite` | "Invite your family to Aangan" share-CTA page (WhatsApp share button, QR code) |
+| `/panchang` | Today's Panchang (tithi, nakshatra, yoga, vara, masa, sunrise/sunset) — works without login, GPS-aware with Delhi fallback |
+| `/festivals` | Indian festival catalog with regional filters |
+| `/demo` | Marketing demo / screenshot tour |
+| `/support` | Help / contact form |
+| `/privacy`, `/terms` | Legal pages |
+| `/upload/[eventId]` | **Guest upload portal** — QR scan → upload event photos without account. Anonymous-INSERT bucket policy with size/MIME guards |
+| `/auth/callback` | OAuth/PKCE redirect handler |
+
+#### 4.11.3 Admin routes (`is_app_admin = true` required)
+
+| Web route | Purpose |
+|---|---|
+| `/admin` | Dashboard — DAU/WAU/MAU/D7-D30 retention, recent users/posts/events/reports, support queue |
+| `/admin/users` | User management — search by name/phone, role/admin toggle, deactivate |
+| `/admin/analytics` | Engagement metrics, time-series breakdowns |
+| `/admin/reports` | Content moderation queue (approve/reject reports) |
+| `/admin/issues` | Combined view: support tickets + content reports |
+| `/admin/audit` | Audit log viewer with actor + action filters |
+| `/admin/feedback-digest` | Aggregated feedback summary, exportable |
+| `/admin/support` | Support ticket workspace with inline chat |
+| `/admin/settings` | App-wide JSONB settings (`app_settings` table) |
+| `/admin/versions` | Release history (driven by `aangan_web/src/data/versions.ts`) |
+
+---
+
+### 4.12 Support & Feedback System (added v0.5+, formalized v0.9)
+
+> Not in the original §4 spec. Documented retrospectively per the 2026-04-29 PRD audit.
+
+**RN screens:**
+- `screens/support/HelpScreen.tsx` — FAQ + contact CTAs
+- `screens/support/FeedbackScreen.tsx` — bilingual feedback form
+- `screens/support/MyTicketsScreen.tsx`, `TicketDetailScreen.tsx`, `SupportChatScreen.tsx` — full ticket lifecycle with chat thread
+- `screens/support/ReportContentScreen.tsx` — flag posts/comments/users for moderation
+
+**Web counterpart:** `/support` (public-facing) and `/admin/support` + `/admin/issues` (admin workspace).
+
+**DB tables:** `support_tickets`, `support_messages`, `content_reports` — RLS-protected, private-to-user except admin role.
+
+**Cron:** `aangan_web/src/app/api/cron/feedback-digest/route.ts` — daily aggregation for admin review.
+
+---
+
+### 4.13 Festivals (extended in v0.12.0)
+
+Original §4.7 mentioned only "pre-loaded calendar + upcoming strip". Reality is a richer feature:
+
+- **DB-backed catalog:** `system_festivals` table (`supabase/migrations/20260428_system_festivals.sql`) — every festival has name (Hindi + English), date, region, and category.
+- **Regional opt-in:** users select which regions' festivals they want (North / South / East / West / All India).
+- **"Next Festival" banner** on home feed — countdown to the next opted-in festival.
+- **Festival push notifications** (v0.12.0) — daily-reminders cron pushes a notification on the day of, opt-in.
+- **Public `/festivals` SEO page** — full catalog browsable without login.
 
 ---
 
@@ -334,82 +425,109 @@ supabase_migration_v0.4.4_reminders.sql    — family_important_dates + reminder
 
 ---
 
-## 8. Shipped Features (v0.8.0) ✅
+## 8. Shipped Features (v0.12.5) ✅
 
-All features listed in sections 4.1–4.11 are **SHIPPED** as of v0.8.0 (2026-04-11), including:
+Most features in §4.1–4.13 are shipped. Asterisks below mark partial / regressed / postponed items uncovered in the 2026-04-29 PRD-vs-implementation audit.
 
-| Feature | Status |
-|---------|--------|
-| Phone OTP auth + Google OAuth | ✅ SHIPPED |
-| Family tree (L1/L2/L3) + interactive SVG | ✅ SHIPPED |
-| Posts & feed with audience control | ✅ SHIPPED |
-| Events & RSVP with multi-ceremony | ✅ SHIPPED |
-| Voice messages + voice-to-text + voice commands | ✅ SHIPPED |
-| Panchang / Vedic calendar (offline) | ✅ SHIPPED |
-| Festival calendar | ✅ SHIPPED |
-| Kuldevi / Kuldevta | ✅ SHIPPED |
-| Aangan chatbot (family assistant) | ✅ SHIPPED |
-| DMs / messaging with read receipts | ✅ SHIPPED |
-| Push notifications + family reminders | ✅ SHIPPED |
-| Admin dashboard (web) | ✅ SHIPPED |
-| B2 cloud storage + Cloudflare CDN | ✅ SHIPPED |
-| Dadi Test compliance (52px+ buttons, 16px+ text, Hindi-first) | ✅ SHIPPED |
-| Play Store submission (v0.8.0 AAB) | ✅ SHIPPED |
-| Web app live on Vercel | ✅ SHIPPED |
+| Feature | Status | Note |
+|---------|--------|------|
+| Phone OTP auth + Email OTP + Google OAuth | ✅ SHIPPED | |
+| Family tree (L1/L2/L3) + interactive zoomable diagram | ✅ SHIPPED | v0.11.0 overhaul |
+| Posts & feed with audience control + polls + stories | ✅ SHIPPED | |
+| Events & RSVP with multi-ceremony, GPS check-in, QR upload | ✅ SHIPPED | |
+| Voice messages + voice-to-text + voice commands | ✅ SHIPPED | M4A 120s, 8 commands |
+| Panchang / Vedic calendar (self-contained Meeus engine) | ✅ SHIPPED | GPS-aware, Delhi fallback |
+| Festival calendar + regional opt-in + push (v0.12.0) | ✅ SHIPPED | See §4.13 |
+| Kuldevi / Kuldevta | ✅ SHIPPED | |
+| Aangan chatbot (family assistant) | ✅ SHIPPED | v0.7.0 |
+| DMs / messaging with read receipts (realtime) | ✅ SHIPPED | |
+| Push notifications | ✅ SHIPPED | Expo Push (FCM migration deferred — see §9.2) |
+| Family reminders — birthdays + anniversaries | ✅ SHIPPED | |
+| Family reminders — upcoming events | ⚠️ FIXED 2026-04-29 | Was silently dead Apr 11 → Apr 29 (table-name typo `aangan_events` vs `events`). Fixed in commit `1e3d84a`. |
+| Admin dashboard (web) — 9 sub-routes | ✅ SHIPPED | See §4.11.3 |
+| B2 cloud storage + Cloudflare CDN | ✅ SHIPPED | |
+| Supabase Storage hardening — file_size_limit + MIME allowlist | ✅ SHIPPED v0.12.5 | event-photos 20 MiB, family-photos 8 MiB, voice-messages 10 MiB, avatars 4 MiB |
+| Dadi Test compliance (52px+ buttons, 16px+ text, Hindi-first) | ✅ SHIPPED | |
+| Play Store submission (v0.8.0 AAB) | ✅ SHIPPED | |
+| Web app live on Vercel | ✅ SHIPPED | Full feature parity — see §4.11.1 |
+| Support / Tickets system (§4.12) | ✅ SHIPPED | Retrospectively documented in v0.12.5 audit |
+| RLS hardening — users-table anon revoke, audience-respecting child-table policies, notification recipient validation, search_path on 18 SECURITY DEFINER functions | ✅ SHIPPED v0.12.5 | Migration files `20260429b/c/d/e/f/g_*.sql` |
+| Edge function authn — JWT-verified `audit-log` / `rate-limit` / `send-push`, fail-closed `send-otp-sms`, CRON_SECRET on `daily-reminders` | ✅ SHIPPED v0.12.5 | |
+| Privacy policy — applicable Indian privacy law sections | ✅ SHIPPED v0.12.5 | User rights, retention, cross-border, breach notification, privacy-team contact |
+| Sentry web (Next.js) | ✅ SHIPPED | Per-runtime: client + edge + server |
+| Sentry RN (mobile) | 🟡 BINDING SHIPPED | Inert until Kumar runs `npx expo install @sentry/react-native` + sets `EXPO_PUBLIC_SENTRY_DSN`. Documented in `KUMAR_PRODUCTION_TASKS_PLAYBOOK.md` Task 5. |
 
 ---
 
-## 9. Roadmap — v0.9.0 (Target: May 2026)
+## 9. Roadmap — Next (revised post 2026-04-29 audit)
 
 **Theme: Offline, Growth, and Performance**
+**Status legend:** ✅ Shipped · 🟡 Partial · 🔴 Not started · ⏸ Deferred
 
-### 9.1 Offline Mode
+### 9.1 Offline Mode — 🟡 Partial
 
-- Local SQLite cache for family member data, recent posts, and events
-- Queue system for offline-created posts, comments, and RSVPs
-- Auto-sync when network restored (conflict resolution: server wins, user notified)
-- Offline indicator banner (Dadi Test: large, clear "ऑफलाइन" banner in red)
-- Panchang already works offline (self-contained engine)
-- Cache expiry: 7 days for posts, 30 days for family data
+**Shipped:**
+- Offline indicator banner (`aangan_rn/src/components/common/OfflineBanner.tsx`) with Hindi "ऑफलाइन" label and Dadi Test-compliant sizing.
+- NetInfo singleton + `withRetry` exponential-backoff helper (`aangan_rn/src/utils/network.ts`).
+- Persisted offline queue primitive (factories + AsyncStorage) — built but not yet wired to post / comment / RSVP creation flows.
+- Panchang already works offline (self-contained engine).
 
-### 9.2 Push Notifications (FCM)
+**Not shipped:**
+- Local SQLite cache for family / posts / events.
+- Queue-and-sync wiring on post / comment / RSVP creation.
+- Conflict resolution UI ("server wins, user notified").
+- Cache-expiry policy (7 days posts, 30 days family).
 
-- Migrate from Expo Push to Firebase Cloud Messaging (FCM) for reliability
-- Notification channels (Android):
-  - Events & RSVP (high priority)
-  - Birthdays & festivals (default priority)
-  - Posts & comments (low priority)
-  - DMs (high priority)
-- Rich notifications with images (event photos, profile pics)
-- Notification grouping by type
-- Deep links: tap notification → open relevant screen
+### 9.2 Push Notifications (FCM) — ⏸ Deferred
 
-### 9.3 WhatsApp Invite Deep Links
+Honest re-assessment: **Expo Push is fine until ~10K MAU.** FCM migration is a multi-day refactor with native-build implications. Defer until reliability ceilings are hit OR until rich notifications (event-photo previews) become a real product need.
 
-- Generate shareable invite link: `https://aangan.app/join/{family_code}`
+**Currently shipped under Expo Push:**
+- Per-user `push_token` registration on login.
+- `daily-reminders` cron at 08:00 IST → `https://exp.host/--/api/v2/push/send`.
+- New `send-push` edge function (v0.12.5) with JWT auth + relationship validation.
+
+**Not shipped (FCM-only):**
+- Android notification channels (high/default/low priority lanes).
+- Rich notifications with images.
+- Notification grouping by type.
+- Deep links from notification tap → open relevant screen.
+
+### 9.3 WhatsApp Invite Deep Links — 🔴 Not started (HIGH-ROI)
+
+Highest-leverage growth lever in §9 and not started. Spec:
+
+- Generate shareable invite: `https://aangan.app/join/{family_code}`
+- Family code = 6-char alphanumeric on `families.invite_code` (new column).
 - WhatsApp share button with pre-filled Hindi message:
   > "🏡 आँगन पर हमारे परिवार से जुड़ें! अभी डाउनलोड करें: [link]"
-- Deep link handling: app opens → auto-join family after auth
-- Invite tracking: who invited whom, conversion rate
-- QR code generation for in-person invites (shaadi cards, family gatherings)
+- Deep link handling: web `/join/{code}` → install CTA → on app open after auth, auto-add as family member with invitee → inviter relationship.
+- Invite tracking: `invites` table with `inviter_id`, `invitee_phone`, `code`, `created_at`, `claimed_at`, conversion rate.
+- QR code generation for in-person invites (shaadi cards, family gatherings).
 
-### 9.4 Photo Albums per Event
+### 9.4 Photo Albums per Event — 🔴 Not started
 
-- Auto-create album when event is created
-- Manual album creation within events
-- Album cover photo selection
-- Slideshow mode (auto-play with transitions)
-- Download album as ZIP
-- Album sharing via link (privacy-respecting)
+- Auto-create album when event is created.
+- Manual album creation within events.
+- Album cover photo selection.
+- Slideshow mode (auto-play with transitions).
+- Download album as ZIP.
+- Album sharing via link (privacy-respecting).
 
-### 9.5 Performance Improvements
+### 9.5 Performance Improvements — 🟡 Partial
 
-- Image lazy loading with blur-hash placeholders
-- Skeleton screens on all list views (feed, family tree, events, messages)
-- Virtualized lists (FlashList) for feed and family members
-- Image CDN resizing (thumbnail, medium, full via Cloudflare transforms)
-- Bundle size optimization: code splitting, tree shaking
-- Startup time target: < 3 seconds on mid-range Android devices
+**Shipped:**
+- Skeleton screens on most list views.
+- Client-side image compression (max 1MB, 1920px, WebP).
+- Code-splitting on web for below-fold modals (`(app)/feed/page.tsx`, `(app)/events/[eventId]/page.tsx`).
+- B2 + Cloudflare CDN for media.
+
+**Not shipped:**
+- FlashList virtualization on feed + family members.
+- Blur-hash placeholders during image load.
+- Image CDN resize variants (thumbnail / medium / full via Cloudflare transforms).
+- Bundle size budget enforcement.
+- Startup time target (< 3 sec on mid-range Android) not measured.
 
 ---
 
