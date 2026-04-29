@@ -1,19 +1,21 @@
 /**
  * Supabase Edge Function — Audit Logging
- * Aangan v0.2
+ * Aangan v0.2 — Hardened 2026-04-29 (audit fix)
  *
  * Records security-relevant events to the audit_logs table.
- * Must be called with service_role key (from server/edge only).
+ * Caller MUST present a valid Supabase user JWT in the Authorization header.
+ * The function validates the JWT, derives actor_id from the JWT subject, and
+ * IGNORES any actor_id in the body (prior version trusted body input —
+ * audit log spoofing).
  *
  * POST /functions/v1/audit-log
- * Body: { actor_id, action, target_type?, target_id?, metadata?, ip_address?, user_agent? }
+ * Headers: Authorization: Bearer <user JWT>
+ * Body: { action, target_type?, target_id?, metadata?, ip_address?, user_agent? }
  * Returns: { success: boolean, id?: string }
  */
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
-// Audit-log is a server-to-server function — only allow internal callers
-// In production, invoke this only from other Edge Functions or backend code, not from the browser
 const ALLOWED_ORIGINS = [
   'https://aangan.app',
   'https://www.aangan.app',
@@ -41,6 +43,10 @@ const VALID_ACTIONS = [
   'admin_action', 'account_deactivate', 'content_report',
 ];
 
+const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? '';
+const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY') ?? '';
+const SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
+
 Deno.serve(async (req) => {
   const corsHeaders = getCorsHeaders(req);
 
@@ -55,13 +61,36 @@ Deno.serve(async (req) => {
     );
   }
 
+  // ── 1. JWT verification (added 2026-04-29). Body actor_id is no longer trusted.
+  const authHeader = req.headers.get('authorization') ?? '';
+  if (!authHeader.startsWith('Bearer ')) {
+    return new Response(
+      JSON.stringify({ error: 'Missing bearer token' }),
+      { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+    );
+  }
+
+  const userClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    global: { headers: { Authorization: authHeader } },
+  });
+
+  const { data: { user }, error: userErr } = await userClient.auth.getUser();
+  if (userErr || !user) {
+    return new Response(
+      JSON.stringify({ error: 'Invalid or expired token' }),
+      { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+    );
+  }
+
+  const actor_id = user.id;
+
   try {
     const body = await req.json();
-    const { actor_id, action, target_type, target_id, metadata, ip_address, user_agent } = body;
+    const { action, target_type, target_id, metadata, ip_address, user_agent } = body;
 
-    if (!actor_id || !action) {
+    if (!action) {
       return new Response(
-        JSON.stringify({ error: 'actor_id and action required' }),
+        JSON.stringify({ error: 'action required' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
       );
     }
@@ -73,15 +102,13 @@ Deno.serve(async (req) => {
       );
     }
 
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
-    );
+    // Service-role client for the actual insert (RLS-bypassing write to audit_logs).
+    const adminClient = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
 
-    const { data, error } = await supabase
+    const { data, error } = await adminClient
       .from('audit_logs')
       .insert({
-        actor_id,
+        actor_id, // bound to verified JWT subject — body cannot override
         action,
         target_type: target_type || null,
         target_id: target_id || null,
@@ -103,7 +130,7 @@ Deno.serve(async (req) => {
       JSON.stringify({ success: true, id: data.id }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
     );
-  } catch (error) {
+  } catch (_error) {
     return new Response(
       JSON.stringify({ error: 'Internal server error' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },

@@ -116,9 +116,12 @@ You will be prompted for your database password.
 ### Step 3d: Set Edge Function Secrets (MSG91 Credentials)
 
 ```bash
+# REDACTED 2026-04-29 — original auth key was committed and is now considered leaked.
+# Rotate via MSG91 dashboard, then set the new key from your password manager.
+# See MSG91_KEY_ROTATION_RUNBOOK.md.
 npx supabase secrets set \
-  MSG91_AUTH_KEY="505756AQEhXpC30Xnc69d0aaf2P1" \
-  MSG91_TEMPLATE_ID="69d0acea4401dcf53a0b4f82" \
+  MSG91_AUTH_KEY="<NEW_KEY_FROM_PASSWORD_MANAGER>" \
+  MSG91_TEMPLATE_ID="<TEMPLATE_ID_FROM_PASSWORD_MANAGER>" \
   MSG91_SENDER_ID="AANGAN" \
   --project-ref okzmeuhxodzkbdilvkyu
 ```
@@ -157,8 +160,8 @@ npx supabase functions deploy rate-limit --project-ref okzmeuhxodzkbdilvkyu
 
 | Key | Value |
 |-----|-------|
-| Auth Key | `505756AQEhXpC30Xnc69d0aaf2P1` |
-| OTP Template ID | `69d0acea4401dcf53a0b4f82` |
+| Auth Key | **REDACTED** — see CREDENTIALS.md (gitignored) / 1Password. Original committed value rotated 2026-04-29. |
+| OTP Template ID | **REDACTED** — see CREDENTIALS.md / 1Password. |
 | Sender ID | `AANGAN` |
 
 ### How the Hook Works

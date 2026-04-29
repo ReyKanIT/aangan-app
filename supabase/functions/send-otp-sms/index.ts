@@ -35,16 +35,24 @@ Deno.serve(async (req: Request) => {
     return new Response('Method not allowed', { status: 405 });
   }
 
-  // Optional: Verify webhook secret if configured (prevents external abuse)
-  if (WEBHOOK_SECRET) {
-    const auth = req.headers.get('authorization') ?? '';
-    if (auth !== `Bearer ${WEBHOOK_SECRET}`) {
-      console.error('Unauthorized: invalid webhook secret');
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        status: 401,
-        headers: { 'Content-Type': 'application/json' },
-      });
-    }
+  // Fail-closed webhook auth (hardened 2026-04-29).
+  // Previously: if WEBHOOK_SECRET was unset (?? '') the auth check was
+  // silently skipped — anyone with the function URL could trigger MSG91 SMS,
+  // burning DLT credits and potentially DoS-ing real users.
+  if (!WEBHOOK_SECRET) {
+    console.error('SUPABASE_WEBHOOK_SECRET not configured — refusing to accept request');
+    return new Response(JSON.stringify({ error: 'Service misconfigured' }), {
+      status: 503,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+  const auth = req.headers.get('authorization') ?? '';
+  if (auth !== `Bearer ${WEBHOOK_SECRET}`) {
+    console.error('Unauthorized: invalid webhook secret');
+    return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+      status: 401,
+      headers: { 'Content-Type': 'application/json' },
+    });
   }
 
   let payload: any;

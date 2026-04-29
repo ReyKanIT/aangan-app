@@ -139,7 +139,37 @@ async function sendBatchPush(payloads: NotificationPayload[]): Promise<void> {
 
 // ─── Main handler ─────────────────────────────────────────────────────────────
 
-Deno.serve(async (_req) => {
+const CRON_SECRET = Deno.env.get('CRON_SECRET') ?? '';
+
+/** Constant-time string compare to avoid timing oracles on the cron secret. */
+function safeEqual(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  let diff = 0;
+  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return diff === 0;
+}
+
+Deno.serve(async (req) => {
+  // Hardened 2026-04-29: require CRON_SECRET. Prior version was openly callable
+  // and would happily blast reminders to all users on demand, leaking the
+  // family graph by who got what notification. Set CRON_SECRET via:
+  //   supabase secrets set CRON_SECRET="<random>"
+  // and configure pg_cron / Vercel cron to send Authorization: Bearer <secret>.
+  if (!CRON_SECRET) {
+    console.error('CRON_SECRET not configured — refusing to run');
+    return new Response(JSON.stringify({ error: 'Service misconfigured' }), {
+      status: 503,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+  const auth = req.headers.get('authorization') ?? '';
+  if (!safeEqual(auth, `Bearer ${CRON_SECRET}`)) {
+    return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+      status: 401,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+
   const db = createClient(SUPABASE_URL, SERVICE_KEY, {
     auth: { persistSession: false },
   });
@@ -325,10 +355,13 @@ Deno.serve(async (_req) => {
     }
   }
 
-  // ── 7. Upcoming aangan_events (next 7 days) ──────────────────────────────────
+  // ── 7. Upcoming events (next 7 days) ──────────────────────────────────
+  // FIX 2026-04-29: was 'aangan_events' — that table does not exist; the real
+  // table is public.events (per supabase_schema.sql:358). The whole block was
+  // silently returning zero rows in prod, so no event reminders were firing.
   const sevenDaysLater = toISO(daysFromNow(7));
   const { data: upcomingEvents } = await db
-    .from('aangan_events') // Note: may be 'events' depending on actual table name
+    .from('events')
     .select('id, creator_id, title, title_hindi, event_date, event_type, audience_type')
     .gte('event_date', todayISO)
     .lte('event_date', sevenDaysLater);
