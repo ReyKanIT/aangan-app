@@ -133,13 +133,15 @@ If this session disconnects, the next Claude run should:
 
 ## 5. Kumar-only actions (cannot be automated)
 
+> **📘 Step-by-step playbook for all five tasks below: [KUMAR_PRODUCTION_TASKS_PLAYBOOK.md](KUMAR_PRODUCTION_TASKS_PLAYBOOK.md)**
+
 | Tag | Action | Why |
 |---|---|---|
 | **T03** | Rotate MSG91 auth key in MSG91 dashboard, update `MSG91_AUTH_KEY` Supabase Edge Function secret | Requires MSG91 portal login; key is in Kumar's password manager |
 | **T09** | Back up `aangan_rn/aangan-release.keystore` + `credentials.json` to 1Password (encrypted) and a second offline location | Cannot upload to Kumar's password manager from this session |
 | **T12** | Apply P0 SQL migrations to production Supabase | Requires Supabase project credentials; safer for Kumar to run via Dashboard SQL Editor |
-| **T26** | Fill `eas.json` Apple submit IDs (`appleId`, `ascAppId`, `appleTeamId`) + place real `play-service-account.json` | Requires Apple Developer / Google Play Console access |
-| **T33** | Apply P1 SQL migrations to production Supabase | Same as T12 |
+| **T26** | Fill `eas.json` Apple submit IDs (`appleId`, `ascAppId`, `appleTeamId`) + place real `play-service-account.json` + install `@sentry/react-native` | Requires Apple Developer / Google Play Console access + Sentry project setup |
+| **T33** | Reconcile event_date schema drift, then apply migration `h` (or a tailored one) | Web reads `start_datetime`, RN reads `event_date` — Kumar must pick one |
 
 ---
 
