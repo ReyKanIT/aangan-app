@@ -54,7 +54,7 @@ If this session disconnects, the next Claude run should:
 
 - [ ] **T01** Backup doc written (this file)
 - [ ] **T02** P0-1 Remove leaked file `archive/SUPABASE_SETUP_GUIDE.md` from working tree + write rotation runbook `MSG91_KEY_ROTATION_RUNBOOK.md`
-- [k] **T03** P0-1 (Kumar action) Rotate MSG91 auth key in dashboard, update `MSG91_AUTH_KEY` Supabase secret
+- [x] **T03** P0-1 ROTATED 2026-04-30 ~01:55 IST — new key `AanganAPIv2` created in MSG91 dashboard (browser-driven, blue/green pattern), `MSG91_AUTH_KEY` replaced in Supabase Edge Function Secrets (digest `283e0154...` → `e8bd35a0...`), old `AanganAPIKey` (5057...f2P1) DISABLED. Leaked-key probe `curl -H "authkey: 505756AQEhXpC30Xnc69d0aaf2P1" https://control.msg91.com/api/v5/sms/credits` returns **HTTP 401 Unauthorized** ✅ — leaked git-history value is dead.
 - [ ] **T04** P0-2 Migration `supabase/migrations/20260429_users_rls_lockdown.sql` — family-scoped SELECT + `REVOKE SELECT FROM anon`
 - [ ] **T05** P0-3 Migration `supabase/migrations/20260429_audience_rls_lockdown.sql` — gate comments/reactions/stories/polls by parent visibility
 - [ ] **T06** P0-4 Migration `supabase/migrations/20260429_notification_insert_hardening.sql` — recipient-validation

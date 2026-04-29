@@ -8,7 +8,15 @@
 
 ---
 
-## 🟥 Task 1 — Rotate MSG91 auth key (15 min)
+## ✅ Task 1 — Rotate MSG91 auth key — DONE 2026-04-30 ~01:55 IST
+
+Completed in-session via Chrome browser automation. New key `AanganAPIv2` (5057…4aP1) is the active key in both MSG91 and Supabase. Old `AanganAPIKey` is disabled. Leaked git-history key `505756…f2P1` returns HTTP 401 on `/api/v5/sms/credits`. **No further action needed.**
+
+Original procedure preserved below for reference.
+
+---
+
+(Original)
 
 The key `505756…` is leaked in git history. Rotate first; everything else can wait.
 
