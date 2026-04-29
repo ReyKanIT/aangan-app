@@ -74,3 +74,4 @@ supabase/config.toml
 
 # Draft migrations not yet applied
 supabase/migrations/create_app_settings.sql
+.aangan-prod-secrets.txt

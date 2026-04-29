@@ -1,7 +1,7 @@
 import { safeError } from '../utils/security';
 import { create } from 'zustand';
 import { supabase } from '../config/supabase';
-import { RELATIONSHIP_MAP } from '../config/constants';
+import { RELATIONSHIP_MAP, RELATIONSHIP_HINDI_LABEL } from '../config/constants';
 import { sendPushToUser } from '../services/pushNotifications';
 import type { FamilyMember, User } from '../types/database';
 
@@ -74,15 +74,24 @@ export const useFamilyStore = create<FamilyState>((set, get) => ({
         return false;
       }
 
-      const reverseRelationship = RELATIONSHIP_MAP[relationshipType] || relationshipType;
+      // Reverse-relationship lookup. Bug fixed 2026-04-30: previously the
+      // RELATIONSHIP_MAP was Hindi-keyed but the call site passes English
+      // keys, so this fell through and the reverse defaulted to the SAME
+      // relationship as the forward — corrupting every bidirectional pair
+      // (B saw A as B's father if A added B as A's father).
+      const reverseRelationship = RELATIONSHIP_MAP[relationshipType] ?? relationshipType;
+      const reverseLabelHindi = RELATIONSHIP_HINDI_LABEL[reverseRelationship] ?? null;
 
-      // Use server-side SECURITY DEFINER function for atomic bidirectional insert
+      // Use server-side SECURITY DEFINER function for atomic bidirectional insert.
+      // The 6th param `p_reverse_hindi` was added by migration 20260430b; older
+      // backends (pre-fix) ignored a 6th arg, so this call works against either.
       const { error } = await supabase.rpc('add_family_member_bidirectional', {
         p_member_id: familyMemberId,
         p_rel_type: relationshipType,
         p_rel_hindi: relationshipLabelHindi,
         p_level: connectionLevel,
         p_reverse_type: reverseRelationship,
+        p_reverse_hindi: reverseLabelHindi,
       });
 
       if (error) {

@@ -86,34 +86,158 @@ export const INDIAN_STATES = [
   'Delhi', 'Jammu & Kashmir', 'Ladakh', 'Lakshadweep', 'Puducherry',
 ] as const;
 
-// Relationship types with reverse mappings
+// Reverse-relationship map.
+//
+// Bug fixed 2026-04-30: this map was previously keyed by HINDI labels
+// (`'पिता'`, `'माता'`, …) but every caller in the app passes the ENGLISH
+// `relationship_type` key (e.g. `'father'`). The lookup never matched, so
+// `addMember` fell back to passing the SAME relationship as the reverse —
+// which meant every bidirectional pair stored both rows with identical
+// `relationship_type`. If A said "B is my father", DB ended up with
+// `A→B = father` AND `B→A = father` (B's tree showed A as B's father).
+//
+// This English-keyed map mirrors the working version in
+// `aangan_web/src/components/family/AddMemberDrawer.tsx:17` and extends it
+// with the Indian-specific in-law relations.
+//
+// Gender note: many reverses are gender-asymmetric (mother ↔ son for sons,
+// mother ↔ daughter for daughters). Without `users.gender` we default to the
+// male form (matches the existing web behavior). Future enhancement:
+// gender-aware reverse lookup using `users.gender` of the target member —
+// see TODO in `add_family_member_bidirectional` SQL.
 export const RELATIONSHIP_MAP: Record<string, string> = {
-  'पिता': 'बेटा',
-  'माता': 'बेटा',
-  'बेटा': 'पिता',
-  'बेटी': 'पिता',
-  'भाई': 'भाई',
-  'बहन': 'भाई',
-  'पत्नी': 'पति',
-  'पति': 'पत्नी',
-  'दादा': 'पोता',
-  'दादी': 'पोता',
-  'नाना': 'नाती',
-  'नानी': 'नाती',
-  'चाचा': 'भतीजा',
-  'चाची': 'भतीजा',
-  'मामा': 'भांजा',
-  'मामी': 'भांजा',
-  'बुआ': 'भतीजा',
-  'फूफा': 'भतीजा',
-  'पोता': 'दादा',
-  'पोती': 'दादा',
-  'नाती': 'नाना',
-  'नातिन': 'नाना',
-  'भतीजा': 'चाचा',
-  'भतीजी': 'चाचा',
-  'भांजा': 'मामा',
-  'भांजी': 'मामा',
+  // ── L1 immediate ──
+  father: 'son',
+  mother: 'son',
+  son: 'father',
+  daughter: 'father',
+  brother: 'brother',
+  sister: 'brother',
+  husband: 'wife',
+  wife: 'husband',
+  stepfather: 'son',
+  stepmother: 'son',
+  stepson: 'father',
+  stepdaughter: 'father',
+  stepbrother: 'brother',
+  stepsister: 'brother',
+  half_brother: 'half_brother',
+  half_sister: 'half_brother',
+  adopted_son: 'father',
+  adopted_daughter: 'father',
+
+  // ── L2 grandparents / grandchildren ──
+  grandfather_paternal: 'grandson_paternal',
+  grandmother_paternal: 'grandson_paternal',
+  grandfather_maternal: 'grandson_maternal',
+  grandmother_maternal: 'grandson_maternal',
+  grandson_paternal: 'grandfather_paternal',
+  granddaughter_paternal: 'grandfather_paternal',
+  grandson_maternal: 'grandfather_maternal',
+  granddaughter_maternal: 'grandfather_maternal',
+  grandson: 'grandfather_paternal',
+  granddaughter: 'grandfather_paternal',
+
+  // ── L2 in-laws ──
+  father_in_law: 'son_in_law',
+  mother_in_law: 'daughter_in_law',
+  son_in_law: 'father_in_law',
+  daughter_in_law: 'mother_in_law',
+
+  // ── L2 siblings-in-law (Indian-specific) ──
+  jeth: 'bhabhi',
+  jethani: 'devar',
+  devar: 'bhabhi',
+  devrani: 'jeth',
+  nanad: 'bhabhi',
+  bhabhi: 'devar',
+  jija: 'saala',
+  saala: 'jija',
+  saali: 'jija',
+  sandhu: 'sandhu',
+  brother_in_law: 'brother_in_law',
+  sister_in_law: 'brother_in_law',
+
+  // ── L3 great-grandparents ──
+  great_grandfather_paternal: 'great_grandson_paternal',
+  great_grandmother_paternal: 'great_grandson_paternal',
+  great_grandfather_maternal: 'great_grandson_maternal',
+  great_grandmother_maternal: 'great_grandson_maternal',
+
+  // ── L3 uncles/aunts (paternal) ──
+  tau: 'bhatija',
+  tai: 'bhatija',
+  uncle_paternal: 'bhatija',
+  aunt_paternal: 'bhatija',
+  bua: 'bhatija',
+  fufa: 'bhatija',
+
+  // ── L3 uncles/aunts (maternal) ──
+  uncle_maternal: 'bhanja',
+  aunt_maternal: 'bhanja',
+  mausi: 'bhanja',
+  mausa: 'bhanja',
+
+  // ── L3 nephews/nieces ──
+  bhatija: 'tau',
+  bhatiji: 'tau',
+  bhanja: 'uncle_maternal',
+  bhanji: 'uncle_maternal',
+  nephew: 'uncle_paternal',
+  niece: 'uncle_paternal',
+
+  // ── L3 cousins (symmetric) ──
+  cousin_brother_paternal: 'cousin_brother_paternal',
+  cousin_sister_paternal: 'cousin_brother_paternal',
+  cousin_brother_maternal: 'cousin_brother_maternal',
+  cousin_sister_maternal: 'cousin_brother_maternal',
+  cousin: 'cousin',
+
+  // ── L3 samdhi/samdhan ──
+  samdhi: 'samdhi',
+  samdhan: 'samdhi',
+
+  // ── Other / fallback ──
+  other: 'other',
+};
+
+// Hindi labels for each reverse, keyed by the English reverse_key returned
+// from RELATIONSHIP_MAP. Used by addMember to write the reverse row's Hindi
+// column correctly.
+export const RELATIONSHIP_HINDI_LABEL: Record<string, string> = {
+  father: 'पिता', mother: 'माँ', son: 'बेटा', daughter: 'बेटी',
+  brother: 'भाई', sister: 'बहन', husband: 'पति', wife: 'पत्नी',
+  stepfather: 'सौतेला पिता', stepmother: 'सौतेली माँ',
+  stepson: 'सौतेला बेटा', stepdaughter: 'सौतेली बेटी',
+  stepbrother: 'सौतेला भाई', stepsister: 'सौतेली बहन',
+  half_brother: 'सौतेला भाई', half_sister: 'सौतेली बहन',
+  adopted_son: 'गोद लिया बेटा', adopted_daughter: 'गोद ली बेटी',
+  grandfather_paternal: 'दादा', grandmother_paternal: 'दादी',
+  grandfather_maternal: 'नाना', grandmother_maternal: 'नानी',
+  grandson_paternal: 'पोता', granddaughter_paternal: 'पोती',
+  grandson_maternal: 'नाती', granddaughter_maternal: 'नातिन',
+  grandson: 'पोता/नाती', granddaughter: 'पोती/नातिन',
+  father_in_law: 'ससुर', mother_in_law: 'सास',
+  son_in_law: 'दामाद', daughter_in_law: 'बहू',
+  jeth: 'जेठ', jethani: 'जेठानी', devar: 'देवर', devrani: 'देवरानी',
+  nanad: 'ननद', bhabhi: 'भाभी', jija: 'जीजा', saala: 'साला', saali: 'साली',
+  sandhu: 'साढू', brother_in_law: 'देवर/जीजा', sister_in_law: 'ननद/भाभी',
+  great_grandfather_paternal: 'परदादा', great_grandmother_paternal: 'परदादी',
+  great_grandfather_maternal: 'परनाना', great_grandmother_maternal: 'परनानी',
+  great_grandson_paternal: 'परपोता', great_grandson_maternal: 'परनाती',
+  tau: 'ताऊ', tai: 'ताई',
+  uncle_paternal: 'चाचा', aunt_paternal: 'चाची',
+  bua: 'बुआ', fufa: 'फूफा',
+  uncle_maternal: 'मामा', aunt_maternal: 'मामी',
+  mausi: 'मौसी', mausa: 'मौसा',
+  bhatija: 'भतीजा', bhatiji: 'भतीजी',
+  bhanja: 'भांजा', bhanji: 'भांजी',
+  nephew: 'भतीजा', niece: 'भतीजी',
+  cousin_brother_paternal: 'चचेरा भाई', cousin_sister_paternal: 'चचेरी बहन',
+  cousin_brother_maternal: 'ममेरा भाई', cousin_sister_maternal: 'ममेरी बहन',
+  cousin: 'चचेरा भाई/बहन',
+  samdhi: 'समधी', samdhan: 'समधन',
+  other: 'अन्य',
 };
 
 // Content report reasons
