@@ -1,3 +1,25 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// Site URL — single source of truth for absolute URLs (sitemap, OG, share
+// links, calendar UIDs, server-rendered metadata). Resolution order:
+//   1. NEXT_PUBLIC_SITE_URL env (set in Vercel project settings + .env.local)
+//   2. VERCEL_URL (Vercel sets this automatically on every deploy/preview)
+//   3. Fallback to https://aangan.app for local builds run without env.
+// Use SITE_URL.toString() (no trailing slash) when concatenating paths.
+// ─────────────────────────────────────────────────────────────────────────────
+export const SITE_URL: string = (() => {
+  const explicit = process.env.NEXT_PUBLIC_SITE_URL;
+  if (explicit && explicit.startsWith('http')) return explicit.replace(/\/$/, '');
+  const vercel = process.env.NEXT_PUBLIC_VERCEL_URL || process.env.VERCEL_URL;
+  if (vercel) return `https://${vercel.replace(/\/$/, '')}`;
+  return 'https://aangan.app';
+})();
+
+/** Build an absolute URL for `path` (e.g. "/events/123"). */
+export function siteUrl(path = '/'): string {
+  const cleanPath = path.startsWith('/') ? path : '/' + path;
+  return SITE_URL + cleanPath;
+}
+
 export const VALIDATION = {
   phoneLength: 10,
   phoneRegex: /^[6-9]\d{9}$/,

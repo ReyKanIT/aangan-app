@@ -95,40 +95,32 @@ export function setupNotificationListeners(
 }
 
 /**
- * Send a push notification to a specific user via Supabase Edge Function.
- * In production, this should be triggered server-side, not client-side.
+ * Send a push notification to another user.
+ *
+ * 2026-04-29: routed through the new `send-push` edge function. The edge
+ * function authenticates the caller, validates a legitimate relationship
+ * (family or shared event) before pushing, looks up the recipient's
+ * push_token under service role (so the caller never sees the raw token),
+ * and writes an audit log entry. The previous client-side path could be
+ * abused by any signed-in user to spam any other user's device.
  */
 export async function sendPushToUser(
   targetUserId: string,
   title: string,
   body: string,
-  data?: Record<string, any>,
+  data?: Record<string, string>,
 ): Promise<void> {
-  // Fetch target user's push token
-  const { data: user } = await supabase
-    .from('users')
-    .select('push_token')
-    .eq('id', targetUserId)
-    .single();
-
-  if (!user?.push_token) return;
-
-  // Send via Expo Push API
-  // In production, do this via a Supabase Edge Function for security
   try {
-    await fetch('https://exp.host/--/api/v2/push/send', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        to: user.push_token,
+    const { error } = await supabase.functions.invoke('send-push', {
+      body: {
+        target_user_id: targetUserId,
         title,
         body,
-        data: data || {},
-        sound: 'default',
-        badge: 1,
-      }),
+        data: data ?? {},
+      },
     });
-  } catch (error) {
-    // Silently fail — push is best-effort
+    if (error) secureLog.warn('[pushNotifications] send-push error:', error.message);
+  } catch (err) {
+    secureLog.warn('[pushNotifications] send-push failed:', err);
   }
 }

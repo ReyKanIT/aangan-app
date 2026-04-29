@@ -40,3 +40,7 @@ yarn-error.*
 # generated native folders
 /ios
 /android
+
+# EAS local credentials (contains keystore passwords)
+credentials.json
+aangan-release.keystore

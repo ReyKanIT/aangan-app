@@ -4,6 +4,7 @@
  */
 
 import { supabase } from '../config/supabase';
+import { secureLog } from '../utils/security';
 
 const BUCKET_NAME = 'voice-messages';
 
@@ -47,14 +48,14 @@ export async function uploadVoiceMessage(
       });
 
     if (error) {
-      console.error('[audioStorageService] Upload error:', error.message);
+      secureLog.error('[audioStorageService] Upload error:', error.message);
       return null;
     }
 
     const url = getVoiceMessageUrl(filePath);
     return { url, path: filePath };
   } catch (err) {
-    console.error('[audioStorageService] Upload failed:', err);
+    secureLog.error('[audioStorageService] Upload failed:', err);
     return null;
   }
 }
@@ -72,13 +73,13 @@ export async function deleteVoiceMessage(path: string): Promise<boolean> {
       .remove([path]);
 
     if (error) {
-      console.error('[audioStorageService] Delete error:', error.message);
+      secureLog.error('[audioStorageService] Delete error:', error.message);
       return false;
     }
 
     return true;
   } catch (err) {
-    console.error('[audioStorageService] Delete failed:', err);
+    secureLog.error('[audioStorageService] Delete failed:', err);
     return false;
   }
 }

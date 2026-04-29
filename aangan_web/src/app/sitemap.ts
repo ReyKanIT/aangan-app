@@ -1,7 +1,8 @@
 import type { MetadataRoute } from 'next';
+import { SITE_URL } from '@/lib/constants';
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const base = 'https://aangan.app';
+  const base = SITE_URL;
   // Static public routes only. Event detail pages are crawlable
   // (see robots.ts) but we don't enumerate them here because they
   // require auth-aware RLS reads and may leak private events if we

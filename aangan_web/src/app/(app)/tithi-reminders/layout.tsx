@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { siteUrl } from '@/lib/constants';
 
 export const metadata: Metadata = {
   title: 'तिथि अनुस्मारक — Tithi Reminders | Aangan आँगन',
@@ -16,7 +17,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'तिथि अनुस्मारक — Tithi Reminders',
     description: 'हिंदू तिथि के अनुसार जन्मदिन, श्राद्ध और त्योहारों के अनुस्मारक',
-    url: 'https://aangan.app/tithi-reminders',
+    url: siteUrl('/tithi-reminders'),
     type: 'website',
     images: [{ url: '/og-image.png', width: 1200, height: 630, alt: 'Aangan — तिथि अनुस्मारक' }],
   },
@@ -27,7 +28,7 @@ export const metadata: Metadata = {
     images: ['/og-image.png'],
   },
   alternates: {
-    canonical: 'https://aangan.app/tithi-reminders',
+    canonical: siteUrl('/tithi-reminders'),
   },
 };
 

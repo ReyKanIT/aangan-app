@@ -32,7 +32,7 @@ export const useEventStore = create<EventState>((set, get) => ({
     try {
       const { data, error } = await supabase
         .from('events')
-        .select('*, creator:users!creator_id(*)')
+        .select('*, creator:users!creator_id(id, display_name, display_name_hindi, avatar_url, profile_photo_url, family_level)')
         .gte('start_datetime', new Date(Date.now() - 86400000 * 7).toISOString())
         .order('start_datetime', { ascending: true });
 
@@ -48,7 +48,7 @@ export const useEventStore = create<EventState>((set, get) => ({
     try {
       const { data, error } = await supabase
         .from('events')
-        .select('*, creator:users!creator_id(*)')
+        .select('*, creator:users!creator_id(id, display_name, display_name_hindi, avatar_url, profile_photo_url, family_level)')
         .eq('id', eventId)
         .single();
 
@@ -165,7 +165,7 @@ export const useEventStore = create<EventState>((set, get) => ({
     try {
       const { data, error } = await supabase
         .from('event_rsvps')
-        .select('*, user:users(*)')
+        .select('*, user:users(id, display_name, display_name_hindi, avatar_url, profile_photo_url, family_level)')
         .eq('event_id', eventId)
         .order('created_at', { ascending: true });
       if (error) { set({ error: friendlyError(error.message) }); return; }

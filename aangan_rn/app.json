@@ -16,7 +16,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "app.aangan.family",
-      "buildNumber": "2",
+      "buildNumber": "18",
       "infoPlist": {
         "NSCameraUsageDescription": "Aangan needs camera access to take profile photos and event pictures.",
         "NSPhotoLibraryUsageDescription": "Aangan needs photo library access to share photos with your family.",
@@ -32,7 +32,7 @@
     },
     "android": {
       "package": "app.aangan.family",
-      "versionCode": 17,
+      "versionCode": 18,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#FDFAF0"

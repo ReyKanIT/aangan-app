@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { createSupabaseServer } from '@/lib/supabase/server';
+import { siteUrl } from '@/lib/constants';
 
 interface Props {
   params: Promise<{ eventId: string }>;
@@ -54,7 +55,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       title: `${title} — Aangan`,
       description,
       alternates: {
-        canonical: `https://aangan.app/events/${eventId}`,
+        canonical: siteUrl(`/events/${eventId}`),
       },
       openGraph: {
         title,

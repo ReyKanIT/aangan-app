@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import { Poppins, Tiro_Devanagari_Hindi } from 'next/font/google';
 import PWAInstallMount from '@/components/ui/PWAInstallMount';
+import { SITE_URL } from '@/lib/constants';
 import './globals.css';
 
 // PWAInstallMount is a tiny client island that ssr:false-loads the install
@@ -22,7 +23,7 @@ const tiro = Tiro_Devanagari_Hindi({
   display: 'swap',
 });
 
-const APP_URL = 'https://aangan.app';
+const APP_URL = SITE_URL;
 const APP_NAME = 'Aangan आँगन';
 const APP_TAGLINE = 'Your Family\'s Digital Home';
 const APP_DESCRIPTION =

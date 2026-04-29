@@ -1,5 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { Audio, AVPlaybackStatus } from 'expo-av';
+import { secureLog } from '../utils/security';
 
 interface UseAudioPlayerReturn {
   loadAudio: (uri: string) => Promise<void>;
@@ -24,7 +25,7 @@ export function useAudioPlayer(): UseAudioPlayerReturn {
     if (!status.isLoaded) {
       // Unloaded or error state
       if (status.error) {
-        console.warn('Playback error:', status.error);
+        secureLog.warn('Playback error:', status.error);
       }
       return;
     }

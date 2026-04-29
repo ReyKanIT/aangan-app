@@ -31,7 +31,7 @@ export const useFamilyStore = create<FamilyState>((set) => ({
 
       const { data, error } = await supabase
         .from('family_members')
-        .select('*, member:users!family_members_family_member_id_fkey(*)')
+        .select('*, member:users!family_members_family_member_id_fkey(id, display_name, display_name_hindi, avatar_url, profile_photo_url, village, state, family_level, date_of_birth, gotra, family_role, last_seen_at)')
         .eq('user_id', session.user.id)
         .order('connection_level', { ascending: true });
 
@@ -45,14 +45,16 @@ export const useFamilyStore = create<FamilyState>((set) => ({
   searchUsers: async (query) => {
     if (!query.trim()) { set({ searchResults: [] }); return; }
     try {
-      const { data, error } = await supabase
-        .from('users')
-        .select('*')
-        .or(`display_name.ilike.%${query.replace(/[%_,.()\\']/g, '\\$&')}%,display_name_hindi.ilike.%${query.replace(/[%_,.()\\']/g, '\\$&')}%`)
-        .limit(20);
+      // Switched 2026-04-29 to a SECURITY DEFINER RPC (search_users_safe).
+      // Direct ilike() on public.users would now bypass the RLS lockdown
+      // (Phase B) and was leaking phone_number / email / family_id.
+      // The RPC returns only non-PII columns and is rate-limited to 20 rows.
+      const { data, error } = await supabase.rpc('search_users_safe', {
+        p_query: query.trim(),
+      });
 
       if (error) { set({ error: friendlyError(error.message) }); return; }
-      set({ searchResults: data as User[] });
+      set({ searchResults: (data ?? []) as User[] });
     } catch (e: unknown) {
       set({ error: friendlyError(e instanceof Error ? e.message : 'Search failed') });
     }

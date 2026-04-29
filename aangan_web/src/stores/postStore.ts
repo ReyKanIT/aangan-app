@@ -45,7 +45,7 @@ export const usePostStore = create<PostState>((set, get) => ({
       const effectiveCursor = reset ? null : cursor;
       let query = supabase
         .from('posts')
-        .select('*, author:users(*)')
+        .select('*, author:users(id, display_name, display_name_hindi, avatar_url, profile_photo_url, family_level)')
         .order('created_at', { ascending: false })
         .limit(PAGE_SIZE);
 
