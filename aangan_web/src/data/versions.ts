@@ -24,6 +24,23 @@ export interface ReleaseNote {
 
 export const RELEASES: ReleaseNote[] = [
   {
+    version: '0.12.5',
+    releasedAt: '2026-04-29T20:10:00+05:30',
+    stamp: '[8:10pm - 29Apr26]',
+    summary: 'Security: production-readiness audit sweep — RLS lockdown, edge-function auth, secret rotation runbooks',
+    category: 'security',
+    highlights: [
+      'Supabase migrations: users RLS Phase A (REVOKE anon, harden admin-escalation, add users_safe view + safe RPCs), audience-respecting RLS on comments/reactions/polls/stories, notification recipient validation, search_path on all SECURITY DEFINER functions, corrected v0.2.2 indexes',
+      'Edge functions hardened: send-otp-sms fail-closed, audit-log/rate-limit JWT-verified, daily-reminders aangan_events → events fix + CRON_SECRET',
+      'New send-push edge function — replaces client-side push spam vector',
+      'Web: middleware deduped (root + src merged), server-side profile-completeness check, NEXT_PUBLIC_SITE_URL centralization, users(*) joins trimmed',
+      'RN: version sync 0.9.14 → 0.9.15, raw console.* → secureLog, Sentry-ready analytics binding',
+      'Privacy policy expanded with user-rights, retention, cross-border, breach-notification, and privacy-team contact sections',
+      'New runbooks: MSG91 key rotation, keystore backup, EAS submit setup',
+      'Resumable audit doc: PRODUCTION_AUDIT_2026-04-29.md (T01–T33 tracker)',
+    ],
+  },
+  {
     version: '0.12.4',
     releasedAt: '2026-04-28T22:30:00+05:30',
     stamp: '[10:30pm - 28Apr26]',

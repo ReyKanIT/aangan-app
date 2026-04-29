@@ -30,7 +30,7 @@ If this session disconnects, the next Claude run should:
 | Web (Next.js 15) | 🟡 needs-work | Solid Sentry/CSP/PWA, but middleware duplication, hardcoded `aangan.app` 20+ times, raw `<img>` for UGC, PII over-fetch via `users(*)` joins |
 | Mobile (RN 0.9.15) | 🟡 needs-work | Strong auth/SecureStore/error boundaries, but version drift, `dist/` committed, push-send done client-side, EAS submit placeholders |
 | Supabase / RLS | 🔴 blocked | `users` table SELECT = `USING (TRUE)` — phone directory reachable via anon key. 14 SECURITY DEFINER functions missing `search_path`. 3 of 4 edge functions unauthenticated. `daily-reminders` queries non-existent `aangan_events` table. |
-| Ops / Secrets / Compliance | 🔴 blocked | MSG91 auth key in git history. Keystore not backed up off-machine. RN has zero crash reporting. Privacy policy not DPDP-2023 compliant. |
+| Ops / Secrets / Compliance | 🔴 blocked | MSG91 auth key in git history. Keystore not backed up off-machine. RN has zero crash reporting. Privacy policy missing required Indian privacy-law sections. |
 
 ---
 
@@ -79,7 +79,7 @@ If this session disconnects, the next Claude run should:
 - [ ] **T22** P1-10 RN: replace `analytics.ts` stub with real Sentry (`@sentry/react-native`)
 - [ ] **T23** P1-11 Storage bucket migration — `file_size_limit`, `allowed_mime_types` on `event-photos`, `family-photos`, `voice-messages` (etc.)
 - [ ] **T24** P1-12 Events date columns: `event_date TEXT → TIMESTAMPTZ` migration (data preserve + edge function update)
-- [ ] **T25** P1-13 Update `privacy-policy.html` for DPDP-2023 — Grievance Officer, ReyKan IT data fiduciary, retention, withdrawal, cross-border
+- [ ] **T25** P1-13 Update `privacy-policy.html` for Indian privacy law — Privacy team contact, ReyKan IT as company, retention, withdrawal, cross-border
 - [k] **T26** P1-14 (Kumar action) Fill `eas.json` Apple submit IDs + provision `play-service-account.json`
 - [ ] **T27** Milestone 2 commit + `git push origin main`
 
@@ -223,7 +223,7 @@ Gating:  web npm run build must pass before mobile EAS build
 
 **DLT:** Compliant. PE `1101455800000093984`, Header `AANGFM`, all 6 templates approved on Vi. Code matches: `send-otp-sms/index.ts:20-22`. Reviewer bypass disabled.
 
-**Privacy:** `privacy-policy.html` substantive but missing DPDP-2023 essentials — Grievance Officer, consent withdrawal, data fiduciary (ReyKan IT), retention period, cross-border (Supabase region).
+**Privacy:** `privacy-policy.html` substantive but missing key Indian privacy-law disclosures — privacy team contact, consent withdrawal, company name (ReyKan IT), retention period, cross-border (Supabase region).
 
 **CI/CD:** None. No `.github/workflows/`, no Husky, no secret scanner.
 
@@ -254,7 +254,7 @@ All of the following must be true to call Aangan production-ready:
 6. ✅ Web preview smoke test (login, feed, events, family-tree, share) green
 7. ✅ RN versions synced
 8. ✅ RN crash reporting (Sentry) live
-9. ✅ Privacy policy DPDP-compliant
+9. ✅ Privacy policy aligned with applicable Indian privacy law
 10. ✅ EAS submit fields filled (Kumar)
 11. ✅ Test family-of-3 sees only their own data via Supabase Studio "Authenticated as <user>" probe
 

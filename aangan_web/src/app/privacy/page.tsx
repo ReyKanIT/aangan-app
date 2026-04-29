@@ -192,28 +192,87 @@ export default function PrivacyPolicyPage() {
           </p>
         </section>
 
-        {/* Contact */}
+        {/* User Rights */}
         <section className="bg-white rounded-xl p-6 border border-[#C8A84B]/20">
-          <h2 className="text-2xl font-bold text-[#C8A84B] mb-3">संपर्क करें</h2>
-          <p className="text-sm text-gray-500 mb-3">Contact Us</p>
+          <h2 className="text-2xl font-bold text-[#C8A84B] mb-3">
+            आपके अधिकार
+          </h2>
+          <p className="text-sm text-gray-500 mb-3">Your Rights</p>
+          <p className="text-gray-800 mb-3">
+            भारतीय डेटा सुरक्षा कानून के अंतर्गत आपके पास निम्नलिखित अधिकार हैं:
+          </p>
+          <ul className="list-disc pl-6 space-y-2 text-gray-700 text-sm">
+            <li><strong>Right to access:</strong> obtain a copy of the personal data we hold about you.</li>
+            <li><strong>Right to correction &amp; erasure:</strong> request correction of inaccurate data, completion of incomplete data, or erasure of data no longer needed for the purposes for which it was collected.</li>
+            <li><strong>Right of grievance redressal:</strong> file a complaint with our privacy team (below) and, if unresolved, with the appropriate Indian regulatory authority.</li>
+            <li><strong>Right to nominate:</strong> nominate another individual to exercise your rights in the event of incapacity or death.</li>
+            <li><strong>Right to withdraw consent:</strong> withdraw consent for any optional processing at any time. Mandatory processing (account creation, OTP delivery, family graph) cannot be withdrawn without account deletion.</li>
+          </ul>
+          <p className="text-gray-700 text-sm mt-3">
+            अधिकार का प्रयोग करने के लिए{' '}
+            <a href="mailto:support@aangan.app" className="text-[#C8A84B] underline">support@aangan.app</a>{' '}
+            पर ईमेल करें। हम 30 दिनों के अंदर जवाब देंगे।
+          </p>
+        </section>
+
+        {/* Data Retention */}
+        <section className="bg-white rounded-xl p-6 border border-[#C8A84B]/20">
+          <h2 className="text-2xl font-bold text-[#C8A84B] mb-3">डेटा प्रतिधारण</h2>
+          <p className="text-sm text-gray-500 mb-3">Data Retention</p>
+          <p className="text-gray-700 text-sm leading-relaxed">
+            Personal data is retained for as long as your account is active, plus 30 days after deletion request to allow restore in case of accidental deletion. Audit logs (who logged in, when) are retained for 12 months for security forensics. Anonymized aggregate analytics may be retained indefinitely. Voice messages auto-expire after 30 days.
+          </p>
+        </section>
+
+        {/* Cross-Border Transfer Disclosure */}
+        <section className="bg-white rounded-xl p-6 border border-[#C8A84B]/20">
+          <h2 className="text-2xl font-bold text-[#C8A84B] mb-3">डेटा कहाँ स्टोर होता है</h2>
+          <p className="text-sm text-gray-500 mb-3">Where Your Data is Stored (Cross-Border Transfer Disclosure)</p>
+          <p className="text-gray-700 text-sm leading-relaxed">
+            Aangan stores user data in Supabase managed Postgres clusters located in the AWS Asia Pacific (Mumbai / ap-south-1) region. Push notifications transit through Expo&apos;s push servers (United States) — only the device push token and notification text leave India for that hop. No other personal data is transferred outside India.
+          </p>
+        </section>
+
+        {/* Breach Notification */}
+        <section className="bg-white rounded-xl p-6 border border-[#C8A84B]/20">
+          <h2 className="text-2xl font-bold text-[#C8A84B] mb-3">डेटा उल्लंघन की सूचना</h2>
+          <p className="text-sm text-gray-500 mb-3">Breach Notification</p>
+          <p className="text-gray-700 text-sm leading-relaxed">
+            In the unlikely event of a personal data breach that is likely to cause significant harm, we will notify affected users and the appropriate Indian regulatory authority in accordance with applicable Indian privacy law, without undue delay.
+          </p>
+        </section>
+
+        {/* Privacy Contact */}
+        <section className="bg-white rounded-xl p-6 border border-[#C8A84B]/20">
+          <h2 className="text-2xl font-bold text-[#C8A84B] mb-3">
+            संपर्क करें — गोपनीयता टीम
+          </h2>
+          <p className="text-sm text-gray-500 mb-3">Contact Us — Privacy &amp; Grievance Team</p>
           <p className="text-gray-800 mb-2">
-            यदि आपके कोई प्रश्न हैं, तो कृपया हमसे संपर्क करें:
+            डेटा से जुड़ी किसी भी शिकायत या प्रश्न के लिए:
           </p>
-          <p className="text-gray-600 mb-4">
-            If you have any questions, please contact us:
-          </p>
-          <div className="space-y-1 text-gray-800">
+          <p className="text-gray-600 mb-4">For any data-related grievance or question:</p>
+          <div className="space-y-1 text-gray-800 text-sm">
+            <p>
+              <span className="font-semibold">गोपनीयता टीम / Privacy &amp; Grievance Team:</span>{' '}
+              ReyKan Information Technologies Pvt Ltd
+            </p>
             <p>
               <span className="font-semibold">ईमेल / Email:</span>{' '}
-              <a
-                href="mailto:support@aangan.app"
-                className="text-[#C8A84B] underline"
-              >
+              <a href="mailto:support@aangan.app" className="text-[#C8A84B] underline">
                 support@aangan.app
               </a>
             </p>
             <p>
-              <span className="font-semibold">कंपनी / Company:</span> ReyKan IT, India
+              <span className="font-semibold">उत्तर समय / Response time:</span>{' '}
+              within 30 days
+            </p>
+            <p>
+              <span className="font-semibold">कंपनी / Company:</span>{' '}
+              ReyKan Information Technologies Pvt Ltd, India
+            </p>
+            <p>
+              <span className="font-semibold">ब्रांड / Brand:</span> Aangan आँगन
             </p>
           </div>
         </section>
