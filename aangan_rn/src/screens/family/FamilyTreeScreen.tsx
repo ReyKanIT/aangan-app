@@ -80,17 +80,23 @@ const WHATSAPP_MESSAGE_INVITE_ONLY =
 
 function openWhatsApp(message: string) {
   const url = `whatsapp://send?text=${encodeURIComponent(message)}`;
-  Linking.canOpenURL(url).then((supported) => {
-    if (supported) {
-      Linking.openURL(url);
-    } else {
-      Alert.alert(
-        'WhatsApp नहीं मिला',
-        'आपके फोन में WhatsApp इंस्टॉल नहीं है।',
-        [{ text: 'ठीक है' }],
-      );
-    }
-  });
+  Linking.canOpenURL(url)
+    .then((supported) => {
+      if (supported) {
+        Linking.openURL(url).catch(() => {
+          Alert.alert('त्रुटि / Error', 'WhatsApp नहीं खुल सका।', [{ text: 'ठीक है' }]);
+        });
+      } else {
+        Alert.alert(
+          'WhatsApp नहीं मिला',
+          'आपके फोन में WhatsApp इंस्टॉल नहीं है।',
+          [{ text: 'ठीक है' }],
+        );
+      }
+    })
+    .catch(() => {
+      Alert.alert('त्रुटि / Error', 'WhatsApp नहीं खुल सका।', [{ text: 'ठीक है' }]);
+    });
 }
 
 // -- Sub-components --

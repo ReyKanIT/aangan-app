@@ -58,7 +58,7 @@ export default function SupportChatScreen({ navigation }: Props) {
   function handleSubjectSubmit() {
     const trimmed = subject.trim();
     if (trimmed.length < 5) {
-      Alert.alert('', 'Please enter at least 5 characters for the subject.');
+      Alert.alert('', 'कृपया कम से कम 5 अक्षर लिखें। / Please enter at least 5 characters.');
       return;
     }
     addMessage('user', trimmed);
@@ -71,7 +71,7 @@ export default function SupportChatScreen({ navigation }: Props) {
   function handleMessageSubmit() {
     const trimmed = messageText.trim();
     if (trimmed.length < 10) {
-      Alert.alert('', 'Please describe your issue in at least 10 characters.');
+      Alert.alert('', 'कृपया कम से कम 10 अक्षरों में समस्या बताएं। / Please describe in at least 10 characters.');
       return;
     }
     addMessage('user', trimmed);
