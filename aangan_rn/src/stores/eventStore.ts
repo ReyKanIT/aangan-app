@@ -125,7 +125,7 @@ export const useEventStore = create<EventState>((set, get) => ({
           event_id: event.id,
           user_id: userId,
           status: 'pending' as const,
-          guests_count: 0,
+          plus_count: 0,          // DB column is 'plus_count' not 'guests_count'
           dietary_preferences: [],
           created_at: now,
           updated_at: now,
@@ -136,11 +136,12 @@ export const useEventStore = create<EventState>((set, get) => ({
           .insert(rsvpRows);
 
         if (rsvpError) {
-          // Roll back the event — invitees would be stuck with no RSVP record
-          secureLog.warn('RSVP insert failed, rolling back event:', rsvpError.message);
-          await supabase.from('events').delete().eq('id', event.id);
-          set({ error: 'इवेंट नहीं बन सका। दोबारा कोशिश करें।' });
-          return false;
+          // RLS NOTE: The event_rsvps INSERT policy requires auth.uid() = user_id,
+          // so the creator cannot pre-create RSVP records for other users from the client.
+          // Event is still saved successfully — the creator can see it via creator_id = auth.uid().
+          // Family-member visibility requires a SECURITY DEFINER RPC or an updated RLS policy (DB-level fix).
+          // DO NOT roll back the event — that was the original bug causing "not saving".
+          secureLog.warn('RSVP pre-creation skipped (RLS restriction):', rsvpError.message);
         }
       }
 

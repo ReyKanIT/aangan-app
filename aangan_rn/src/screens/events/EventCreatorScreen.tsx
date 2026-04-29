@@ -60,7 +60,7 @@ const BUNDLE_INFO: Record<string, { name: string; nameHindi: string }> = {
 };
 
 export default function EventCreatorScreen({ navigation }: Props) {
-  const { createEvent, isLoading: storeLoading } = useEventStore();
+  const { createEvent, isLoading: storeLoading, error: storeError } = useEventStore();
   const { members, fetchMembers } = useFamilyStore();
 
   // Form state
