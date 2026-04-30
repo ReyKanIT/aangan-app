@@ -1,9 +1,80 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef, useMemo } from 'react';
 import { supabase } from '@/lib/supabase/client';
 import { cn } from '@/lib/utils/cn';
 import { notifyUser } from '@/lib/utils/notifyUser';
+
+// ─── Quick-reply templates ─────────────────────────────────────────────
+// One-click canned responses for the most common cases. Click to insert
+// into the reply box (still editable before send). Hindi-first per the
+// Dadi Test, with an English subtitle so reviewers and English-only
+// supporters can scan them too. Order them by frequency so the top row
+// fits on a phone screen without scrolling.
+//
+// {{name}} is substituted with the ticket owner's display_name at insert
+// time so a reply feels personal without manual typing.
+interface ReplyTemplate {
+  id: string;
+  emoji: string;
+  shortLabel: string; // What shows on the chip
+  body: string;       // What goes into the reply box
+}
+const REPLY_TEMPLATES: ReplyTemplate[] = [
+  {
+    id: 'thanks_looking',
+    emoji: '🙏',
+    shortLabel: 'Thanks, looking',
+    body: 'नमस्ते {{name}} 🙏\nआपके feedback के लिए धन्यवाद! हम इसे देख रहे हैं और जल्दी ही अपडेट देंगे।\n\nThank you for your feedback — we are looking into this and will update you soon.',
+  },
+  {
+    id: 'fixed_in_update',
+    emoji: '✅',
+    shortLabel: 'Fixed in update',
+    body: 'नमस्ते {{name}} 🙏\nयह समस्या नए version में ठीक कर दी गई है। App update करके फिर से try करें — अगर अभी भी दिखे तो बताइए।\n\nThis has been fixed in the latest update. Please update your app and try again — let us know if it still appears.',
+  },
+  {
+    id: 'need_more_info',
+    emoji: '🤔',
+    shortLabel: 'Need details',
+    body: 'नमस्ते {{name}} 🙏\nथोड़ी और जानकारी चाहिए — कृपया बताएं:\n• कौन सा screen / button?\n• क्या error message दिखा?\n• कौन सा phone / browser इस्तेमाल कर रहे हैं?\n\nA little more info will help us fix it — which screen, what error, and which phone/browser are you on?',
+  },
+  {
+    id: 'screenshot_request',
+    emoji: '📸',
+    shortLabel: 'Send screenshot',
+    body: 'नमस्ते {{name}} 🙏\nक्या आप इस screen का screenshot भेज सकते हैं? तस्वीर देखकर हम जल्दी समझ लेंगे।\n\nCould you share a screenshot of this screen? It helps us understand and fix it faster.',
+  },
+  {
+    id: 'wont_fix_explanation',
+    emoji: '💡',
+    shortLabel: 'Working as designed',
+    body: 'नमस्ते {{name}} 🙏\nयह feature जान-बूझकर ऐसे बनाया गया है — [REASON]। आपकी समझ के लिए धन्यवाद।\n\nThis is working as intended — [REASON]. Thank you for understanding.',
+  },
+  {
+    id: 'feature_planned',
+    emoji: '📅',
+    shortLabel: 'Planned soon',
+    body: 'नमस्ते {{name}} 🙏\nयह feature आगे आने वाले update में add किया जाएगा। आपका सुझाव note कर लिया है — धन्यवाद!\n\nThis feature is on our roadmap for an upcoming update. We have noted your suggestion — thank you!',
+  },
+  {
+    id: 'restart_help',
+    emoji: '🔄',
+    shortLabel: 'Restart app',
+    body: 'नमस्ते {{name}} 🙏\nकृपया एक बार app बंद करके फिर से खोलें। अगर समस्या बनी रहे तो बताइए — हम तुरंत देखेंगे।\n\nPlease close and reopen the app once. If the issue continues, let us know and we will investigate immediately.',
+  },
+  {
+    id: 'resolved_thanks',
+    emoji: '👌',
+    shortLabel: 'Resolved, thanks',
+    body: 'नमस्ते {{name}} 🙏\nसमस्या ठीक हो गई है — आपके धैर्य के लिए धन्यवाद!\n\nThe issue has been resolved — thank you for your patience!',
+  },
+];
+
+// Stale-ticket threshold (days). Tickets with status `open` /
+// `waiting_for_user` and `updated_at` older than this get a ⏰ badge
+// so they don't slip through the cracks like Jyotsna's 19-day-old one.
+const STALE_DAYS = 3;
 
 type TicketStatus = 'open' | 'assigned' | 'in_progress' | 'waiting_for_user' | 'resolved' | 'closed';
 type TicketCategory = 'billing' | 'account' | 'bug_report' | 'feature_request' | 'complaint' | 'general';
@@ -87,9 +158,14 @@ export default function SupportPage() {
   const [sending, setSending] = useState(false);
   const [resolveNote, setResolveNote] = useState('');
   const [showResolve, setShowResolve] = useState(false);
+  const [bulkSelected, setBulkSelected] = useState<Set<string>>(new Set());
+  const replyRef = useRef<HTMLTextAreaElement>(null);
 
   const fetchTickets = useCallback(async () => {
     setLoading(true);
+    // Sort: open + waiting > stale-flag > priority > recent activity.
+    // The DB does the cheap part (status + updated_at), client sorts the
+    // priority bucket so urgent tickets always float up.
     let q = supabase
       .from('support_tickets')
       .select(`*, user:users!user_id (display_name, phone_number, profile_photo_url)`)
@@ -101,6 +177,33 @@ export default function SupportPage() {
   }, [statusFilter]);
 
   useEffect(() => { fetchTickets(); }, [fetchTickets]);
+
+  // ─── Realtime: refresh ticket list when a row changes ─────────────
+  // Without this, a brand-new ticket only appears when the admin
+  // manually reloads — which means slower first-touch and tickets
+  // sitting in the queue. Subscribe to support_tickets INSERT/UPDATE
+  // and to support_messages INSERT (so an incoming user reply on the
+  // currently-open ticket shows up live, and the parent ticket's
+  // updated_at bubble re-sorts the list).
+  useEffect(() => {
+    const channel = supabase
+      .channel('support-realtime')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'support_tickets' }, () => {
+        fetchTickets();
+      })
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'support_messages' }, (payload) => {
+        // If the inbound message is on the currently-open ticket and
+        // came from the user (not a duplicate echo of our own send),
+        // append it to the visible thread immediately.
+        const m = payload.new as Message;
+        if (selected && m.ticket_id === selected.id && !m.is_from_support) {
+          setMessages((prev) => [...prev, m]);
+        }
+        fetchTickets();
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [fetchTickets, selected]);
 
   async function openTicket(ticket: Ticket) {
     setSelected(ticket);
@@ -177,16 +280,60 @@ export default function SupportPage() {
     fetchTickets();
   }
 
-  const filtered = tickets.filter((t) => {
+  const filtered = useMemo(() => tickets.filter((t) => {
     if (!search) return true;
     const q = search.toLowerCase();
     return (
-      t.ticket_number.toLowerCase().includes(q) ||
+      (t.ticket_number ?? '').toLowerCase().includes(q) ||
       t.subject.toLowerCase().includes(q) ||
       (t.user?.display_name ?? '').toLowerCase().includes(q) ||
       (t.user?.phone_number ?? '').includes(q)
     );
-  });
+  }), [tickets, search]);
+
+  // Stale = open/waiting AND last touched > STALE_DAYS days ago.
+  // Used both for the visual ⏰ badge in the list and for the inbox
+  // counter so the admin sees at a glance how many tickets need
+  // attention NOW vs ones still waiting on the user.
+  function isStale(t: Ticket): boolean {
+    if (t.status !== 'open' && t.status !== 'waiting_for_user') return false;
+    const ageMs = Date.now() - new Date(t.updated_at).getTime();
+    return ageMs > STALE_DAYS * 24 * 60 * 60 * 1000;
+  }
+
+  const staleCount = useMemo(() => filtered.filter(isStale).length, [filtered]);
+  const openCount = useMemo(
+    () => filtered.filter((t) => t.status === 'open' || t.status === 'in_progress' || t.status === 'waiting_for_user').length,
+    [filtered]
+  );
+
+  // Apply a quick-reply template — substitutes {{name}} with the
+  // recipient's display name and focuses the textarea so the admin
+  // can edit before sending. Append-vs-replace: if the textarea is
+  // empty replace; if non-empty append a blank line so the admin
+  // can chain templates ("thanks looking" + "need details").
+  function applyTemplate(t: ReplyTemplate) {
+    if (!selected) return;
+    const name = selected.user?.display_name?.split(' ')[0] || '';
+    const body = t.body.replace(/\{\{name\}\}/g, name);
+    setReply((prev) => (prev.trim() ? prev + '\n\n' + body : body));
+    setIsNote(false);
+    // Defer so React commits the new value before we focus.
+    setTimeout(() => replyRef.current?.focus(), 0);
+  }
+
+  // Bulk close — for the test-ticket cleanup case (Jyotsna's 4 dummies)
+  // and any future spam wave. RLS is admin-only so this is safe to ship.
+  async function bulkClose() {
+    if (bulkSelected.size === 0) return;
+    if (!confirm(`Close ${bulkSelected.size} selected tickets? They'll be marked status=closed and removed from the open queue.`)) return;
+    await supabase
+      .from('support_tickets')
+      .update({ status: 'closed' })
+      .in('id', Array.from(bulkSelected));
+    setBulkSelected(new Set());
+    fetchTickets();
+  }
 
   function formatDate(iso: string) {
     return new Date(iso).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Kolkata' });
@@ -196,9 +343,30 @@ export default function SupportPage() {
     <div className="flex gap-6 h-[calc(100vh-80px)]">
       {/* Ticket List */}
       <div className={cn('flex flex-col', selected ? 'hidden lg:flex w-96 flex-shrink-0' : 'flex-1')}>
-        <div className="mb-4">
-          <h1 className="font-heading text-2xl text-brown">Support Tickets</h1>
-          <p className="text-brown-light text-sm mt-1">Manage customer queries & complaints</p>
+        <div className="mb-4 flex items-start justify-between gap-2">
+          <div>
+            <h1 className="font-heading text-2xl text-brown">Support Tickets</h1>
+            <p className="text-brown-light text-sm mt-1">
+              {/* Inbox glance: show open + stale counts so the admin
+                  immediately knows what needs attention. Realtime keeps
+                  these counts live without manual refresh. */}
+              <span className="font-semibold text-brown">{openCount}</span> active
+              {staleCount > 0 && (
+                <span className="ml-2 inline-flex items-center gap-1 text-orange-700 font-semibold">
+                  ⏰ {staleCount} stale
+                </span>
+              )}
+            </p>
+          </div>
+          {bulkSelected.size > 0 && (
+            <button
+              onClick={bulkClose}
+              className="px-3 py-1.5 text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium"
+              title="Close selected tickets"
+            >
+              Close {bulkSelected.size} ✕
+            </button>
+          )}
         </div>
 
         {/* Filters */}
@@ -240,34 +408,68 @@ export default function SupportPage() {
           ) : filtered.length === 0 ? (
             <div className="text-center py-16 text-brown-light">No tickets found.</div>
           ) : (
-            filtered.map((ticket) => (
-              <button
-                key={ticket.id}
-                onClick={() => openTicket(ticket)}
-                className={cn(
-                  'w-full text-left bg-white rounded-xl border p-4 hover:shadow-md transition-shadow',
-                  selected?.id === ticket.id ? 'border-haldi-gold ring-1 ring-haldi-gold/40' : 'border-cream-dark'
-                )}
-              >
-                <div className="flex items-start justify-between gap-2 mb-2">
-                  <span className="text-xs text-brown-light font-mono">{ticket.ticket_number}</span>
-                  <div className="flex gap-1.5">
-                    <span className={cn('text-xs px-2 py-0.5 rounded-full font-medium', PRIORITY_COLORS[ticket.priority])}>
-                      {ticket.priority}
-                    </span>
-                    <span className={cn('text-xs px-2 py-0.5 rounded-full font-medium', STATUS_COLORS[ticket.status])}>
-                      {STATUS_LABELS[ticket.status]}
-                    </span>
-                  </div>
+            filtered.map((ticket) => {
+              const stale = isStale(ticket);
+              const isBulkSel = bulkSelected.has(ticket.id);
+              return (
+                <div
+                  key={ticket.id}
+                  className={cn(
+                    'group relative w-full bg-white rounded-xl border p-4 hover:shadow-md transition-shadow',
+                    selected?.id === ticket.id ? 'border-haldi-gold ring-1 ring-haldi-gold/40' : 'border-cream-dark',
+                    stale && 'border-l-4 border-l-orange-400'
+                  )}
+                >
+                  {/* Bulk-select checkbox — only shows when at least one
+                      ticket is already selected, OR on hover, so the
+                      single-click open flow stays clean for solo work. */}
+                  <input
+                    type="checkbox"
+                    checked={isBulkSel}
+                    onChange={(e) => {
+                      e.stopPropagation();
+                      setBulkSelected((prev) => {
+                        const next = new Set(prev);
+                        if (e.target.checked) next.add(ticket.id);
+                        else next.delete(ticket.id);
+                        return next;
+                      });
+                    }}
+                    onClick={(e) => e.stopPropagation()}
+                    className={cn(
+                      'absolute top-3 left-3 w-4 h-4 rounded transition-opacity',
+                      bulkSelected.size > 0 || isBulkSel ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
+                    )}
+                    aria-label="Select ticket for bulk actions"
+                  />
+                  <button
+                    onClick={() => openTicket(ticket)}
+                    className="w-full text-left"
+                  >
+                    <div className="flex items-start justify-between gap-2 mb-2 pl-5">
+                      <span className="text-xs text-brown-light font-mono flex items-center gap-1.5">
+                        {stale && <span title="Stale: no activity in 3+ days">⏰</span>}
+                        {ticket.ticket_number ?? ticket.id.slice(0, 8)}
+                      </span>
+                      <div className="flex gap-1.5">
+                        <span className={cn('text-xs px-2 py-0.5 rounded-full font-medium', PRIORITY_COLORS[ticket.priority])}>
+                          {ticket.priority}
+                        </span>
+                        <span className={cn('text-xs px-2 py-0.5 rounded-full font-medium', STATUS_COLORS[ticket.status])}>
+                          {STATUS_LABELS[ticket.status]}
+                        </span>
+                      </div>
+                    </div>
+                    <p className="text-sm font-semibold text-brown truncate mb-1 pl-5">{ticket.subject}</p>
+                    <div className="flex items-center justify-between pl-5">
+                      <span className="text-xs text-brown-light">{ticket.user?.display_name ?? '—'}</span>
+                      <span className="text-xs text-brown-light/60">{formatDate(ticket.updated_at)}</span>
+                    </div>
+                    <span className="text-xs text-brown-light/60 pl-5">{CATEGORY_LABELS[ticket.category]}</span>
+                  </button>
                 </div>
-                <p className="text-sm font-semibold text-brown truncate mb-1">{ticket.subject}</p>
-                <div className="flex items-center justify-between">
-                  <span className="text-xs text-brown-light">{ticket.user?.display_name ?? '—'}</span>
-                  <span className="text-xs text-brown-light/60">{formatDate(ticket.updated_at)}</span>
-                </div>
-                <span className="text-xs text-brown-light/60">{CATEGORY_LABELS[ticket.category]}</span>
-              </button>
-            ))
+              );
+            })
           )}
         </div>
       </div>
@@ -397,18 +599,53 @@ export default function SupportPage() {
                   📌 Internal Note
                 </button>
               </div>
+
+              {/* Quick-reply templates — single click inserts the canned
+                  body into the textarea (with {{name}} substituted), still
+                  editable before send. Hidden when composing internal
+                  notes since the templates are user-facing. Horizontally
+                  scrolls on phones so the chips don't wrap into a wall. */}
+              {!isNote && (
+                <div className="mb-2">
+                  <p className="text-xs text-brown-light mb-1.5 font-medium">Quick replies:</p>
+                  <div className="flex gap-1.5 overflow-x-auto pb-1 -mx-1 px-1">
+                    {REPLY_TEMPLATES.map((t) => (
+                      <button
+                        key={t.id}
+                        type="button"
+                        onClick={() => applyTemplate(t)}
+                        className="flex-shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white border border-cream-dark hover:border-haldi-gold hover:bg-haldi-gold/5 text-xs font-medium text-brown transition-colors"
+                        title={t.body.split('\n')[0]}
+                      >
+                        <span>{t.emoji}</span>
+                        <span className="whitespace-nowrap">{t.shortLabel}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               <div className="flex gap-3">
                 <textarea
+                  ref={replyRef}
                   value={reply}
                   onChange={(e) => setReply(e.target.value)}
-                  placeholder={isNote ? 'Add internal note (not visible to user)...' : 'Type your reply...'}
+                  // Cmd/Ctrl+Enter to send — saves a thumb-stretch on
+                  // mobile and feels native to anyone who types email.
+                  onKeyDown={(e) => {
+                    if ((e.metaKey || e.ctrlKey) && e.key === 'Enter' && reply.trim() && !sending) {
+                      e.preventDefault();
+                      sendReply();
+                    }
+                  }}
+                  placeholder={isNote ? 'Add internal note (not visible to user)...' : 'Type your reply... (⌘+Enter to send)'}
                   className="flex-1 px-4 py-3 rounded-xl border border-cream-dark bg-white text-sm text-brown resize-none focus:outline-none focus:ring-2 focus:ring-haldi-gold/40"
-                  rows={2}
+                  rows={3}
                 />
                 <button
                   onClick={sendReply}
                   disabled={!reply.trim() || sending}
-                  className="px-5 py-2 bg-haldi-gold text-brown rounded-xl font-semibold text-sm hover:bg-haldi-gold-dark transition-colors disabled:opacity-40"
+                  className="px-5 py-2 bg-haldi-gold text-brown rounded-xl font-semibold text-sm hover:bg-haldi-gold-dark transition-colors disabled:opacity-40 self-end"
                 >
                   {sending ? '...' : 'Send'}
                 </button>

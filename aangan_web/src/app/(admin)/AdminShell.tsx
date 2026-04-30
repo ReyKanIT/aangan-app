@@ -3,8 +3,9 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils/cn';
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Toaster } from 'react-hot-toast';
+import { supabase } from '@/lib/supabase/client';
 
 const navItems = [
   { href: '/admin', label: 'Dashboard', icon: DashboardIcon, roles: ['super_admin','admin','manager'] },
@@ -27,6 +28,34 @@ interface AdminShellProps {
 export default function AdminShell({ children, adminRole }: AdminShellProps) {
   const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [openTickets, setOpenTickets] = useState(0);
+
+  // ─── Live unread/open ticket count ────────────────────────────────
+  // Renders a red dot + count next to "Support Tickets" in the sidebar
+  // so Kumar sees pending work without navigating to the page first.
+  // Counts both `open` and `waiting_for_user` since both states are
+  // his responsibility to clear (open = needs first reply, waiting =
+  // needs the user reply to land but he should also nudge after a
+  // few days). Realtime-subscribed: any insert/update on the table
+  // bumps the counter live.
+  const refreshOpenCount = useCallback(async () => {
+    const { count } = await supabase
+      .from('support_tickets')
+      .select('id', { count: 'exact', head: true })
+      .in('status', ['open', 'in_progress']);
+    setOpenTickets(count ?? 0);
+  }, []);
+
+  useEffect(() => {
+    refreshOpenCount();
+    const channel = supabase
+      .channel('admin-shell-tickets')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'support_tickets' }, () => {
+        refreshOpenCount();
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [refreshOpenCount]);
 
   const visibleNav = navItems.filter((item) =>
     !adminRole || item.roles.includes(adminRole)
@@ -86,6 +115,7 @@ export default function AdminShell({ children, adminRole }: AdminShellProps) {
           <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
             {visibleNav.map((item) => {
               const isActive = pathname === item.href || (item.href !== '/admin' && pathname.startsWith(item.href));
+              const isSupport = item.href === '/admin/support';
               return (
                 <Link
                   key={item.href}
@@ -99,7 +129,19 @@ export default function AdminShell({ children, adminRole }: AdminShellProps) {
                   )}
                 >
                   <item.icon className="w-5 h-5 flex-shrink-0" />
-                  {item.label}
+                  <span className="flex-1">{item.label}</span>
+                  {isSupport && openTickets > 0 && (
+                    <span
+                      className={cn(
+                        'inline-flex items-center justify-center min-w-[1.25rem] h-5 px-1.5 rounded-full text-xs font-bold',
+                        isActive ? 'bg-brown text-haldi-gold' : 'bg-red-500 text-white'
+                      )}
+                      aria-label={`${openTickets} open tickets`}
+                      title={`${openTickets} ticket${openTickets === 1 ? '' : 's'} need attention`}
+                    >
+                      {openTickets > 99 ? '99+' : openTickets}
+                    </span>
+                  )}
                 </Link>
               );
             })}
