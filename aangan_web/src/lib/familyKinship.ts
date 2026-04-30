@@ -80,8 +80,12 @@ const COMPOSITION: Record<RelKey, Record<RelKey, RelKey | null>> = {
     sister: 'bua',                   // father's sister → बुआ
     father: 'grandfather_paternal',  // father's father → दादा
     mother: 'grandmother_paternal',  // father's mother → दादी
-    son: 'brother',                  // father's other son = my brother
-    daughter: 'sister',
+    // father.son/daughter is INTENTIONALLY OMITTED — would naively reduce
+    // to "brother"/"sister", but in practice fathers add their nieces and
+    // nephews (brother's children = चचेरे, sister's children = ममेरे)
+    // far more often than they add the viewer's own siblings. Falling
+    // through to the "via पिता" fallback is safer than confidently wrong.
+    // See pre-store code-review 2026-04-30.
   },
   // ── Viewer → Mother → ___ ──────────────────────────────────────────────
   mother: {
@@ -90,8 +94,7 @@ const COMPOSITION: Record<RelKey, Record<RelKey, RelKey | null>> = {
     sister: 'mausi',                 // mother's sister → मौसी
     father: 'grandfather_maternal',  // mother's father → नाना
     mother: 'grandmother_maternal',  // mother's mother → नानी
-    son: 'brother',
-    daughter: 'sister',
+    // mother.son/daughter intentionally omitted — see father.son note above.
   },
   // ── Viewer → Husband → ___ ─────────────────────────────────────────────
   husband: {
@@ -124,22 +127,16 @@ const COMPOSITION: Record<RelKey, Record<RelKey, RelKey | null>> = {
     daughter: 'granddaughter_maternal',
   },
   // ── Viewer → Grandparent → ___ ─────────────────────────────────────────
-  grandfather_paternal: {
-    son: 'father',                   // दादा's son could be father — but only if it's MY line; treat as uncle
-    daughter: 'bua',
-  },
-  grandmother_paternal: {
-    son: 'father',
-    daughter: 'bua',
-  },
-  grandfather_maternal: {
-    son: 'uncle_maternal',
-    daughter: 'mother',
-  },
-  grandmother_maternal: {
-    son: 'uncle_maternal',
-    daughter: 'mother',
-  },
+  // grandparent.son/daughter is INTENTIONALLY OMITTED — a grandparent's
+  // son could be the viewer's father OR uncle (taa/chacha/mama). Without
+  // the specific lineage we cannot disambiguate, so falling through to
+  // "via दादा / नाना" is safer than a confidently wrong label.
+  // Spouse-of-grandparent reductions kept (paternal grandparents → bua,
+  // maternal → mausi) are dropped for the same reason.
+  grandfather_paternal: {},
+  grandmother_paternal: {},
+  grandfather_maternal: {},
+  grandmother_maternal: {},
 };
 
 // Stepbrother / half_brother / stepsister normalize to their plain forms

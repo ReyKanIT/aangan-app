@@ -32,7 +32,17 @@ export const useEventStore = create<EventState>((set, get) => ({
     try {
       const { data, error } = await supabase
         .from('events')
-        .select('*, creator:users!creator_id(id, display_name, display_name_hindi, avatar_url, profile_photo_url, family_level)')
+        // Use the explicit FK constraint name (events_creator_id_fkey)
+        // instead of the FK-shorthand `users!creator_id` form. After
+        // tonight's REVOKE on public.users (20260429b RLS lockdown phase A),
+        // PostgREST's FK-shorthand resolution intermittently failed for
+        // sessions whose schema cache was stale, returning PGRST200
+        // ("Could not find a relationship between 'events' and 'users'")
+        // and rendering /events as a bilingual error banner. The explicit
+        // constraint-name form is robust against that — same pattern that
+        // the admin page already uses and that has been working through
+        // the lockdown.
+        .select('*, creator:users!events_creator_id_fkey(id, display_name, display_name_hindi, avatar_url, profile_photo_url, family_level)')
         .gte('start_datetime', new Date(Date.now() - 86400000 * 7).toISOString())
         .order('start_datetime', { ascending: true });
 
@@ -48,7 +58,8 @@ export const useEventStore = create<EventState>((set, get) => ({
     try {
       const { data, error } = await supabase
         .from('events')
-        .select('*, creator:users!creator_id(id, display_name, display_name_hindi, avatar_url, profile_photo_url, family_level)')
+        // Same explicit-FK-name fix as fetchEvents above.
+        .select('*, creator:users!events_creator_id_fkey(id, display_name, display_name_hindi, avatar_url, profile_photo_url, family_level)')
         .eq('id', eventId)
         .single();
 
@@ -165,7 +176,10 @@ export const useEventStore = create<EventState>((set, get) => ({
     try {
       const { data, error } = await supabase
         .from('event_rsvps')
-        .select('*, user:users(id, display_name, display_name_hindi, avatar_url, profile_photo_url, family_level)')
+        // Explicit FK name (event_rsvps_user_id_fkey) — same fix as
+        // fetchEvents/fetchEvent above so the embed survives PostgREST
+        // schema-cache hiccups under the post-RLS-lockdown regime.
+        .select('*, user:users!event_rsvps_user_id_fkey(id, display_name, display_name_hindi, avatar_url, profile_photo_url, family_level)')
         .eq('event_id', eventId)
         .order('created_at', { ascending: true });
       if (error) { set({ error: friendlyError(error.message) }); return; }

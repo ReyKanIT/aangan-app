@@ -269,6 +269,24 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       // public.users get one created here — there is no DB trigger that
       // auto-inserts from auth.users, so a plain .update() would silently
       // affect 0 rows and leave isNewUser stuck as true forever.
+      //
+      // KNOWN RISK (tracked in STORE_READINESS_AUDIT_2026-04-30.md):
+      // This blind upsert keyed on auth.uid() will RECREATE the account-
+      // fragmentation bug (the Kumar 05d182cf vs 578a8432 case fixed by
+      // 20260430c) for any user who logs in with email today and phone
+      // tomorrow (or vice-versa). The proper fix is a SECURITY DEFINER
+      // RPC `find_or_link_profile(phone, email)` that locates an existing
+      // public.users row by phone/email match and either links the new
+      // auth identity or surfaces a "merge needed" error. Deferred to a
+      // dedicated session — auth-flow changes need careful security
+      // thinking and identity-link plumbing.
+      //
+      // Mitigation now in place:
+      // - Migration 20260430h adds users.aangan_id, a stable share-able
+      //   handle that survives identity changes.
+      // - Future "I lost my number" recovery flow can ask the user for
+      //   their AAN-XXXXXXXX and rebind the new auth identity to the
+      //   existing public.users row.
       const { error } = await supabase.from('users')
         .upsert({ id: session.user.id, ...data, updated_at: new Date().toISOString() });
       if (error) { set({ error: friendlyError(error.message) }); return false; }

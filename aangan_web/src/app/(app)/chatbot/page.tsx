@@ -3,6 +3,9 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import GoldButton from '@/components/ui/GoldButton';
 import VoiceButton from '@/components/ui/VoiceButton';
+import { supabase } from '@/lib/supabase/client';
+import { useAuthStore } from '@/stores/authStore';
+import { searchFestivals, daysBetween, istDateStr, type SystemFestival } from '@/lib/festivals';
 
 interface ChatMessage {
   id: string;
@@ -19,11 +22,39 @@ const QUICK_REPLIES = [
   { emoji: '👨‍👩‍👧‍👦', text: 'परिवार का पेड़ कैसे बनाएं?', english: 'How to build family tree?' },
 ];
 
-/* ─── Local Knowledge Base (no API needed) ───────────────────── */
-function getBotResponse(input: string): string {
+/* ─── Festival reply formatter ──────────────────────────────────
+ * Was hard-coded to 4 festivals regardless of what the user asked
+ * (caught in 2026-04-30 CEO-mode review). Now grounded in the
+ * `system_festivals` table (27+ festivals through 2027) via the
+ * shared searchFestivals() helper, with regional filter applied
+ * from the user's state_code. Both keyword search ("होली कब है?")
+ * and "next festival" lookups land here.
+ */
+function formatFestivalReply(query: string, festivals: SystemFestival[]): string {
+  if (festivals.length === 0) {
+    return `🤔 "${query}" से मेल खाता कोई आगामी त्योहार नहीं मिला।\n\nसभी त्योहारों की पूरी लिस्ट "Festivals" पेज पर देखें — वहाँ हर त्योहार का तारीख और विवरण मिलेगा।\n\n📱 मेनू में "त्योहार" / "Festivals" पर टैप करें।`;
+  }
+  const today = istDateStr();
+  const lines = festivals.map((f) => {
+    const days = daysBetween(today, f.date);
+    const when = days === 0 ? 'आज!' : days === 1 ? 'कल' : `${days} दिन में`;
+    const dateLabel = new Date(`${f.date}T00:00:00+05:30`).toLocaleDateString('hi-IN', {
+      day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Asia/Kolkata',
+    });
+    const icon = f.icon || '🪔';
+    return `${icon} ${f.name_hi} (${f.name_en}) — ${dateLabel} (${when})`;
+  });
+  return `📅 आगामी त्योहार:\n\n${lines.join('\n')}\n\nपूरी लिस्ट "Festivals" पेज पर मिलेगी 🙏`;
+}
+
+/* ─── Async knowledge base — DB-grounded for festivals/panchang ── */
+async function getBotResponse(
+  input: string,
+  ctx: { userStateCode: string | null }
+): Promise<string> {
   const q = input.toLowerCase();
 
-  // Panchang
+  // Panchang — today's date + redirect (real tithi calc lives on /panchang)
   if (q.includes('पंचांग') || q.includes('panchang') || q.includes('tithi') || q.includes('तिथि')) {
     const today = new Date();
     const options: Intl.DateTimeFormatOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: 'Asia/Kolkata' };
@@ -31,9 +62,27 @@ function getBotResponse(input: string): string {
     return `🪔 आज ${dateStr} है।\n\nविस्तृत पंचांग देखने के लिए "पंचांग" पेज पर जाएं — वहाँ तिथि, नक्षत्र, योग, करण सब मिलेगा!\n\n📱 मेनू में "पंचांग" पर टैप करें।`;
   }
 
-  // Festivals
-  if (q.includes('त्योहार') || q.includes('festival') || q.includes('tyohar') || q.includes('दिवाली') || q.includes('होली') || q.includes('नवरात्रि')) {
-    return '📅 आगामी प्रमुख त्योहार:\n\n🪔 अक्षय तृतीया — मई 2026\n🙏 गुरु पूर्णिमा — जुलाई 2026\n🎋 रक्षाबंधन — अगस्त 2026\n🪔 दिवाली — अक्टूबर 2026\n\nसभी त्योहारों की लिस्ट "Festivals" पेज पर देखें!';
+  // Festivals — grounded in system_festivals (was hard-coded 4-list before).
+  // Trigger on any festival keyword OR any festival name (we let the search
+  // helper match by name_en/name_hi).
+  if (
+    q.includes('त्योहार') || q.includes('festival') || q.includes('tyohar') ||
+    q.includes('दिवाली') || q.includes('होली') || q.includes('नवरात्रि') ||
+    q.includes('रक्षा') || q.includes('जन्माष्टमी') || q.includes('करवा') ||
+    q.includes('गणेश') || q.includes('दशहरा') || q.includes('पूजा') ||
+    q.includes('अगला') || q.includes('next') || q.includes('upcoming')
+  ) {
+    // If the query is generic ("next festival", "त्योहार"), fall through
+    // to upcoming-list mode (empty search string). Otherwise feed the
+    // user's text to the ILIKE matcher so "होली" lands on Holi.
+    const isGeneric = /^(अगला|next|upcoming|त्योहार|festival|tyohar)\b|^[?!.\s]*$/i.test(q.trim()) || q.trim().length < 3;
+    const searchTerm = isGeneric ? '' : input;
+    const festivals = await searchFestivals(supabase, searchTerm, {
+      stateCode: ctx.userStateCode,
+      limit: 6,
+      withinDays: 365,
+    });
+    return formatFestivalReply(input.trim() || 'त्योहार', festivals);
   }
 
   // Kuldevi
@@ -77,6 +126,7 @@ function getBotResponse(input: string): string {
 
 /* ─── Chatbot Page ───────────────────────────────────────────── */
 export default function ChatbotPage() {
+  const { user } = useAuthStore();
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: 'welcome',
@@ -112,19 +162,35 @@ export default function ChatbotPage() {
     setInput('');
     setIsTyping(true);
 
-    // Simulate typing delay
-    setTimeout(() => {
-      const response = getBotResponse(text);
-      const botMsg: ChatMessage = {
-        id: `bot-${Date.now()}`,
-        role: 'bot',
-        text: response,
-        timestamp: new Date(),
-      };
-      setMessages((prev) => [...prev, botMsg]);
-      setIsTyping(false);
-    }, 600 + Math.random() * 400);
-  }, []);
+    // Async — getBotResponse may hit Supabase for DB-grounded festival
+    // answers. Min 600ms so the typing dots feel natural even when the
+    // DB is fast.
+    const minDelay = new Promise((resolve) => setTimeout(resolve, 600));
+    Promise.all([
+      getBotResponse(text, { userStateCode: user?.state_code ?? null }),
+      minDelay,
+    ])
+      .then(([response]) => {
+        const botMsg: ChatMessage = {
+          id: `bot-${Date.now()}`,
+          role: 'bot',
+          text: typeof response === 'string' ? response : '🤔 कुछ गड़बड़ हुई — कृपया फिर से पूछें।',
+          timestamp: new Date(),
+        };
+        setMessages((prev) => [...prev, botMsg]);
+        setIsTyping(false);
+      })
+      .catch(() => {
+        const botMsg: ChatMessage = {
+          id: `bot-${Date.now()}`,
+          role: 'bot',
+          text: '🤔 कुछ गड़बड़ हुई — Connection error. कृपया फिर से कोशिश करें।',
+          timestamp: new Date(),
+        };
+        setMessages((prev) => [...prev, botMsg]);
+        setIsTyping(false);
+      });
+  }, [user?.state_code]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

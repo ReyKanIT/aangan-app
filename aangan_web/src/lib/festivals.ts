@@ -161,6 +161,54 @@ export async function getNextFestivalForUser(
   return null;
 }
 
+/**
+ * Search the system_festivals table for festivals matching `query` and/or
+ * upcoming within `withinDays`. Powers the chatbot's festival branch — used
+ * to be a hard-coded 4-festival string literal that ignored user input.
+ *
+ * - If `query` is provided, ILIKE-matches against name_en + name_hi.
+ * - If `query` is empty, returns the next `limit` upcoming festivals.
+ * - Always filtered to is_active = true and date >= today (IST).
+ * - Region filter is applied client-side via festivalAppliesToState so a
+ *   user in Maharashtra doesn't see Pongal as their "next" festival.
+ */
+export async function searchFestivals(
+  supabase: SupabaseClient,
+  query: string,
+  opts: { stateCode?: string | null; limit?: number; withinDays?: number } = {}
+): Promise<SystemFestival[]> {
+  const limit = opts.limit ?? 6;
+  const withinDays = opts.withinDays ?? 365;
+  const todayIST = istDateStr();
+  const horizon = addDaysIST(todayIST, withinDays);
+  const stateCode = opts.stateCode ?? null;
+
+  const trimmed = query.trim();
+  let q = supabase
+    .from('system_festivals')
+    .select('*')
+    .eq('is_active', true)
+    .gte('date', todayIST)
+    .lte('date', horizon)
+    .order('date', { ascending: true });
+
+  if (trimmed.length >= 2) {
+    // Escape ILIKE metacharacters to prevent wildcard injection.
+    const safe = trimmed.replace(/\\/g, '\\\\').replace(/%/g, '\\%').replace(/_/g, '\\_');
+    q = q.or(`name_en.ilike.%${safe}%,name_hi.ilike.%${safe}%`);
+  }
+
+  // Pull a generous window then filter client-side for state applicability.
+  const { data, error } = await q.limit(limit * 3);
+  if (error || !data) return [];
+
+  const filtered = (data as SystemFestival[])
+    .filter((f) => festivalAppliesToState(f.region, stateCode))
+    .slice(0, limit);
+
+  return filtered;
+}
+
 export function istDateStr(date = new Date()): string {
   const utcMs = date.getTime() + date.getTimezoneOffset() * 60 * 1000;
   const istMs = utcMs + 330 * 60 * 1000;
