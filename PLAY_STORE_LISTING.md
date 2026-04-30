@@ -1,4 +1,4 @@
-# Google Play Store Listing — Aangan v0.9.12
+# Google Play Store Listing — Aangan v0.13.5
 
 > Ready to copy-paste into Google Play Console.
 > Last updated: 2026-04-18
@@ -150,56 +150,70 @@ WhatsApp के 10 ग्रुप चला-चलाकर थक गए? आ�
 
 ---
 
-## 4. What's New — v0.9.12
+## 4. What's New — v0.13.5
 
-### What's New (English)
+> Note: this is the FIRST mobile release since v0.9.14 — bundles all
+> v0.10–v0.13.5 features that have been live on the web for several weeks.
+> Stay under 500 chars per Play Store "What's new" limit.
+
+### What's New (English, ≤500 chars)
 ```
-Aangan v0.9.12 — Plan a Wedding in the App
+Aangan v0.13.5 — Bahut kuch naya!
 
-NEW IN THIS VERSION:
-• 🎙️ Voice invites — Elders record a 30-second blessing, plays inline on the invite page
-• 👥 Co-hosts — Share event edit rights with family (bride + groom + both mothers)
-• 💍 Wedding series — One parent event with Tilak, Haldi, Mehndi, Sangeet, Shaadi sub-events
-• 🎁 Gift register — Private shagun/नेग ledger visible only to host side
-• 📇 Bulk invites — Paste contacts or pick from phone, schedule a one-shot send
-• 📍 GPS check-in — Auto check-in when guests arrive at the venue
-• 🖐️ Physical card tracker — हाथ से, पोस्ट, कूरियर — log who got their card
-• 🎉 Potluck — "क्या लाओगे?" — host adds items, guests claim with quantity
+🌳 Family tree ab har rishtedar ke liye sahi label dikhata hai (chacha, mama, dada — sab apne-aap)
+🔗 WhatsApp pe ek tap se family-mein-jud — "Aapke chacha ne aapko jodne ke liye bulaya hai!"
+🆔 Apna Aangan ID — number badle to bhi parivaar nahi chhoote
+🎉 Event invites bulk-schedule, voice se welcome message
+🔒 Privacy aur strong: ghar-bhar ka data ab bhi sirf ghar-bhar ke liye
 
-ALSO INCLUDED:
-• 🌳 Family Tree — 3-level family hierarchy with offline & deceased member support
-• 📅 Panchang — Daily Hindu calendar with Tithi, Nakshatra & 50+ festival alerts
-• 🗣️ Voice Messages + Voice-to-Text in Hindi & English
+Ek hi app, poora parivaar — chaliye sab Aangan mein milte hain.
+```
+
+### What's New (Hindi, ≤500 chars)
+```
+आँगन v0.13.5 — आपके परिवार के लिए बहुत कुछ नया!
+
+🌳 परिवार-वृक्ष अब सही रिश्ता दिखाता है — चाचा, मामा, दादा सब अपने-आप
+🔗 WhatsApp से एक टैप में जुड़ें — "आपके चाचा ने बुलाया है!"
+🆔 आपका अपना Aangan ID — नंबर बदलें तो भी परिवार नहीं छूटे
+🎉 कार्यक्रम के निमंत्रण bulk में, आवाज़ का स्वागत संदेश भी
+🔒 निजता और मज़बूत — घर का डेटा घर में ही
+
+एक ऐप, पूरा परिवार — आइए सब आँगन में मिलते हैं।
+```
+
+### Full feature list since v0.9.14 (for the long description)
+```
+NEW SINCE LAST RELEASE (v0.10 → v0.13.5):
+• 🆔 Stable Aangan ID — share-able discovery handle (AAN-XXXX YYYY)
+   that survives phone or email changes
+• 🌳 Per-viewer family-tree labels — your भाभी shows as भाभी for YOU
+   even when she was added by your brother as his पत्नी
+• 🔗 WhatsApp deep-link family invites — relatives get a link with the
+   relationship pre-set, one tap to join
+• 🪔 Festival chatbot grounded in 27+ festivals — actual upcoming dates
+   in Hindi, filtered to your state (Karwa Chauth for north, Pongal for
+   south, etc.)
+• 📅 Recurring panchang reminders — every-month tithi alerts (पूर्णिमा,
+   अमावस्या, एकादशी)
+• 🪔 50+ festivals catalog with regional opt-in/out
+• 🔒 Privacy-safe family-of-family view — see relatives without their
+   phone numbers / addresses
+
+ALSO INCLUDED FROM PRIOR RELEASES:
+• 🎙️ Voice invites — record a 30-second blessing, plays inline
+• 👥 Co-hosts — bride + groom + both mothers can edit one event
+• 💍 Wedding sub-event series — Tilak, Haldi, Mehndi, Sangeet, Shaadi
+• 🎁 Gift register — private शगुन ledger visible only to host
+• 📇 Bulk invites — pick from phone contacts, schedule a send
+• 📍 GPS check-in for guests
+• 🎉 Potluck — guests claim items by quantity
+• 🌳 Family Tree with offline + deceased member support (3 levels)
+• 🗣️ Voice messages + Hindi/English voice-to-text
 • 🙏 Kuldevi / Kuldevta traditions
-• 📸 Photo Sharing with audience control
-• 💬 Direct Messages & family chat
-• 🤖 AI Family Chatbot in Hindi
-• 👵 Dadi Test UX — 52px+ buttons, 16px+ text, Hindi-first labels
-```
-
-### What's New (Hindi)
-```
-आँगन v0.9.12 — अब शादी भी App में plan करें
-
-इस वर्ज़न में नया:
-• 🎙️ आवाज़ का न्यौता — दादाजी/नानाजी 30 सेकंड का आशीर्वाद रिकॉर्ड करें
-• 👥 सह-मेज़बान — दुल्हा, दुल्हन, दोनों माँ — सब मिलकर इवेंट संभालें
-• 💍 शादी की सीरीज़ — तिलक, हल्दी, मेहंदी, संगीत, शादी — सब एक साथ
-• 🎁 शगुन बही — निजी नेग/शगुन का ledger सिर्फ़ मेज़बान पक्ष को दिखे
-• 📇 Bulk आमंत्रण — फोन से contacts चुनें, एक साथ भेजें या schedule करें
-• 📍 GPS चेक-इन — मेहमान पहुँचने पर अपने आप मार्क हो जाता है
-• 🖐️ कार्ड ट्रैकर — हाथ से, पोस्ट, कूरियर — किसको कार्ड मिला track करें
-• 🎉 पोटलक — "क्या लाओगे?" — मेज़बान सूची बनाए, मेहमान चुनें
-
-पहले से शामिल:
-• 🌳 वंशवृक्ष — 3 स्तरों तक परिवार का पेड़, offline/स्वर्गवासी सदस्य भी जोड़ें
-• 📅 पंचांग — रोज़ का हिंदू कैलेंडर, तिथि, नक्षत्र और 50+ त्योहार अलर्ट
-• 🗣️ वॉइस मैसेज + हिंदी/अंग्रेज़ी वॉइस-टू-टेक्स्ट
-• 🙏 कुलदेवी / कुलदेवता परंपराएं
-• 📸 फोटो शेयरिंग — audience control के साथ
-• 💬 डायरेक्ट मैसेज + family chat
-• 🤖 AI चैटबॉट हिंदी में
-• 👵 दादी टेस्ट UX — 52px बटन, 16px टेक्स्ट, हिंदी-first labels
+• 📸 Photo sharing with audience control
+• 💬 Direct messages & family chat
+• 👵 Dadi Test UX — 52px+ buttons, 16px+ text, Hindi-first
 ```
 
 ---
@@ -346,4 +360,4 @@ Your family's digital home — completely free, forever.
 
 ---
 
-*File updated 2026-04-18 for Aangan v0.9.12 Google Play Console submission. All text blocks are ready to copy-paste. See PLAY_STORE_PUBLISHING_CHECK.md for the full readiness audit + step-by-step submission path.*
+*File updated 2026-04-18 for Aangan v0.13.5 Google Play Console submission. All text blocks are ready to copy-paste. See PLAY_STORE_PUBLISHING_CHECK.md for the full readiness audit + step-by-step submission path.*

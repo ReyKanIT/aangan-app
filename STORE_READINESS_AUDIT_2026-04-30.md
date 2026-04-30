@@ -1,5 +1,44 @@
 # Aangan — Store-Readiness Audit & Action Plan
-*[10:58pm - 30Apr26]*
+*[10:58pm - 30Apr26] · Updated [11:58pm - 30Apr26]*
+
+## ⚡ Update — auto-run completed in same session
+
+Since this doc was first written, the following has shipped:
+
+- **Web v0.13.4** — events page bug fix (migration `20260430j` adds
+  4 missing v0.12-era columns, eventStore switched to explicit FK
+  names) + chatbot festival accuracy (DB-grounded `searchFestivals`).
+- **Web v0.13.5** — Claude Design polish: Aadhaar-style Aangan ID
+  display + WhatsApp share button, chatbot cognitive units, "via X"
+  promoted to chip, palette tightening on family card.
+- **RN port (in-flight commit)** — `aangan_rn` bumped to v0.13.5
+  (versionCode 20, buildNumber 20). Type adds `aangan_id`. New
+  `aangan_rn/src/lib/familyKinship.ts` mirrors the web composition
+  table.
+- **Store metadata refreshed** — `PLAY_STORE_LISTING.md`,
+  `APP_STORE_ASSETS.md`, `TESTING_INDUS_APP_STORE.md` all bumped
+  v0.9/v0.8 → v0.13.5 with full feature delta.
+- **`CHANGELOG.md` shipped** — covers v0.10.0 → v0.13.5 per tag.
+- **`APPLE_PRIVACY_NUTRITION_LABELS.md` shipped** — copy-pasteable
+  answers for App Store Connect's Privacy form.
+
+P0 blockers reduced from 7 → 3:
+- ~~B1 Bump RN to v0.13.x~~ — DONE (v0.13.5).
+- ~~B2 Mirror v0.13.1 derived-label kinship to RN~~ — DONE (lib ported).
+- ~~B3 Mirror v0.13.2 aangan_id to RN~~ — type DONE; UI surfaces
+  (Settings card + AddMember search) deferred to next session as a
+  scoped UI-only task.
+- B4 **Capture 6+ phone screenshots** — STILL needs Kumar.
+- B5 **Fill `eas.json` iOS submit creds** — STILL needs Kumar.
+- ~~B6 Confirm Android target SDK = 34~~ — VERIFIED (Expo SDK 54
+  defaults to compileSdkVersion=35 / targetSdkVersion=35).
+- B7 **`EXPO_PUBLIC_SENTRY_DSN`** — STILL needs Kumar.
+
+Remaining gates: just **B4 + B5 + B7** (all Kumar inputs). One EAS
+build (1 of 15 monthly slots) produces both AAB + IPA.
+
+---
+
 
 This is the consolidated output of a parallel 4-agent audit run before
 pushing any update to **Indus App Store / Google Play / Apple App Store**.

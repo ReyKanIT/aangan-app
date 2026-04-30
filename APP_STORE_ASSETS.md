@@ -1,4 +1,4 @@
-# Aangan v0.8.0 — App Store Assets (iOS + Android)
+# Aangan v0.13.5 — App Store Assets (iOS + Android)
 
 > Last updated: 2026-04-11
 > Bundle ID: app.aangan.family
@@ -222,24 +222,28 @@ Voice features use on-device speech recognition (no third-party voice processing
 
 ---
 
-## 9. What's New — v0.8.0 (App Store Release Notes)
+## 9. What's New — v0.13.5 (App Store Release Notes)
+
+> First mobile release since v0.8.0 — bundles all v0.10–v0.13.5
+> features. App Store allows ~4000 chars; first 170 visible without
+> tap-to-expand, so leading bullets matter most.
 
 ```
-Aangan v0.8.0 — Your Family's WhatsApp Group Replacement
+Aangan v0.13.5 — परिवार और भी क़रीब
 
-New:
-• Voice Messages — Send voice notes in Hindi & English
-• Voice-to-Text — Speak in Hindi, see it typed out
-• AI Family Chatbot — Ask about festivals & traditions in Hindi
-• Direct Messages — Private 1-on-1 DMs
-• Kuldevi / Kuldevta — Document family deity traditions
+🔗 WhatsApp से one-tap family invite — रिश्ता automatically set
+🌳 Family Tree अब हर सदस्य के नज़रिए से सही label दिखाए (चाचा, मामा, दादा सब अपने-आप)
+🆔 Stable Aangan ID — phone या email बदलें, account वही रहे
+🪔 50+ festival notifications + dual-calendar (तिथि + English date) reminders
+🎙️ Voice invites, co-hosts, sub-events, potluck, gift register
+📍 GPS event check-in
+🔒 Privacy-safe family-of-family view — phones/emails redacted
+🤖 AI Chatbot grounded in 27+ real festivals (filtered to your state)
 
-Includes:
-• 3-level Family Tree
-• Daily Panchang with festival alerts
-• Events with RSVP
-• Photo sharing with audience control
-• Performance improvements & bug fixes
+Voice Messages • Voice-to-Text in Hindi & English • Direct Messages •
+Kuldevi/Kuldevta traditions • 3-level Family Tree • Daily Panchang •
+Events with RSVP • Photo sharing with audience control •
+Performance + privacy fixes (DPDP-aligned).
 ```
 
 ---

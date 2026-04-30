@@ -2,7 +2,7 @@
   "expo": {
     "name": "Aangan आँगन",
     "slug": "aangan",
-    "version": "0.10.0",
+    "version": "0.13.5",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -16,7 +16,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "app.aangan.family",
-      "buildNumber": "19",
+      "buildNumber": "20",
       "infoPlist": {
         "NSCameraUsageDescription": "Aangan needs camera access to take profile photos and event pictures.",
         "NSPhotoLibraryUsageDescription": "Aangan needs photo library access to share photos with your family.",
@@ -32,7 +32,7 @@
     },
     "android": {
       "package": "app.aangan.family",
-      "versionCode": 19,
+      "versionCode": 20,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#FDFAF0"

@@ -2,6 +2,15 @@
 
 export interface User {
   id: string;
+  /**
+   * Stable, human-friendly identifier (e.g. "AAN-X7K2P9X3"). Generated
+   * once at signup and never changes — survives phone-number / email
+   * swaps so relatives can still find the same person via this code.
+   * Backed by users.aangan_id (web migration 20260430h, applied to prod).
+   * Optional in the type because legacy rows that predate the migration
+   * may briefly have NULL during backfill rollout.
+   */
+  aangan_id?: string | null;
   phone_number: string;
   display_name: string;
   display_name_hindi: string | null;

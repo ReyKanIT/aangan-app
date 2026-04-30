@@ -40,10 +40,34 @@ test numbers required.
 
 ---
 
-## What's live in v0.9.13
+## What's live in v0.13.5
 
-Bigger feature set than what you last reviewed:
+Substantially bigger feature set than what you last reviewed (v0.9.14
+on 2026-04-18 — this is the first mobile release since then):
 
+**New since last review (v0.10 → v0.13.5):**
+- 🆔 **Stable Aangan ID** — every user gets a permanent, share-able
+  discovery handle (e.g. `AAN-X7K2 P9X3`) visible in Settings. Family
+  members can find each other by ID even after phone-number changes.
+- 🌳 **Per-viewer family-tree labels** — the tree now derives the
+  correct Hindi label for each relative based on the viewer's position
+  (your brother's wife shows as भाभी for you, even though her row was
+  added by your brother as पत्नी). Includes a "via X" badge so users
+  know which side of the family a transitive relative came from.
+- 🔗 **WhatsApp deep-link family invites** — generates a one-tap link
+  like `https://aangan.app/join/ABC123` with the relationship
+  pre-set; recipient lands directly on the family-add screen.
+- 🪔 **Festival chatbot grounded in 27+ festivals** — actual upcoming
+  dates with Hindi day names, filtered to the user's state (Karwa
+  Chauth for north India, Pongal for Tamil Nadu, Chhath for Bihar/UP).
+- 🪔 **50+ festivals catalog** with regional opt-in/out preferences
+- 📅 **Recurring panchang reminders** — every-month tithi alerts
+  (पूर्णिमा, अमावस्या, एकादशी)
+- 🔒 **Privacy-safe family-of-family view** — see relatives' tree
+  positions without their phone / email / DOB / address being exposed
+  to family-of-family viewers.
+
+**Already live in prior reviews (still part of v0.13.5):**
 - Family tree with 3-level hierarchy (including offline members + deceased relatives)
 - Daily Panchang + 50+ festival alerts
 - Wedding series (Tilak → Haldi → Mehndi → Sangeet → Shaadi as linked sub-events)
@@ -53,7 +77,16 @@ Bigger feature set than what you last reviewed:
 - GPS event check-in
 - Potluck sign-up ("क्या लाओगे?")
 - Hindi/English voice-to-text
-- AI family chatbot in Hindi
+- AI family chatbot in Hindi (now DB-grounded for festival accuracy)
+
+## Discovery testing (NEW for this release)
+
+After signing in, go to **Settings** → see your Aangan ID below your
+name (formatted as `AAN-XXXX YYYY`). Tap **कॉपी / Copy** or **WhatsApp**
+to share. Then open the app on a second device, sign in with a different
+number, go to **Family Tree → "+ जोड़ें"** → enter the first user's
+Aangan ID in the search box → the user should appear instantly without
+needing the phone number.
 
 ---
 
@@ -74,4 +107,4 @@ to re-enable the bypass (e.g. another store takes Vi down), repopulate:
 
 ---
 
-*Generated [7:50am - 18Apr26] · Aangan v0.9.13 · Contact: support@aangan.app*
+*Generated [11:55pm - 30Apr26] · Aangan v0.13.5 (build 20) · Contact: support@aangan.app*

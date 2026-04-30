@@ -1,6 +1,6 @@
 {
   "name": "aangan_rn",
-  "version": "0.10.0",
+  "version": "0.13.5",
   "main": "index.ts",
   "scripts": {
     "start": "expo start",
