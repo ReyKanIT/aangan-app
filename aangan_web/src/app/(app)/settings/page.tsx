@@ -171,43 +171,67 @@ export default function SettingsPage() {
         सेव करें — Save Changes
       </GoldButton>
 
-      {/* Account Info — phone/email can change, but aangan_id stays stable. */}
+      {/* Account Info — phone/email can change, but aangan_id stays stable.
+          Aadhaar-style visual chunking (AAN-XXXX YYYY) + WhatsApp share
+          per design review v0.13.5. */}
       <div className="bg-cream-dark rounded-2xl p-4 mb-4 space-y-3 font-body text-base text-brown-light">
-        {user?.aangan_id && (
-          <div className="bg-white border-2 border-haldi-gold rounded-xl p-3">
-            <p className="font-body text-sm text-brown-light mb-1">
-              आपकी आँगन आईडी — Your Aangan ID
-            </p>
-            <div className="flex items-center gap-2">
-              <code className="font-mono text-lg font-bold text-haldi-gold-dark tracking-wider select-all">
-                {user.aangan_id}
-              </code>
-              <button
-                type="button"
-                onClick={async () => {
-                  try {
-                    await navigator.clipboard.writeText(user.aangan_id);
-                    setSuccess(true);
-                    setTimeout(() => setSuccess(false), 1500);
-                  } catch {
-                    // Clipboard blocked (some grandma-tier browsers / iframe
-                    // contexts) — silent no-op; the value is select-all so
-                    // the user can long-press copy.
-                  }
-                }}
-                aria-label="कॉपी करें — Copy"
-                className="ml-auto px-3 py-1 bg-haldi-gold/10 text-haldi-gold-dark text-sm font-semibold rounded-lg hover:bg-haldi-gold/20"
+        {user?.aangan_id && (() => {
+          // Display form: split the 8-char body in halves so it parses like
+          // a phone/Aadhaar number. Canonical form (with hyphen) is what
+          // `select-all` copies + what the API expects.
+          const body = user.aangan_id.replace(/^AAN-/, '');
+          const display = `AAN-${body.slice(0, 4)} ${body.slice(4)}`.trim();
+          const waMessage =
+            `मेरी आँगन ID: ${user.aangan_id}\n` +
+            `मुझे अपने परिवार में जोड़ें — Add me to your family on Aangan: https://aangan.app`;
+          const waHref = `https://wa.me/?text=${encodeURIComponent(waMessage)}`;
+          return (
+            <div className="bg-white border-2 border-haldi-gold rounded-xl p-3">
+              <p className="font-body text-sm text-brown-light mb-1">
+                आपकी आँगन आईडी — Your Aangan ID
+              </p>
+              <code
+                className="block font-mono text-xl font-bold text-haldi-gold-dark tracking-widest select-all"
+                style={{ fontVariantNumeric: 'tabular-nums' }}
               >
-                कॉपी
-              </button>
+                {display}
+              </code>
+              <div className="mt-2 flex gap-2">
+                <button
+                  type="button"
+                  onClick={async () => {
+                    try {
+                      await navigator.clipboard.writeText(user.aangan_id);
+                      setSuccess(true);
+                      setTimeout(() => setSuccess(false), 1500);
+                    } catch {
+                      // Clipboard blocked — silent no-op; the code is
+                      // select-all so user can long-press copy.
+                    }
+                  }}
+                  aria-label="कॉपी करें — Copy"
+                  className="flex-1 min-h-dadi px-3 py-2 bg-haldi-gold/10 text-haldi-gold-dark text-base font-semibold rounded-lg hover:bg-haldi-gold/20 flex items-center justify-center gap-2"
+                >
+                  📋 कॉपी
+                </button>
+                <a
+                  href={waHref}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="WhatsApp पर भेजें — Share on WhatsApp"
+                  className="flex-1 min-h-dadi px-3 py-2 bg-[#25D366] text-white text-base font-semibold rounded-lg hover:bg-[#1DA851] flex items-center justify-center gap-2"
+                >
+                  📲 WhatsApp
+                </a>
+              </div>
+              <p className="font-body text-sm text-brown-light mt-2">
+                यह आईडी हमेशा एक जैसी रहेगी, चाहे आप मोबाइल या ईमेल बदलें
+                — Stable across phone/email changes. Share this with relatives
+                to add you to their family.
+              </p>
             </div>
-            <p className="font-body text-xs text-brown-light mt-2">
-              यह आईडी हमेशा एक जैसी रहेगी, चाहे आप मोबाइल या ईमेल बदलें
-              — Stable across phone/email changes. Share this with relatives
-              to add you to their family.
-            </p>
-          </div>
-        )}
+          );
+        })()}
         {user?.email && <p>📧 {user.email}</p>}
         {user?.phone_number && <p>📱 {user.phone_number}</p>}
       </div>

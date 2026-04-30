@@ -320,7 +320,7 @@ export default function AddMemberDrawer({ onClose }: Props) {
                   type="text"
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
-                  placeholder="नाम या आँगन ID से खोजें — Name or AAN-XXXXXXXX"
+                  placeholder="नाम या आँगन ID — Name or Aangan ID"
                   className="w-full border-2 border-gray-300 rounded-xl px-4 py-3 font-body text-base focus:border-haldi-gold focus:outline-none mb-1"
                   autoFocus
                 />

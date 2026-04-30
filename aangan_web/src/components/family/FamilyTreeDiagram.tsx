@@ -227,7 +227,7 @@ function TreeNodeCard({ node }: { node: TreeNode }) {
       : 'bg-white border-cream-dark';
 
   return (
-    <div className={`relative w-36 sm:w-40 rounded-2xl p-3 text-center shadow-sm border ${bg} group`}>
+    <div className={`relative w-40 sm:w-44 rounded-2xl p-3 text-center shadow-sm border ${bg} group`}>
       <div className={`mx-auto mb-2 rounded-full ${ring}`}>
         {node.avatarUrl ? (
           <AvatarCircle src={node.avatarUrl} name={node.name} size={64} className="mx-auto" />
@@ -256,8 +256,20 @@ function TreeNodeCard({ node }: { node: TreeNode }) {
           </span>
         )}
         {node.isOffline && !node.isDeceased && (
-          <span className="bg-blue-100 text-blue-600 text-sm font-semibold px-2 py-0.5 rounded-full">
+          // Palette tightening (design review v0.13.5): blue → muted haldi
+          // so the family-tree card stays in one warm palette. Reserve
+          // accent blue for actionable affordances elsewhere in the app.
+          <span className="bg-haldi-gold/15 text-haldi-gold-dark text-sm font-semibold px-2 py-0.5 rounded-full">
             ऑफ़लाइन
+          </span>
+        )}
+        {node.viaName && (
+          // "via X" promoted from a whisper-quiet italic line into a real
+          // chip in the same row as L-badge — it's the most informative
+          // per-card piece for a Dadi understanding why a stranger appears
+          // in her tree, deserves chip-level visibility.
+          <span className="bg-cream-dark text-brown text-sm font-semibold px-2 py-0.5 rounded-full max-w-[120px] truncate">
+            via {node.viaName}
           </span>
         )}
         {node.isSelf && (
@@ -269,17 +281,6 @@ function TreeNodeCard({ node }: { node: TreeNode }) {
 
       {node.village && (
         <p className="font-body text-sm text-brown-light mt-1 truncate">📍 {node.village}</p>
-      )}
-
-      {node.viaName && (
-        // "via X" badge — tells the viewer that this row was added by another
-        // family member, and the relationship label shown is computed from
-        // their perspective. Crucial for the Krishna-added "wife" → भाभी
-        // case so Kumar isn't confused why someone else's wife shows up.
-        // Bumped from 11px → sm (14px) for Dadi compliance.
-        <p className="font-body text-sm text-brown-light/80 mt-1 truncate italic">
-          via {node.viaName}
-        </p>
       )}
 
       {node.onRemove && (

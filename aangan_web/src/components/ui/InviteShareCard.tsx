@@ -1,13 +1,6 @@
 'use client';
-import { useState } from 'react';
-
-const INVITE_MESSAGE = `नमस्ते! 🙏 मैं आपको Aangan आँगन पर बुलाना चाहता/चाहती हूँ — हमारा परिवार सोशल नेटवर्क।
-
-👨‍👩‍👧‍👦 परिवार का पेड़ बनाएं
-📅 पंचांग और त्योहार
-🎉 इवेंट और RSVP
-
-अभी जुड़ें: https://aangan.app`;
+import { useState, useMemo } from 'react';
+import { useAuthStore } from '@/stores/authStore';
 
 const INVITE_LINK = 'https://aangan.app';
 
@@ -15,12 +8,36 @@ const INVITE_LINK = 'https://aangan.app';
  * InviteShareCard — Dadi-Test compliant invite CTA
  * Shows WhatsApp button + Copy Link button + native share (on supported devices).
  * Used on /family page and anywhere we want a quick invite flow.
+ *
+ * Personalization (added 2026-04-30 v0.13.5):
+ * The shared message now includes the inviter's display name and Aangan ID
+ * (AAN-XXXXXXXX), so the recipient knows who's inviting them and can find
+ * the inviter directly via "Search by Aangan ID" once installed. The full
+ * per-relative deep-link flow (with pre-set relationship) lives on the
+ * AddMemberDrawer's "Invite by WhatsApp" path — this card is the generic
+ * "share Aangan with anyone" surface.
  */
 export default function InviteShareCard({ className = '' }: { className?: string }) {
+  const { user } = useAuthStore();
   const [copied, setCopied] = useState(false);
   const [expanded, setExpanded] = useState(false);
 
-  const whatsappHref = `https://wa.me/?text=${encodeURIComponent(INVITE_MESSAGE)}`;
+  const inviteMessage = useMemo(() => {
+    const inviterName = user?.display_name_hindi || user?.display_name || '';
+    const aanganId = user?.aangan_id ? `\n\n🆔 मेरी Aangan ID: ${user.aangan_id}` : '';
+    const greeting = inviterName
+      ? `नमस्ते! 🙏 मैं ${inviterName} हूँ — आपको Aangan आँगन पर बुलाना चाहता/चाहती हूँ।`
+      : 'नमस्ते! 🙏 आपको Aangan आँगन पर बुलाना चाहता/चाहती हूँ।';
+    return `${greeting}
+
+👨‍👩‍👧‍👦 परिवार का पेड़ बनाएं
+📅 पंचांग और त्योहार
+🎉 इवेंट और RSVP${aanganId}
+
+अभी जुड़ें: https://aangan.app`;
+  }, [user?.display_name_hindi, user?.display_name, user?.aangan_id]);
+
+  const whatsappHref = `https://wa.me/?text=${encodeURIComponent(inviteMessage)}`;
 
   const handleCopyLink = async () => {
     try {
@@ -35,11 +52,11 @@ export default function InviteShareCard({ className = '' }: { className?: string
 
   const handleCopyMessage = async () => {
     try {
-      await navigator.clipboard.writeText(INVITE_MESSAGE);
+      await navigator.clipboard.writeText(inviteMessage);
       setCopied(true);
       setTimeout(() => setCopied(false), 2500);
     } catch {
-      window.prompt('संदेश कॉपी करें — Copy this message:', INVITE_MESSAGE);
+      window.prompt('संदेश कॉपी करें — Copy this message:', inviteMessage);
     }
   };
 
@@ -48,7 +65,7 @@ export default function InviteShareCard({ className = '' }: { className?: string
       try {
         await navigator.share({
           title: 'Aangan — आँगन',
-          text: INVITE_MESSAGE,
+          text: inviteMessage,
           url: INVITE_LINK,
         });
       } catch {
@@ -136,7 +153,7 @@ export default function InviteShareCard({ className = '' }: { className?: string
 
           {/* SMS */}
           <a
-            href={`sms:?&body=${encodeURIComponent(INVITE_MESSAGE)}`}
+            href={`sms:?&body=${encodeURIComponent(inviteMessage)}`}
             className="w-full flex items-center gap-3 min-h-dadi px-4 py-3 rounded-xl bg-white border border-gray-200 text-brown font-body text-base hover:bg-cream-dark transition-colors"
           >
             <span className="text-xl shrink-0">💬</span>
@@ -148,7 +165,7 @@ export default function InviteShareCard({ className = '' }: { className?: string
 
           {/* Email */}
           <a
-            href={`mailto:?subject=${encodeURIComponent('Aangan आँगन — परिवार से जुड़ें')}&body=${encodeURIComponent(INVITE_MESSAGE)}`}
+            href={`mailto:?subject=${encodeURIComponent('Aangan आँगन — परिवार से जुड़ें')}&body=${encodeURIComponent(inviteMessage)}`}
             className="w-full flex items-center gap-3 min-h-dadi px-4 py-3 rounded-xl bg-white border border-gray-200 text-brown font-body text-base hover:bg-cream-dark transition-colors"
           >
             <span className="text-xl shrink-0">✉️</span>

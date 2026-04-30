@@ -30,6 +30,19 @@ const QUICK_REPLIES = [
  * from the user's state_code. Both keyword search ("होली कब है?")
  * and "next festival" lookups land here.
  */
+/**
+ * Convert raw days-until into a grandma-readable cognitive unit.
+ * "195 दिन में" parses as a number, not a calendar — switch to weeks
+ * past 14 days, months past 60. Per design review v0.13.5.
+ */
+function relativeWhen(days: number): string {
+  if (days === 0) return 'आज!';
+  if (days === 1) return 'कल';
+  if (days <= 14) return `${days} दिन में`;
+  if (days <= 60) return `~${Math.round(days / 7)} हफ़्ते में`;
+  return `~${Math.round(days / 30)} महीने में`;
+}
+
 function formatFestivalReply(query: string, festivals: SystemFestival[]): string {
   if (festivals.length === 0) {
     return `🤔 "${query}" से मेल खाता कोई आगामी त्योहार नहीं मिला।\n\nसभी त्योहारों की पूरी लिस्ट "Festivals" पेज पर देखें — वहाँ हर त्योहार का तारीख और विवरण मिलेगा।\n\n📱 मेनू में "त्योहार" / "Festivals" पर टैप करें।`;
@@ -37,7 +50,7 @@ function formatFestivalReply(query: string, festivals: SystemFestival[]): string
   const today = istDateStr();
   const lines = festivals.map((f) => {
     const days = daysBetween(today, f.date);
-    const when = days === 0 ? 'आज!' : days === 1 ? 'कल' : `${days} दिन में`;
+    const when = relativeWhen(days);
     const dateLabel = new Date(`${f.date}T00:00:00+05:30`).toLocaleDateString('hi-IN', {
       day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Asia/Kolkata',
     });
@@ -77,10 +90,13 @@ async function getBotResponse(
     // user's text to the ILIKE matcher so "होली" lands on Holi.
     const isGeneric = /^(अगला|next|upcoming|त्योहार|festival|tyohar)\b|^[?!.\s]*$/i.test(q.trim()) || q.trim().length < 3;
     const searchTerm = isGeneric ? '' : input;
+    // Generic "next festival" queries → top 3 within 90 days (grandma-readable
+    // window). Specific name searches ("होली") → wider net so the festival
+    // shows up wherever it falls in the year.
     const festivals = await searchFestivals(supabase, searchTerm, {
       stateCode: ctx.userStateCode,
-      limit: 6,
-      withinDays: 365,
+      limit: isGeneric ? 3 : 6,
+      withinDays: isGeneric ? 90 : 365,
     });
     return formatFestivalReply(input.trim() || 'त्योहार', festivals);
   }
