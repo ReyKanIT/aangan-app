@@ -171,8 +171,43 @@ export default function SettingsPage() {
         सेव करें — Save Changes
       </GoldButton>
 
-      {/* Account Info */}
-      <div className="bg-cream-dark rounded-2xl p-4 mb-4 space-y-2 font-body text-base text-brown-light">
+      {/* Account Info — phone/email can change, but aangan_id stays stable. */}
+      <div className="bg-cream-dark rounded-2xl p-4 mb-4 space-y-3 font-body text-base text-brown-light">
+        {user?.aangan_id && (
+          <div className="bg-white border-2 border-haldi-gold rounded-xl p-3">
+            <p className="font-body text-sm text-brown-light mb-1">
+              आपकी आँगन आईडी — Your Aangan ID
+            </p>
+            <div className="flex items-center gap-2">
+              <code className="font-mono text-lg font-bold text-haldi-gold-dark tracking-wider select-all">
+                {user.aangan_id}
+              </code>
+              <button
+                type="button"
+                onClick={async () => {
+                  try {
+                    await navigator.clipboard.writeText(user.aangan_id);
+                    setSuccess(true);
+                    setTimeout(() => setSuccess(false), 1500);
+                  } catch {
+                    // Clipboard blocked (some grandma-tier browsers / iframe
+                    // contexts) — silent no-op; the value is select-all so
+                    // the user can long-press copy.
+                  }
+                }}
+                aria-label="कॉपी करें — Copy"
+                className="ml-auto px-3 py-1 bg-haldi-gold/10 text-haldi-gold-dark text-sm font-semibold rounded-lg hover:bg-haldi-gold/20"
+              >
+                कॉपी
+              </button>
+            </div>
+            <p className="font-body text-xs text-brown-light mt-2">
+              यह आईडी हमेशा एक जैसी रहेगी, चाहे आप मोबाइल या ईमेल बदलें
+              — Stable across phone/email changes. Share this with relatives
+              to add you to their family.
+            </p>
+          </div>
+        )}
         {user?.email && <p>📧 {user.email}</p>}
         {user?.phone_number && <p>📱 {user.phone_number}</p>}
       </div>

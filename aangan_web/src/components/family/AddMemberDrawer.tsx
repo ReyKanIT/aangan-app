@@ -93,11 +93,30 @@ export default function AddMemberDrawer({ onClose }: Props) {
     return out;
   }, []);
 
+  // Aangan-ID-aware search.
+  // If the query looks like an Aangan ID (starts with "AAN" or "AAN-"), we
+  // bypass the name-fuzzy search and resolve directly via the lookup RPC —
+  // a friend who shared their stable ID lands as a single, unambiguous
+  // result instead of getting buried under similarly-named users.
+  // Anything else falls through to the existing name search.
   useEffect(() => {
     if (debounce.current) clearTimeout(debounce.current);
-    debounce.current = setTimeout(() => {
-      if (query.length >= 2) searchUsers(query);
-      else clearSearch();
+    const trimmed = query.trim();
+    debounce.current = setTimeout(async () => {
+      if (trimmed.length < 2) { clearSearch(); return; }
+      const isAanganId = /^AAN[-]?[A-Z0-9]{4,12}$/i.test(trimmed.replace(/\s+/g, ''));
+      if (isAanganId) {
+        const normalized = trimmed.replace(/\s+/g, '').toUpperCase();
+        const candidate = normalized.startsWith('AAN-') ? normalized : 'AAN-' + normalized.slice(3);
+        const { data, error } = await supabase.rpc('lookup_user_by_aangan_id', { p_aangan_id: candidate });
+        if (!error && data && data.length > 0) {
+          // Re-use the same store slot so the result list renders identically.
+          useFamilyStore.setState({ searchResults: data as User[] });
+          return;
+        }
+        // Fall back to name search if no exact ID match.
+      }
+      searchUsers(trimmed);
     }, 300);
   }, [query, searchUsers, clearSearch]);
 
@@ -301,10 +320,14 @@ export default function AddMemberDrawer({ onClose }: Props) {
                   type="text"
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
-                  placeholder="नाम से खोजें — Search by name"
-                  className="w-full border-2 border-gray-300 rounded-xl px-4 py-3 font-body text-base focus:border-haldi-gold focus:outline-none mb-3"
+                  placeholder="नाम या आँगन ID से खोजें — Name or AAN-XXXXXXXX"
+                  className="w-full border-2 border-gray-300 rounded-xl px-4 py-3 font-body text-base focus:border-haldi-gold focus:outline-none mb-1"
                   autoFocus
                 />
+                <p className="font-body text-xs text-brown-light mb-3">
+                  💡 आपके रिश्तेदार की आँगन ID सबसे पक्का तरीका है —
+                  Their Aangan ID (e.g. <code className="font-mono">AAN-X7K2P9</code>) is the surest way to find them.
+                </p>
                 {searchResults.length === 0 && query.length >= 2 && (
                   <div className="text-center py-4">
                     <p className="font-body text-base text-brown-light mb-3">
@@ -325,9 +348,12 @@ export default function AddMemberDrawer({ onClose }: Props) {
                     className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-cream-dark transition-colors mb-1 text-left min-h-dadi"
                   >
                     <AvatarCircle src={user.avatar_url} name={user.display_name_hindi ?? user.display_name} size={44} />
-                    <div>
-                      <p className="font-body font-semibold text-brown">{user.display_name_hindi ?? user.display_name}</p>
-                      {user.village_city && <p className="font-body text-base text-brown-light">📍 {user.village_city}</p>}
+                    <div className="min-w-0 flex-1">
+                      <p className="font-body font-semibold text-brown truncate">{user.display_name_hindi ?? user.display_name}</p>
+                      {user.aangan_id && (
+                        <p className="font-mono text-xs text-haldi-gold-dark truncate">{user.aangan_id}</p>
+                      )}
+                      {user.village_city && <p className="font-body text-base text-brown-light truncate">📍 {user.village_city}</p>}
                     </div>
                   </button>
                 ))}

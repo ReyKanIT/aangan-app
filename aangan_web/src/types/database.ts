@@ -5,6 +5,13 @@ export type NotificationType = 'new_post' | 'event_invite' | 'rsvp_update' | 'ne
 
 export interface User {
   id: string;
+  /**
+   * Stable, human-friendly identifier (e.g. "AAN-X7K2P9"). Generated once
+   * at signup and never changes — survives phone-number / email swaps so
+   * relatives can still find the same person via this code. Backed by
+   * users.aangan_id (migration 20260430h).
+   */
+  aangan_id: string;
   phone_number: string | null;
   email: string | null;
   display_name: string;
