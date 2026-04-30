@@ -28,13 +28,17 @@ export default function FamilyPage() {
 
   const fetchOfflineMembers = useCallback(async () => {
     try {
-      const { data, error } = await supabase
-        .from('offline_family_members')
-        .select('*')
-        .order('connection_level', { ascending: true });
+      // Switched 2026-04-30 to a SECURITY DEFINER RPC. Direct SELECT on
+      // offline_family_members now returns only the caller's own rows
+      // (RLS tightened in migration 20260430i to plug a P0 PII leak —
+      // mobile/email/DOB/address were visible to family-of-family).
+      // The RPC reproduces the family-of-family superset for the tree
+      // view but redacts PII columns on rows the caller doesn't own.
+      const { data, error } = await supabase.rpc('get_visible_offline_family_members');
       if (!error && data) setOfflineMembers(data as OfflineFamilyMember[]);
     } catch {
-      // Table may not exist yet — silently ignore
+      // RPC may not exist yet on stale environments — silently degrade
+      // to an empty offline list rather than blocking the page.
     }
   }, []);
 

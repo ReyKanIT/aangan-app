@@ -169,7 +169,7 @@ export default function FamilyTreeDiagram({
   return (
     <div className="relative w-full bg-cream/40 rounded-2xl border border-cream-dark overflow-hidden">
       {/* Scroll hint */}
-      <div className="absolute top-2 right-2 z-10 bg-white/85 backdrop-blur px-3 py-1.5 rounded-full font-body text-xs text-brown-light shadow-sm pointer-events-none select-none">
+      <div className="absolute top-2 right-2 z-10 bg-white/85 backdrop-blur px-3 py-1.5 rounded-full font-body text-sm text-brown-light shadow-sm pointer-events-none select-none">
         ↕ स्क्रॉल करें • → खींचें
       </div>
 
@@ -187,8 +187,8 @@ export default function FamilyTreeDiagram({
               <div key={gen} className="flex flex-col items-center">
                 {/* Generation label */}
                 <div className="mb-2 text-center">
-                  <p className="font-body text-sm text-brown-light/80 font-semibold">{label.hi}</p>
-                  <p className="font-body text-xs text-brown-light/60">{label.en}</p>
+                  <p className="font-body text-base text-brown-light/80 font-semibold">{label.hi}</p>
+                  <p className="font-body text-sm text-brown-light/60">{label.en}</p>
                 </div>
 
                 {/* Member cards */}
@@ -238,36 +238,37 @@ function TreeNodeCard({ node }: { node: TreeNode }) {
         )}
       </div>
 
-      <p className={`font-body font-semibold text-sm truncate ${node.isDeceased ? 'text-gray-600' : 'text-brown'}`}>
+      {/* Dadi test: name = base, relation = sm (≥14px), badges = sm. */}
+      <p className={`font-body font-semibold text-base truncate ${node.isDeceased ? 'text-gray-600' : 'text-brown'}`}>
         {node.name}
       </p>
-      <p className="font-body text-xs text-brown-light truncate">{node.relationLabel}</p>
+      <p className="font-body text-sm text-brown-light truncate">{node.relationLabel}</p>
 
       <div className="mt-1.5 flex flex-wrap justify-center gap-1">
         {!node.isSelf && (
-          <span className="bg-haldi-gold-light text-haldi-gold-dark text-xs font-bold px-2 py-0.5 rounded-full">
+          <span className="bg-haldi-gold-light text-haldi-gold-dark text-sm font-bold px-2 py-0.5 rounded-full">
             L{node.level}
           </span>
         )}
         {node.isDeceased && (
-          <span className="bg-gray-200 text-gray-600 text-xs font-semibold px-2 py-0.5 rounded-full">
+          <span className="bg-gray-200 text-gray-600 text-sm font-semibold px-2 py-0.5 rounded-full">
             स्वर्गवासी
           </span>
         )}
         {node.isOffline && !node.isDeceased && (
-          <span className="bg-blue-100 text-blue-600 text-xs font-semibold px-2 py-0.5 rounded-full">
+          <span className="bg-blue-100 text-blue-600 text-sm font-semibold px-2 py-0.5 rounded-full">
             ऑफ़लाइन
           </span>
         )}
         {node.isSelf && (
-          <span className="bg-haldi-gold text-white text-xs font-bold px-2 py-0.5 rounded-full">
+          <span className="bg-haldi-gold text-white text-sm font-bold px-2 py-0.5 rounded-full">
             आप
           </span>
         )}
       </div>
 
       {node.village && (
-        <p className="font-body text-xs text-brown-light mt-1 truncate">📍 {node.village}</p>
+        <p className="font-body text-sm text-brown-light mt-1 truncate">📍 {node.village}</p>
       )}
 
       {node.viaName && (
@@ -275,15 +276,18 @@ function TreeNodeCard({ node }: { node: TreeNode }) {
         // family member, and the relationship label shown is computed from
         // their perspective. Crucial for the Krishna-added "wife" → भाभी
         // case so Kumar isn't confused why someone else's wife shows up.
-        <p className="font-body text-[11px] text-brown-light/80 mt-1 truncate italic">
+        // Bumped from 11px → sm (14px) for Dadi compliance.
+        <p className="font-body text-sm text-brown-light/80 mt-1 truncate italic">
           via {node.viaName}
         </p>
       )}
 
       {node.onRemove && (
+        // Dadi tap target: 44×44 minimum (44 = WCAG, 52 = Aangan dadi rule).
+        // Was 28px which is unreachable for arthritic fingers.
         <button
           onClick={node.onRemove}
-          className="absolute top-1 right-1 opacity-60 sm:opacity-0 sm:group-hover:opacity-100 text-gray-400 hover:text-error transition-all w-7 h-7 flex items-center justify-center text-sm rounded-lg"
+          className="absolute top-0 right-0 opacity-70 sm:opacity-0 sm:group-hover:opacity-100 text-gray-500 hover:text-error transition-all w-11 h-11 flex items-center justify-center text-base rounded-lg hover:bg-red-50"
           aria-label="सदस्य हटाएं — Remove member"
         >✕</button>
       )}
