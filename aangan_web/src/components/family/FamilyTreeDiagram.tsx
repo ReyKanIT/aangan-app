@@ -2,12 +2,20 @@
 import { useMemo } from 'react';
 import AvatarCircle from '@/components/ui/AvatarCircle';
 import type { FamilyMember, OfflineFamilyMember, User } from '@/types/database';
-import { RELATIONSHIP_MAP, getRelationshipGeneration } from '@/lib/constants';
+import { RELATIONSHIP_MAP, getRelationshipGeneration, getRelationshipLevel } from '@/lib/constants';
+import { deriveRowLabel, composeRelationship } from '@/lib/familyKinship';
 
 interface Props {
   self: User | null;
   members: FamilyMember[];
   offline: OfflineFamilyMember[];
+  /**
+   * Current viewer's user id — required to derive per-viewer relationship
+   * labels for offline rows that were added by someone else (e.g. Krishna's
+   * "wife" row should render as Kumar's "भाभी" when Kumar is viewing).
+   * Pass null to disable derivation (renders raw labels).
+   */
+  viewerId: string | null;
   onRemoveOnline: (m: FamilyMember) => void;
   onRemoveOffline: (m: OfflineFamilyMember) => void;
 }
@@ -23,6 +31,9 @@ interface TreeNode {
   isSelf?: boolean;
   generation: number;
   village?: string | null;
+  /** When set, render a small "via <name>" badge so the viewer knows the
+   *  row was added by someone else and the label is derived/fallback. */
+  viaName?: string | null;
   onRemove?: () => void;
 }
 
@@ -39,11 +50,29 @@ export default function FamilyTreeDiagram({
   self,
   members,
   offline,
+  viewerId,
   onRemoveOnline,
   onRemoveOffline,
 }: Props) {
   const { rows, generations } = useMemo(() => {
     const nodes: TreeNode[] = [];
+
+    // ─── Build viewer-perspective lookups for derived labels ───
+    // viewerToAdderRel: family_member_id → relationship_type the viewer has
+    // declared toward that user. Source of truth for "from MY perspective,
+    // what is this person?". Only the viewer's OWN family_members rows
+    // contribute (each user maintains their own labels).
+    const viewerToAdderRel = new Map<string, string>();
+    // adderName: family_member_id → display name to show in the "via X"
+    // badge. Same source — we only know names of users in the viewer's tree.
+    const adderName = new Map<string, string>();
+    for (const m of members) {
+      viewerToAdderRel.set(m.family_member_id, m.relationship_type);
+      adderName.set(
+        m.family_member_id,
+        m.member?.display_name_hindi ?? m.member?.display_name ?? ''
+      );
+    }
 
     if (self) {
       nodes.push({
@@ -62,6 +91,7 @@ export default function FamilyTreeDiagram({
       nodes.push({
         id: `online-${m.id}`,
         name: m.member?.display_name_hindi ?? m.member?.display_name ?? 'Unknown',
+        // family_members rows are MINE → label is correct as stored.
         relationLabel: m.relationship_label_hindi || RELATIONSHIP_MAP[m.relationship_type] || m.relationship_type,
         level: m.connection_level,
         avatarUrl: m.member?.avatar_url,
@@ -72,17 +102,50 @@ export default function FamilyTreeDiagram({
     }
 
     for (const o of offline) {
+      // Offline rows can be added by anyone in the viewer's family_members
+      // (RLS predicate). When added_by != viewer, the stored label is from
+      // the adder's perspective — derive viewer's label here.
+      const derived = viewerId
+        ? deriveRowLabel(
+            { added_by: o.added_by, relationship_type: o.relationship_type, relationship_label_hindi: o.relationship_label_hindi },
+            viewerId,
+            viewerToAdderRel,
+          )
+        : null;
+
+      const isOwnRow = !viewerId || o.added_by === viewerId;
+      const label = derived
+        ? derived.hindiLabel
+        : (o.relationship_label_hindi || RELATIONSHIP_MAP[o.relationship_type] || o.relationship_type);
+
+      // For derived rows, recompute level/generation from the composed
+      // relationship key so the L-badge and tree row reflect MY view (e.g.
+      // Krishna's wife stored at L1 should display as L2 भाभी for Kumar).
+      let displayLevel = o.connection_level;
+      let displayGeneration = getRelationshipGeneration(o.relationship_type);
+      if (viewerId && !isOwnRow) {
+        const viewerToAdder = viewerToAdderRel.get(o.added_by);
+        if (viewerToAdder) {
+          const composedKey = composeRelationship(viewerToAdder, o.relationship_type);
+          if (composedKey) {
+            displayLevel = getRelationshipLevel(composedKey);
+            displayGeneration = getRelationshipGeneration(composedKey);
+          }
+        }
+      }
+
       nodes.push({
         id: `offline-${o.id}`,
         name: o.display_name_hindi ?? o.display_name,
-        relationLabel: o.relationship_label_hindi || RELATIONSHIP_MAP[o.relationship_type] || o.relationship_type,
-        level: o.connection_level,
+        relationLabel: label,
+        level: displayLevel,
         avatarUrl: o.avatar_url,
         isDeceased: o.is_deceased,
         isOffline: true,
-        generation: getRelationshipGeneration(o.relationship_type),
+        generation: displayGeneration,
         village: o.village_city,
-        onRemove: () => onRemoveOffline(o),
+        viaName: !isOwnRow ? (adderName.get(o.added_by) || null) : null,
+        onRemove: isOwnRow ? () => onRemoveOffline(o) : undefined,
       });
     }
 
@@ -93,7 +156,7 @@ export default function FamilyTreeDiagram({
     }
     const gens = Array.from(byGen.keys()).sort((a, b) => b - a);
     return { rows: byGen, generations: gens };
-  }, [self, members, offline, onRemoveOnline, onRemoveOffline]);
+  }, [self, members, offline, viewerId, onRemoveOnline, onRemoveOffline]);
 
   if (generations.length === 0) {
     return (
@@ -205,6 +268,16 @@ function TreeNodeCard({ node }: { node: TreeNode }) {
 
       {node.village && (
         <p className="font-body text-xs text-brown-light mt-1 truncate">📍 {node.village}</p>
+      )}
+
+      {node.viaName && (
+        // "via X" badge — tells the viewer that this row was added by another
+        // family member, and the relationship label shown is computed from
+        // their perspective. Crucial for the Krishna-added "wife" → भाभी
+        // case so Kumar isn't confused why someone else's wife shows up.
+        <p className="font-body text-[11px] text-brown-light/80 mt-1 truncate italic">
+          via {node.viaName}
+        </p>
       )}
 
       {node.onRemove && (

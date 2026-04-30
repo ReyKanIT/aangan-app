@@ -117,6 +117,7 @@ export default function FamilyPage() {
           self={activeLevel === 0 ? self : null}
           members={filtered}
           offline={filteredOffline}
+          viewerId={self?.id ?? null}
           onRemoveOnline={handleRemove}
           onRemoveOffline={handleRemoveOffline}
         />
