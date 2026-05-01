@@ -106,6 +106,16 @@ function openWhatsApp(message: string) {
 function MemberCard({ member }: { member: FamilyMember }) {
   const displayName = member.member?.display_name_hindi || member.member?.display_name || 'Unknown';
   const initial = displayName[0] || '?';
+  // TODO(v0.13.6 RN): wire src/lib/familyKinship.ts (already ported)
+  // for offline_family_members rows where added_by != viewer.id, so
+  // Krishna's wife shows as Kumar's "भाभी (via Krishna)" — matches
+  // web v0.13.1 behavior. Today the FamilyTreeScreen only displays
+  // family_members (which the viewer always added themselves), so the
+  // raw label is correct. The bug surfaces ONLY when we add an
+  // offline-member fetch path here. See web FamilyTreeDiagram.tsx
+  // for the pattern: build viewerToAdderRel + adderName maps from
+  // members[], call deriveRowLabel() per offline row, render viaName
+  // as a chip.
   const relationship = member.relationship_label_hindi || member.relationship_type || '';
 
   return (
@@ -841,7 +851,7 @@ export default function FamilyTreeScreen({ navigation }: Props) {
               style={styles.searchInput}
               value={searchQuery}
               onChangeText={setSearchQuery}
-              placeholder="नाम से खोजें / Search by name"
+              placeholder="नाम या आँगन ID — Name or Aangan ID"
               placeholderTextColor={Colors.gray400}
               returnKeyType="search"
               accessibilityLabel="Search family members"

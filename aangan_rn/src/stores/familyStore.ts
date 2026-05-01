@@ -206,13 +206,37 @@ export const useFamilyStore = create<FamilyState>((set, get) => ({
 
   searchMembers: async (query: string) => {
     try {
-      // V-04 FIX: Never select phone_number. Only search by name, not phone.
       const sanitized = sanitizeSearchQuery(query);
+      const trimmed = sanitized.trim();
+
+      // ── AAN-ID short-circuit (v0.13.5 parity with web) ──────────────
+      // If input looks like an Aangan ID (AAN-XXXXXXXX, with or
+      // without the dash, case-insensitive), resolve directly via the
+      // SECURITY DEFINER RPC. Returns one unambiguous user, bypassing
+      // name fuzzy match. Falls through to name search on miss so a
+      // user named "Aanchal" still works without a hyphen.
+      const aanganIdRegex = /^AAN[-]?[A-Z0-9]{4,12}$/i;
+      const compact = trimmed.replace(/\s+/g, '');
+      if (aanganIdRegex.test(compact)) {
+        const normalized = compact.toUpperCase();
+        const candidate = normalized.startsWith('AAN-') ? normalized : 'AAN-' + normalized.slice(3);
+        const { data: aanganHit, error: aanganErr } = await supabase
+          .rpc('lookup_user_by_aangan_id', { p_aangan_id: candidate });
+        if (!aanganErr && aanganHit && aanganHit.length > 0) {
+          return aanganHit;
+        }
+        // Fall through to name search if no exact ID match.
+      }
+
+      // ── Name search via SECURITY DEFINER RPC (post-RLS-lockdown) ──
+      // Switched 2026-05-01 to search_users_safe RPC for parity with
+      // web. After the 20260429b REVOKE on public.users from anon,
+      // direct .from('users') still works for authenticated callers
+      // but PostgREST schema-cache hiccups have caused intermittent
+      // FK-shorthand failures. The RPC returns the same shape (incl.
+      // aangan_id since 20260430h) and is rate-limited to 20 rows.
       const { data, error } = await supabase
-        .from('users')
-        .select('id, display_name, display_name_hindi, profile_photo_url, village, state, family_level')
-        .or(`display_name.ilike.%${sanitized}%,display_name_hindi.ilike.%${sanitized}%`)
-        .limit(20);
+        .rpc('search_users_safe', { p_query: trimmed });
 
       if (error) {
         set({ error: safeError(error, 'कुछ गलत हो गया।') });

@@ -25,6 +25,7 @@ import { useThemeStore, ThemeMode } from '../../stores/themeStore';
 
 type Props = NativeStackScreenProps<any, 'Settings'>;
 
+import * as Clipboard from 'expo-clipboard';
 import { APP_VERSION, BUILD_NUMBER } from '../../config/constants';
 
 // Notification preference keys
@@ -233,6 +234,69 @@ export default function SettingsScreen({ navigation }: Props) {
             </TouchableOpacity>
           </View>
         </View>
+
+        {/* 1.5 Aangan ID Card \u2014 mirror of web v0.13.5 Settings card.
+            Shows the user's stable AAN-XXXX YYYY identifier (Aadhaar-
+            style chunked) with Copy + WhatsApp share. Survives phone /
+            email swaps so relatives can find this user even after
+            account changes. Only renders when user.aangan_id exists
+            (legacy rows backfilled in migration 20260430h, but type
+            allows null during rollout). */}
+        {user?.aangan_id ? (() => {
+          const body = user.aangan_id.replace(/^AAN-/, '');
+          const display = `AAN-${body.slice(0, 4)} ${body.slice(4)}`.trim();
+          const waMessage =
+            `\u092E\u0947\u0930\u0940 \u0906\u0901\u0917\u0928 ID: ${user.aangan_id}\n` +
+            `\u092E\u0941\u091D\u0947 \u0905\u092A\u0928\u0947 \u092A\u0930\u093F\u0935\u093E\u0930 \u092E\u0947\u0902 \u091C\u094B\u0921\u093C\u0947\u0902 \u2014 Add me to your family on Aangan: https://aangan.app`;
+          const waHref = `https://wa.me/?text=${encodeURIComponent(waMessage)}`;
+          return (
+            <View style={[styles.card, styles.aanganIdCard, Shadow.sm]}>
+              <Text style={styles.aanganIdLabel}>
+                {isHindi ? '\u0906\u092A\u0915\u0940 \u0906\u0901\u0917\u0928 \u0906\u0908\u0921\u0940' : 'Your Aangan ID'}
+              </Text>
+              <Text style={styles.aanganIdValue} selectable>
+                {display}
+              </Text>
+              <View style={styles.aanganIdActions}>
+                <TouchableOpacity
+                  style={[styles.aanganIdButton, styles.aanganIdCopyButton]}
+                  activeOpacity={0.7}
+                  onPress={async () => {
+                    await Clipboard.setStringAsync(user.aangan_id || '');
+                    Alert.alert(
+                      isHindi ? '\u0915\u0949\u092A\u0940 \u0939\u094B \u0917\u092F\u093E' : 'Copied',
+                      isHindi
+                        ? '\u0906\u092A\u0915\u0940 Aangan ID clipboard \u092E\u0947\u0902 \u0939\u0948 \u2014 \u0930\u093F\u0936\u094D\u0924\u0947\u0926\u093E\u0930\u094B\u0902 \u0915\u094B \u092D\u0947\u091C\u0947\u0902\u0964'
+                        : 'Your Aangan ID is in the clipboard \u2014 share it with family.',
+                    );
+                  }}
+                  accessibilityRole="button"
+                  accessibilityLabel={isHindi ? '\u0915\u0949\u092A\u0940 \u0915\u0930\u0947\u0902' : 'Copy Aangan ID'}
+                >
+                  <Text style={styles.aanganIdCopyText}>
+                    {isHindi ? '\uD83D\uDCCB \u0915\u0949\u092A\u0940' : '\uD83D\uDCCB Copy'}
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.aanganIdButton, styles.aanganIdWaButton]}
+                  activeOpacity={0.7}
+                  onPress={() => Linking.openURL(waHref)}
+                  accessibilityRole="button"
+                  accessibilityLabel={isHindi ? 'WhatsApp \u092A\u0930 \u092D\u0947\u091C\u0947\u0902' : 'Share on WhatsApp'}
+                >
+                  <Text style={styles.aanganIdWaText}>
+                    {isHindi ? '\uD83D\uDCF2 WhatsApp' : '\uD83D\uDCF2 WhatsApp'}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+              <Text style={styles.aanganIdHelp}>
+                {isHindi
+                  ? '\u092F\u0939 \u0906\u0908\u0921\u0940 \u0939\u092E\u0947\u0936\u093E \u090F\u0915 \u091C\u0948\u0938\u0940 \u0930\u0939\u0947\u0917\u0940, \u091A\u093E\u0939\u0947 \u0906\u092A \u092E\u094B\u092C\u093E\u0907\u0932 \u092F\u093E \u0908\u092E\u0947\u0932 \u092C\u0926\u0932\u0947\u0902\u0964'
+                  : 'Stable across phone/email changes. Share with relatives so they can find you.'}
+              </Text>
+            </View>
+          );
+        })() : null}
 
         {/* 2. Kuldevi / Kuldevta */}
         <SectionHeader title={isHindi ? 'कुलदेवी / कुलदेवता' : 'Kuldevi / Kuldevta'} />
@@ -612,6 +676,59 @@ const styles = StyleSheet.create({
     padding: Spacing.lg,
     marginBottom: Spacing.md,
   },
+
+  // Aangan ID card — gold-bordered standout matching web v0.13.5 treatment
+  aanganIdCard: {
+    borderWidth: 2,
+    borderColor: Colors.haldiGold,
+  },
+  aanganIdLabel: {
+    ...Typography.bodySmall,
+    color: Colors.brownLight,
+    marginBottom: Spacing.xs,
+  },
+  aanganIdValue: {
+    ...Typography.h2,
+    color: Colors.haldiGoldDark,
+    fontFamily: 'Courier New', // monospace for ID readability — matches web's font-mono
+    letterSpacing: 2,
+    marginBottom: Spacing.md,
+  },
+  aanganIdActions: {
+    flexDirection: 'row',
+    gap: Spacing.sm,
+    marginBottom: Spacing.sm,
+  },
+  aanganIdButton: {
+    flex: 1,
+    minHeight: DADI_MIN_BUTTON_HEIGHT,
+    borderRadius: BorderRadius.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: Spacing.md,
+  },
+  aanganIdCopyButton: {
+    backgroundColor: Colors.haldiGoldLight,
+  },
+  aanganIdCopyText: {
+    ...Typography.label,
+    color: Colors.haldiGoldDark,
+    fontWeight: '600',
+  },
+  aanganIdWaButton: {
+    backgroundColor: '#25D366',
+  },
+  aanganIdWaText: {
+    ...Typography.label,
+    color: Colors.white,
+    fontWeight: '600',
+  },
+  aanganIdHelp: {
+    ...Typography.bodySmall,
+    color: Colors.brownLight,
+    marginTop: Spacing.xs,
+  },
+
   divider: {
     height: 1,
     backgroundColor: Colors.gray100,
