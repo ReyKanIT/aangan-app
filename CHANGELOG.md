@@ -8,6 +8,84 @@ features so a single RN release catches up to the latest web tag).
 
 ---
 
+## [0.13.11] — 2026-05-01  *(web + db)*
+
+**Edit-relationship feature**
+
+- DB migration `20260501a` — new `update_family_member_relationship`
+  SECURITY DEFINER RPC. Validates auth + caller's existing connection
+  to the target user, then UPDATEs both sides of the bidirectional
+  pair atomically. Mirror of `add_family_member_bidirectional`.
+- `EditRelationshipModal` reuses AddMemberDrawer's grouped picker
+  (immediate / grandparents / in-laws / great / extended / other),
+  pre-selects the current relationship, derives the reverse via the
+  same REVERSE_MAP, computes level via `getRelationshipLevel`.
+- Tree cards now show a ✏️ pencil button (top-left, mirror of the
+  ✕ remove on the right). Online rows only — offline rows are
+  free-form text on add, nothing structured to relabel.
+- Closes Kumar's ask: "Allow one time to change the relationship of
+  members as earlier very smalllist was there."
+
+## [0.13.10] — 2026-05-01  *(web)*
+
+**Hindi-first ConfirmDialog + support inbox cleanup**
+
+- New `components/ui/ConfirmDialog.tsx` — bilingual replacement for
+  `window.confirm()`. ConfirmProvider context + useConfirm() hook
+  resolves Promise<boolean>, API matches native confirm() so caller
+  migration is mechanical.
+- Dadi-test sized (52px+ buttons, text-lg body), gold border,
+  role=alertdialog ARIA, Esc=cancel + Enter=confirm shortcuts,
+  click-outside-to-cancel, danger=true paints confirm red.
+- Provider mounted in `(app)/layout.tsx`. Migrated highest-frequency
+  callsite (family/page.tsx delete flows for online + offline members).
+- Closed all 6 open support tickets via SQL: 4 Jyotsna QA tests
+  (29-Apr) → status=closed; Kumar's 15-Apr "AddMember UI not visible
+  on mobile" → status=resolved (v0.13.5 fix); Jyotsna's 12-Apr
+  "Popup msgs not clear" (19 days no response) → status=closed
+  with reference to this dialog.
+
+## [0.13.9] — 2026-05-01  *(web)*
+
+**Indus card always-Available + canonical URL**
+
+- Verified Aangan IS live on Indus as "Aangan - Your Family's
+  Digital Home" (4.0★, Verified). Indus's listing doesn't expose a
+  version number publicly.
+- New `INDUS_LIVE` flag + `INDUS_LISTING_URL` constants.
+- Card now always renders an "Available on Indus" link with no
+  version subtitle. URL switched from broken
+  `store.indusappstore.com/app/aangan` (subdomain doesn't resolve)
+  to canonical `www.indusappstore.com/apps/social/aangan-आँगन/...`
+- `JoinClient.tsx` Indus deep-link fallback updated to the same.
+
+## [0.13.7] — 2026-05-01  *(web)*
+
+**Indus + per-store version subtitles**
+
+- New `STORE_VERSIONS` constant in `data/versions.ts`. Per-channel
+  published version strings (or null), updated only when each store
+  listing actually goes live (not in lockstep with web).
+- Homepage download grid now shows `(v0.8.0)` etc. inline next to
+  each store name, in smaller bracketed font.
+- Footer Indus link rendered when STORE_VERSIONS.indus is set.
+
+## [0.13.6] — 2026-04-30  *(web)*
+
+**Reply-quickly support inbox**
+
+- AdminShell sidebar gets a live red badge on "Support Tickets"
+  showing open + in_progress count. Realtime-subscribed.
+- /admin/support: 8 quick-reply templates with Hindi-first body +
+  English subtitle, {{name}} substitution, click → insert into
+  textarea (still editable).
+- ⌘+Enter (Ctrl+Enter on Win/Linux) sends the reply.
+- Stale-ticket flag (orange left-border + ⏰ badge) on rows in
+  open/waiting_for_user with no activity >3 days.
+- Realtime subscription for ticket + message inserts.
+- Bulk-select + close N tickets at once (for test-data cleanup).
+- Reply textarea bumped 2 → 3 rows.
+
 ## [0.13.5] — 2026-04-30  *(web)*
 
 **Claude Design polish**
