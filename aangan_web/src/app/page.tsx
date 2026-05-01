@@ -4,7 +4,7 @@ import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase/client';
 import { captureReferralFromUrl } from '@/lib/utils/referral';
-import { RELEASES, STORE_VERSIONS } from '@/data/versions';
+import { RELEASES, STORE_VERSIONS, INDUS_LIVE, INDUS_LISTING_URL } from '@/data/versions';
 
 const CURRENT_VERSION = RELEASES[0].version;
 
@@ -399,23 +399,38 @@ export default function LandingPage() {
                 </span>
               </div>
 
-              {/* Indus App Store */}
-              <a href="https://store.indusappstore.com/app/aangan" target="_blank" rel="noopener noreferrer" className="flex flex-col items-center gap-3 p-6 rounded-2xl bg-cream-dark border-2 border-haldi-gold/20 hover:border-haldi-gold hover:shadow-lg transition-all cursor-pointer">
-                <svg className="w-12 h-12 text-brown-light" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M4 4h16a2 2 0 012 2v12a2 2 0 01-2 2H4a2 2 0 01-2-2V6a2 2 0 012-2zm0 2v12h16V6H4zm2 2h4v4H6V8zm6 0h6v2h-6V8zm0 4h6v2h-6v-2zM6 14h4v2H6v-2z" />
-                </svg>
-                <span className="font-semibold text-brown text-lg">
-                  Indus App Store
-                  {STORE_VERSIONS.indus && (
-                    <span className="ml-1.5 text-xs font-normal text-brown-light/70">
-                      (v{STORE_VERSIONS.indus})
-                    </span>
-                  )}
-                </span>
-                <span className="inline-block px-3 py-1 rounded-full bg-mehndi-green/15 text-mehndi-green text-sm font-semibold">
-                  Available on Indus
-                </span>
-              </a>
+              {/* Indus App Store
+                  Live state is tracked by INDUS_LIVE — Indus's own
+                  listing page doesn't expose the published version
+                  anywhere, so we never render a (vX) subtitle for
+                  this card (verified 2026-05-01). When INDUS_LIVE is
+                  false, fall back to a "Coming Soon" card matching iOS. */}
+              {INDUS_LIVE ? (
+                <a
+                  href={INDUS_LISTING_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex flex-col items-center gap-3 p-6 rounded-2xl bg-cream-dark border-2 border-haldi-gold/20 hover:border-haldi-gold hover:shadow-lg transition-all cursor-pointer"
+                >
+                  <svg className="w-12 h-12 text-brown-light" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M4 4h16a2 2 0 012 2v12a2 2 0 01-2 2H4a2 2 0 01-2-2V6a2 2 0 012-2zm0 2v12h16V6H4zm2 2h4v4H6V8zm6 0h6v2h-6V8zm0 4h6v2h-6v-2zM6 14h4v2H6v-2z" />
+                  </svg>
+                  <span className="font-semibold text-brown text-lg">Indus App Store</span>
+                  <span className="inline-block px-3 py-1 rounded-full bg-mehndi-green/15 text-mehndi-green text-sm font-semibold">
+                    Available on Indus
+                  </span>
+                </a>
+              ) : (
+                <div className="flex flex-col items-center gap-3 p-6 rounded-2xl bg-cream-dark border-2 border-haldi-gold/20">
+                  <svg className="w-12 h-12 text-brown-light" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M4 4h16a2 2 0 012 2v12a2 2 0 01-2 2H4a2 2 0 01-2-2V6a2 2 0 012-2zm0 2v12h16V6H4zm2 2h4v4H6V8zm6 0h6v2h-6V8zm0 4h6v2h-6v-2zM6 14h4v2H6v-2z" />
+                  </svg>
+                  <span className="font-semibold text-brown text-lg">Indus App Store</span>
+                  <span className="inline-block px-3 py-1 rounded-full bg-haldi-gold/15 text-haldi-gold-dark text-sm font-semibold">
+                    Coming Soon
+                  </span>
+                </div>
+              )}
             </div>
           </FadeIn>
         </div>
@@ -431,17 +446,18 @@ export default function LandingPage() {
             </div>
 
             <div className="flex flex-wrap gap-6 text-base justify-center">
-              <a
-                href="https://store.indusappstore.com/app/aangan"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-baseline gap-1.5 text-cream-dark hover:text-haldi-gold transition-colors min-h-dadi px-2"
-              >
-                Indus App Store
-                {STORE_VERSIONS.indus && (
-                  <span className="text-xs text-cream-dark/60">(v{STORE_VERSIONS.indus})</span>
-                )}
-              </a>
+              {/* Footer Indus link — gated on INDUS_LIVE; no version
+                  subtitle because Indus's listing doesn't expose one. */}
+              {INDUS_LIVE && (
+                <a
+                  href={INDUS_LISTING_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center text-cream-dark hover:text-haldi-gold transition-colors min-h-dadi px-2"
+                >
+                  Indus App Store
+                </a>
+              )}
               <a href="/privacy" className="inline-flex items-center text-cream-dark hover:text-haldi-gold transition-colors min-h-dadi px-2">
                 Privacy Policy
               </a>

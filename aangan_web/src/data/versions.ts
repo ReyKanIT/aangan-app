@@ -50,9 +50,26 @@ export interface StoreVersions {
 export const STORE_VERSIONS: StoreVersions = {
   androidApk: '0.8.0',  // last signed APK in /releases/Aangan-v0.8.0-vc13.apk
   ios: null,            // not yet submitted
-  indus: '0.9.14',      // last reviewer-approved Indus submission (per TESTING_INDUS_APP_STORE.md history)
+  // indus: Indus's public listing does NOT expose the published
+  // version anywhere on the page (verified 2026-05-01 via DOM read +
+  // network probe). The app IS live on the store — just no version
+  // number to surface. The homepage card uses INDUS_LIVE below to
+  // decide whether to render the link, and skips the (vX) subtitle.
+  indus: null,
   googlePlay: null,     // not yet submitted
 };
+
+/**
+ * Indus listing flag — separate from STORE_VERSIONS.indus because
+ * Indus doesn't expose a version on the public page even when the app
+ * IS live. Set to `false` if the listing ever goes dark; `true`
+ * means "render the Available card with a working link, no version
+ * pill". The canonical URL was captured from Indus's own slug:
+ * /apps/social/aangan-आँगन/app.aangan.family/?page=details&id=...
+ */
+export const INDUS_LIVE = true;
+export const INDUS_LISTING_URL =
+  'https://www.indusappstore.com/apps/social/aangan-%E0%A4%86%E0%A4%81%E0%A4%97%E0%A4%A8/app.aangan.family/?page=details&id=app.aangan.family';
 
 export const RELEASES: ReleaseNote[] = [
   {

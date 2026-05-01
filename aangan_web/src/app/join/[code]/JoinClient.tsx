@@ -23,7 +23,14 @@ interface Props {
 const PLAY_URL =
   'https://play.google.com/store/apps/details?id=app.aangan.family';
 const APK_URL = 'https://media.aangan.app/releases/Aangan-latest.apk';
-const INDUS_URL = 'https://www.indusappstore.com/apps/social/aangan';
+// Indus listing URL — canonical slug captured 2026-05-01 directly from
+// Indus's own search result for "Aangan" → "Aangan - Your Family's
+// Digital Home" listing. Earlier '/apps/social/aangan' and 'store.'
+// subdomain variants in the codebase were both broken. Single source of
+// truth lives in @/data/versions (INDUS_LISTING_URL) — this is the
+// historical literal kept in JoinClient for backward import safety.
+const INDUS_URL =
+  'https://www.indusappstore.com/apps/social/aangan-%E0%A4%86%E0%A4%81%E0%A4%97%E0%A4%A8/app.aangan.family/?page=details&id=app.aangan.family';
 
 /**
  * Detect whether the visitor is on a mobile device. Used to pick the
