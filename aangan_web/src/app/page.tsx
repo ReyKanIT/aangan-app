@@ -4,7 +4,7 @@ import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase/client';
 import { captureReferralFromUrl } from '@/lib/utils/referral';
-import { RELEASES } from '@/data/versions';
+import { RELEASES, STORE_VERSIONS } from '@/data/versions';
 
 const CURRENT_VERSION = RELEASES[0].version;
 
@@ -367,7 +367,17 @@ export default function LandingPage() {
                 <svg className="w-12 h-12 text-mehndi-green" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M17.523 2.246l1.718 2.978a.5.5 0 01-.183.683l-.566.327a10.1 10.1 0 00-2.2-2.37l1.048-.606a.187.187 0 01.183-.012zM6.477 2.246L4.76 5.224a.5.5 0 00.183.683l.566.327a10.1 10.1 0 012.2-2.37L6.66 2.258a.187.187 0 00-.183-.012zM12 6C7.589 6 4 9.589 4 14v4a2 2 0 002 2h12a2 2 0 002-2v-4c0-4.411-3.589-8-8-8zm-2 10a1 1 0 110-2 1 1 0 010 2zm4 0a1 1 0 110-2 1 1 0 010 2z" />
                 </svg>
-                <span className="font-semibold text-brown text-lg">Android</span>
+                <span className="font-semibold text-brown text-lg">
+                  Android
+                  {/* Published-version subtitle: shows what users actually
+                      get when they tap. Brackets + smaller font keep it
+                      hierarchically secondary to the store name. */}
+                  {STORE_VERSIONS.androidApk && (
+                    <span className="ml-1.5 text-xs font-normal text-brown-light/70">
+                      (v{STORE_VERSIONS.androidApk})
+                    </span>
+                  )}
+                </span>
                 <span className="text-sm text-mehndi-green font-medium group-hover:underline">Download APK</span>
               </a>
 
@@ -376,7 +386,14 @@ export default function LandingPage() {
                 <svg className="w-12 h-12 text-brown-light" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83zM13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z" />
                 </svg>
-                <span className="font-semibold text-brown text-lg">iOS</span>
+                <span className="font-semibold text-brown text-lg">
+                  iOS
+                  {STORE_VERSIONS.ios && (
+                    <span className="ml-1.5 text-xs font-normal text-brown-light/70">
+                      (v{STORE_VERSIONS.ios})
+                    </span>
+                  )}
+                </span>
                 <span className="inline-block px-3 py-1 rounded-full bg-haldi-gold/15 text-haldi-gold-dark text-sm font-semibold">
                   Coming Soon
                 </span>
@@ -387,7 +404,14 @@ export default function LandingPage() {
                 <svg className="w-12 h-12 text-brown-light" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M4 4h16a2 2 0 012 2v12a2 2 0 01-2 2H4a2 2 0 01-2-2V6a2 2 0 012-2zm0 2v12h16V6H4zm2 2h4v4H6V8zm6 0h6v2h-6V8zm0 4h6v2h-6v-2zM6 14h4v2H6v-2z" />
                 </svg>
-                <span className="font-semibold text-brown text-lg">Indus App Store</span>
+                <span className="font-semibold text-brown text-lg">
+                  Indus App Store
+                  {STORE_VERSIONS.indus && (
+                    <span className="ml-1.5 text-xs font-normal text-brown-light/70">
+                      (v{STORE_VERSIONS.indus})
+                    </span>
+                  )}
+                </span>
                 <span className="inline-block px-3 py-1 rounded-full bg-mehndi-green/15 text-mehndi-green text-sm font-semibold">
                   Available on Indus
                 </span>
@@ -406,7 +430,18 @@ export default function LandingPage() {
               <p className="text-cream-dark text-base mt-1">Your Family&rsquo;s Digital Home</p>
             </div>
 
-            <div className="flex gap-6 text-base">
+            <div className="flex flex-wrap gap-6 text-base justify-center">
+              <a
+                href="https://store.indusappstore.com/app/aangan"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-baseline gap-1.5 text-cream-dark hover:text-haldi-gold transition-colors min-h-dadi px-2"
+              >
+                Indus App Store
+                {STORE_VERSIONS.indus && (
+                  <span className="text-xs text-cream-dark/60">(v{STORE_VERSIONS.indus})</span>
+                )}
+              </a>
               <a href="/privacy" className="inline-flex items-center text-cream-dark hover:text-haldi-gold transition-colors min-h-dadi px-2">
                 Privacy Policy
               </a>

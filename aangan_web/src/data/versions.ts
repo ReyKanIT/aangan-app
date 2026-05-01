@@ -22,6 +22,38 @@ export interface ReleaseNote {
   category: 'feature' | 'fix' | 'chore' | 'security';
 }
 
+/**
+ * Currently-published store versions, per channel.
+ *
+ * The web (RELEASES[0].version) ships continuously — every git push to `main`
+ * deploys via Vercel. Mobile builds + store listings move at a much slower
+ * cadence (one EAS build per submission, ~1–2 reviewer days per store).
+ *
+ * Update each field WHEN that store's listing actually goes live with the
+ * new version. Do not bump these alongside the web version — the whole
+ * point is to show the user what they will *actually* get from each link.
+ *
+ * Set a value to `null` if the channel is not yet live (renders as
+ * "Coming Soon" in the UI).
+ */
+export interface StoreVersions {
+  /** Direct APK file in /releases/ — what aangan.app's "Download APK" button serves. */
+  androidApk: string | null;
+  /** Apple App Store listing — null until first iOS submission lands. */
+  ios: string | null;
+  /** Indus App Store — last reviewer-approved version live on the store. */
+  indus: string | null;
+  /** Google Play — null until first Play submission lands. */
+  googlePlay: string | null;
+}
+
+export const STORE_VERSIONS: StoreVersions = {
+  androidApk: '0.8.0',  // last signed APK in /releases/Aangan-v0.8.0-vc13.apk
+  ios: null,            // not yet submitted
+  indus: '0.9.14',      // last reviewer-approved Indus submission (per TESTING_INDUS_APP_STORE.md history)
+  googlePlay: null,     // not yet submitted
+};
+
 export const RELEASES: ReleaseNote[] = [
   {
     version: '0.13.0',
