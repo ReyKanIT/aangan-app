@@ -18,6 +18,13 @@ interface Props {
   viewerId: string | null;
   onRemoveOnline: (m: FamilyMember) => void;
   onRemoveOffline: (m: OfflineFamilyMember) => void;
+  /**
+   * Optional — when provided, renders an "edit relationship" pencil
+   * button on each ONLINE member card (offline rows are skipped because
+   * they're typed free-form on add). Click opens EditRelationshipModal
+   * which calls update_family_member_relationship RPC.
+   */
+  onEditOnline?: (m: FamilyMember) => void;
 }
 
 interface TreeNode {
@@ -35,6 +42,8 @@ interface TreeNode {
    *  row was added by someone else and the label is derived/fallback. */
   viaName?: string | null;
   onRemove?: () => void;
+  /** Optional edit-relationship handler (online cards only). */
+  onEdit?: () => void;
 }
 
 const GEN_LABELS: Record<number, { hi: string; en: string }> = {
@@ -53,6 +62,7 @@ export default function FamilyTreeDiagram({
   viewerId,
   onRemoveOnline,
   onRemoveOffline,
+  onEditOnline,
 }: Props) {
   const { rows, generations } = useMemo(() => {
     const nodes: TreeNode[] = [];
@@ -98,6 +108,7 @@ export default function FamilyTreeDiagram({
         generation: getRelationshipGeneration(m.relationship_type),
         village: m.member?.village_city,
         onRemove: () => onRemoveOnline(m),
+        onEdit: onEditOnline ? () => onEditOnline(m) : undefined,
       });
     }
 
@@ -281,6 +292,19 @@ function TreeNodeCard({ node }: { node: TreeNode }) {
 
       {node.village && (
         <p className="font-body text-sm text-brown-light mt-1 truncate">📍 {node.village}</p>
+      )}
+
+      {node.onEdit && (
+        // Edit-relationship pencil. Sits to the LEFT of the remove ✕ so
+        // grandma's "I want to fix the rishtaa" tap doesn't hit delete.
+        // Same opacity dance — visible by default on touch, hover-only
+        // on desktop so the card stays clean at rest.
+        <button
+          onClick={node.onEdit}
+          className="absolute top-0 left-0 opacity-70 sm:opacity-0 sm:group-hover:opacity-100 text-brown-light hover:text-haldi-gold-dark transition-all w-11 h-11 flex items-center justify-center text-base rounded-lg hover:bg-haldi-gold/10"
+          aria-label="रिश्ता बदलें — Edit relationship"
+          title="रिश्ता बदलें — Edit relationship"
+        >✏️</button>
       )}
 
       {node.onRemove && (

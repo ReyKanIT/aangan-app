@@ -8,6 +8,7 @@ import EmptyState from '@/components/ui/EmptyState';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import type { FamilyMember, OfflineFamilyMember } from '@/types/database';
 import AddMemberDrawer from '@/components/family/AddMemberDrawer';
+import EditRelationshipModal from '@/components/family/EditRelationshipModal';
 import FamilyTreeDiagram from '@/components/family/FamilyTreeDiagram';
 import InviteShareCard from '@/components/ui/InviteShareCard';
 import { useConfirm } from '@/components/ui/ConfirmDialog';
@@ -27,6 +28,7 @@ export default function FamilyPage() {
   const [offlineMembers, setOfflineMembers] = useState<OfflineFamilyMember[]>([]);
   const [activeLevel, setActiveLevel] = useState(0);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [editing, setEditing] = useState<FamilyMember | null>(null);
 
   const fetchOfflineMembers = useCallback(async () => {
     try {
@@ -148,6 +150,7 @@ export default function FamilyPage() {
           viewerId={self?.id ?? null}
           onRemoveOnline={handleRemove}
           onRemoveOffline={handleRemoveOffline}
+          onEditOnline={(m) => setEditing(m)}
         />
       )}
 
@@ -157,6 +160,19 @@ export default function FamilyPage() {
           fetchMembers();
           fetchOfflineMembers();
         }} />
+      )}
+
+      {editing && (
+        <EditRelationshipModal
+          memberId={editing.family_member_id}
+          memberName={editing.member?.display_name_hindi ?? editing.member?.display_name ?? ''}
+          currentRelType={editing.relationship_type}
+          onSaved={() => {
+            setEditing(null);
+            fetchMembers();
+          }}
+          onClose={() => setEditing(null)}
+        />
       )}
     </div>
   );
