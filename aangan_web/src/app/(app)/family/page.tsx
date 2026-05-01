@@ -10,6 +10,7 @@ import type { FamilyMember, OfflineFamilyMember } from '@/types/database';
 import AddMemberDrawer from '@/components/family/AddMemberDrawer';
 import FamilyTreeDiagram from '@/components/family/FamilyTreeDiagram';
 import InviteShareCard from '@/components/ui/InviteShareCard';
+import { useConfirm } from '@/components/ui/ConfirmDialog';
 import { supabase } from '@/lib/supabase/client';
 
 const LEVELS = [
@@ -22,6 +23,7 @@ const LEVELS = [
 export default function FamilyPage() {
   const { members, fetchMembers, removeMember, isLoading, error } = useFamilyStore();
   const { user: self } = useAuthStore();
+  const confirm = useConfirm();
   const [offlineMembers, setOfflineMembers] = useState<OfflineFamilyMember[]>([]);
   const [activeLevel, setActiveLevel] = useState(0);
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -51,17 +53,39 @@ export default function FamilyPage() {
   const filteredOffline = activeLevel === 0 ? offlineMembers : offlineMembers.filter((m) => m.connection_level === activeLevel);
 
   const handleRemove = useCallback(async (m: FamilyMember) => {
-    if (!confirm(`${m.member?.display_name_hindi ?? m.member?.display_name} को हटाएं?`)) return;
+    // Was browser-native confirm() — replaced with bilingual Hindi-first
+    // dialog (ConfirmDialog.tsx) per Jyotsna's "popup msgs not clear"
+    // ticket. Still resolves to a boolean Promise, so the call shape
+    // is identical. `danger: true` paints the confirm button red.
+    const name = m.member?.display_name_hindi ?? m.member?.display_name ?? '';
+    const ok = await confirm({
+      title: 'सदस्य हटाएं?',
+      subtitle: 'Remove family member',
+      body: `${name} को परिवार से हटाएं?\nRemove ${name} from your family?`,
+      confirmLabel: 'हाँ, हटाएं — Yes, remove',
+      cancelLabel: 'नहीं — No',
+      danger: true,
+    });
+    if (!ok) return;
     try {
       const success = await removeMember(m.family_member_id);
       if (!success) toastError('सदस्य हटाने में समस्या हुई', 'Member removal failed');
     } catch {
       toastError('सदस्य हटाने में समस्या हुई', 'Member removal failed');
     }
-  }, [removeMember]);
+  }, [removeMember, confirm]);
 
   const handleRemoveOffline = useCallback(async (m: OfflineFamilyMember) => {
-    if (!confirm(`${m.display_name_hindi ?? m.display_name} को हटाएं?`)) return;
+    const name = m.display_name_hindi ?? m.display_name;
+    const ok = await confirm({
+      title: 'सदस्य हटाएं?',
+      subtitle: 'Remove offline member',
+      body: `${name} को परिवार से हटाएं?\nRemove ${name} from your family?`,
+      confirmLabel: 'हाँ, हटाएं — Yes, remove',
+      cancelLabel: 'नहीं — No',
+      danger: true,
+    });
+    if (!ok) return;
     try {
       const { error } = await supabase.from('offline_family_members').delete().eq('id', m.id);
       if (!error) setOfflineMembers((prev) => prev.filter((o) => o.id !== m.id));
@@ -69,7 +93,7 @@ export default function FamilyPage() {
     } catch {
       toastError('सदस्य हटाने में समस्या हुई', 'Member removal failed');
     }
-  }, []);
+  }, [confirm]);
 
   const totalCount = filtered.length + filteredOffline.length;
 

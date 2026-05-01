@@ -5,6 +5,7 @@ import AppShell from '@/components/layout/AppShell';
 import { useAuthStore } from '@/stores/authStore';
 import { useNotificationStore } from '@/stores/notificationStore';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
+import { ConfirmProvider } from '@/components/ui/ConfirmDialog';
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -34,5 +35,13 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   if (isLoading) return <LoadingSpinner fullPage />;
 
-  return <AppShell>{children}</AppShell>;
+  // ConfirmProvider mounted INSIDE AppShell so the dialog z-index sits
+  // above all in-app surfaces (drawers, modals, toasts) but stays out
+  // of pre-auth screens. Replaces window.confirm() — see ConfirmDialog.tsx
+  // for the rationale (Jyotsna's "popup msgs not clear" support ticket).
+  return (
+    <AppShell>
+      <ConfirmProvider>{children}</ConfirmProvider>
+    </AppShell>
+  );
 }
