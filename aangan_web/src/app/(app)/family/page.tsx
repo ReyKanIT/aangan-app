@@ -29,6 +29,9 @@ export default function FamilyPage() {
   const [activeLevel, setActiveLevel] = useState(0);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [editing, setEditing] = useState<FamilyMember | null>(null);
+  // GUI add-relative state (v0.13.14): when set, AddMemberDrawer opens
+  // pre-seeded to the Via-Member tab with this member as the via-anchor.
+  const [addViaMember, setAddViaMember] = useState<FamilyMember | null>(null);
 
   const fetchOfflineMembers = useCallback(async () => {
     try {
@@ -151,15 +154,27 @@ export default function FamilyPage() {
           onRemoveOnline={handleRemove}
           onRemoveOffline={handleRemoveOffline}
           onEditOnline={(m) => setEditing(m)}
+          onAddRelative={(m) => { setAddViaMember(m); setDrawerOpen(true); }}
         />
       )}
 
       {drawerOpen && (
-        <AddMemberDrawer onClose={() => {
-          setDrawerOpen(false);
-          fetchMembers();
-          fetchOfflineMembers();
-        }} />
+        <AddMemberDrawer
+          // When the user tapped the ➕ on a tree card, pre-seed the
+          // Via-Member tab with that member so they can directly say
+          // "X's wife / brother / etc." without picking the via from
+          // a dropdown again.
+          prefillVia={addViaMember ? {
+            memberId: addViaMember.family_member_id,
+            memberName: addViaMember.member?.display_name_hindi ?? addViaMember.member?.display_name ?? '',
+          } : undefined}
+          onClose={() => {
+            setDrawerOpen(false);
+            setAddViaMember(null);
+            fetchMembers();
+            fetchOfflineMembers();
+          }}
+        />
       )}
 
       {editing && (

@@ -25,6 +25,13 @@ interface Props {
    * which calls update_family_member_relationship RPC.
    */
   onEditOnline?: (m: FamilyMember) => void;
+  /**
+   * GUI add-relative (v0.13.14). Renders a small ➕ button on every
+   * non-self card. Click pre-seeds AddMemberDrawer's Via-Member tab
+   * with that member as the via-context — so the user can say
+   * "X is my brother's wife" with just relation + name to fill in.
+   */
+  onAddRelative?: (m: FamilyMember) => void;
 }
 
 interface TreeNode {
@@ -44,6 +51,10 @@ interface TreeNode {
   onRemove?: () => void;
   /** Optional edit-relationship handler (online cards only). */
   onEdit?: () => void;
+  /** Optional GUI add-relative handler — fires when user clicks the +
+   *  bubble on this card. Online + offline cards both eligible (we use
+   *  the family_member_id of the underlying user as the via-anchor). */
+  onAdd?: () => void;
 }
 
 const GEN_LABELS: Record<number, { hi: string; en: string }> = {
@@ -63,6 +74,7 @@ export default function FamilyTreeDiagram({
   onRemoveOnline,
   onRemoveOffline,
   onEditOnline,
+  onAddRelative,
 }: Props) {
   const { rows, generations } = useMemo(() => {
     const nodes: TreeNode[] = [];
@@ -109,6 +121,7 @@ export default function FamilyTreeDiagram({
         village: m.member?.village_city,
         onRemove: () => onRemoveOnline(m),
         onEdit: onEditOnline ? () => onEditOnline(m) : undefined,
+        onAdd: onAddRelative ? () => onAddRelative(m) : undefined,
       });
     }
 
@@ -167,7 +180,7 @@ export default function FamilyTreeDiagram({
     }
     const gens = Array.from(byGen.keys()).sort((a, b) => b - a);
     return { rows: byGen, generations: gens };
-  }, [self, members, offline, viewerId, onRemoveOnline, onRemoveOffline]);
+  }, [self, members, offline, viewerId, onRemoveOnline, onRemoveOffline, onEditOnline, onAddRelative]);
 
   if (generations.length === 0) {
     return (
@@ -315,6 +328,22 @@ function TreeNodeCard({ node }: { node: TreeNode }) {
           className="absolute top-0 right-0 opacity-70 sm:opacity-0 sm:group-hover:opacity-100 text-gray-500 hover:text-error transition-all w-11 h-11 flex items-center justify-center text-base rounded-lg hover:bg-red-50"
           aria-label="सदस्य हटाएं — Remove member"
         >✕</button>
+      )}
+
+      {node.onAdd && !node.isSelf && (
+        // GUI add-relative ➕ bubble (v0.13.14) — sits on the bottom-right
+        // of the card. Tap → opens AddMemberDrawer pre-seeded to the Via
+        // tab with this person as the via-anchor, so the user can say
+        // "add X as the wife of THIS person" without navigating.
+        // Always visible (not hover-only) because the whole point is
+        // discoverability — grandma needs to SEE that she can add via
+        // any relative without remembering a hidden affordance.
+        <button
+          onClick={node.onAdd}
+          className="absolute bottom-1 right-1 w-9 h-9 rounded-full bg-mehndi-green text-white text-xl font-bold flex items-center justify-center shadow-md hover:scale-110 hover:bg-mehndi-green-dark transition-all"
+          aria-label={`${node.name} के माध्यम से सदस्य जोड़ें — Add a relative via ${node.name}`}
+          title={`${node.name} के माध्यम से जोड़ें — Add via ${node.name}`}
+        >+</button>
       )}
     </div>
   );

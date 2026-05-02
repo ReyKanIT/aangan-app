@@ -46,9 +46,15 @@ const GROUP_ORDER = ['immediate', 'grandparents', 'in_laws', 'great', 'extended'
 
 type Tab = 'search' | 'manual' | 'via';
 
-interface Props { onClose: () => void; }
+interface Props {
+  onClose: () => void;
+  /** GUI add-relative pre-seed (v0.13.14). When provided, drawer opens
+   *  on the "Via" tab with this member already picked as the via-anchor.
+   *  Wired from FamilyTreeDiagram's per-card ➕ button via family/page.tsx. */
+  prefillVia?: { memberId: string; memberName: string };
+}
 
-export default function AddMemberDrawer({ onClose }: Props) {
+export default function AddMemberDrawer({ onClose, prefillVia }: Props) {
   const { searchUsers, searchResults, addMember, clearSearch, error: storeError, members } = useFamilyStore();
   // Inviter context — needed to personalize the WhatsApp invite message
   // ("Kumar ने आपको ... के रूप में बुलाया है" + Aangan ID footer).
@@ -59,10 +65,20 @@ export default function AddMemberDrawer({ onClose }: Props) {
   // Lets the user say "X is my brother's wife" instead of computing
   // "X = bhabhi" themselves. Composes viewer→via + via→target via the
   // same kinship table familyKinship.ts uses for derived display labels.
-  const [viaMemberId, setViaMemberId] = useState<string>('');
+  const [viaMemberId, setViaMemberId] = useState<string>(prefillVia?.memberId || '');
   const [viaRelType, setViaRelType] = useState<string>(''); // adder→target rel
   const [viaName, setViaName] = useState('');
   const [viaNameHindi, setViaNameHindi] = useState('');
+
+  // GUI add-relative pre-seed: open on Via tab when prefillVia is set
+  // so the user lands directly on the right form. Run once on mount.
+  useEffect(() => {
+    if (prefillVia?.memberId) {
+      setActiveTab('via');
+      setViaMemberId(prefillVia.memberId);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Search tab state
   const [query, setQuery] = useState('');
