@@ -15,6 +15,8 @@ import { supabase } from '@/lib/supabase/client';
 import { friendlyError } from '@/lib/errorMessages';
 import { useAuthStore } from '@/stores/authStore';
 import { buildWhatsAppShareUrl } from '@/lib/inviteMessage';
+import { composeRelationship } from '@/lib/familyKinship';
+import type { FamilyMember } from '@/types/database';
 
 const REVERSE_MAP: Record<string, string> = {
   father: 'son', mother: 'son', son: 'father', daughter: 'father',
@@ -42,16 +44,25 @@ const GROUP_LABELS: Record<string, string> = {
 };
 const GROUP_ORDER = ['immediate', 'grandparents', 'in_laws', 'great', 'extended', 'other'] as const;
 
-type Tab = 'search' | 'manual';
+type Tab = 'search' | 'manual' | 'via';
 
 interface Props { onClose: () => void; }
 
 export default function AddMemberDrawer({ onClose }: Props) {
-  const { searchUsers, searchResults, addMember, clearSearch, error: storeError } = useFamilyStore();
+  const { searchUsers, searchResults, addMember, clearSearch, error: storeError, members } = useFamilyStore();
   // Inviter context — needed to personalize the WhatsApp invite message
   // ("Kumar ने आपको ... के रूप में बुलाया है" + Aangan ID footer).
   const { user: inviter } = useAuthStore();
   const [activeTab, setActiveTab] = useState<Tab>('search');
+
+  // ── "Via" tab state (v0.13.13 — add via other person's relation) ──
+  // Lets the user say "X is my brother's wife" instead of computing
+  // "X = bhabhi" themselves. Composes viewer→via + via→target via the
+  // same kinship table familyKinship.ts uses for derived display labels.
+  const [viaMemberId, setViaMemberId] = useState<string>('');
+  const [viaRelType, setViaRelType] = useState<string>(''); // adder→target rel
+  const [viaName, setViaName] = useState('');
+  const [viaNameHindi, setViaNameHindi] = useState('');
 
   // Search tab state
   const [query, setQuery] = useState('');
@@ -283,6 +294,85 @@ export default function AddMemberDrawer({ onClose }: Props) {
     setIsAdding(false);
   };
 
+  // ── Computed relation derived from via-member + via-relation ──
+  // Live-computed so the user sees what relation will be stored as
+  // they pick. composeRelationship returns null for ambiguous combos
+  // (e.g. mother.son — could be father OR uncle); we surface that as
+  // a "stored as: via [adder]" fallback.
+  const viaMember = useMemo(
+    () => members.find((m) => m.family_member_id === viaMemberId),
+    [members, viaMemberId]
+  );
+  const viaComposed = useMemo(() => {
+    if (!viaMember || !viaRelType) return null;
+    return composeRelationship(viaMember.relationship_type, viaRelType);
+  }, [viaMember, viaRelType]);
+  const viaComposedHindi = viaComposed
+    ? (RELATIONSHIP_MAP[viaComposed] ?? viaComposed)
+    : null;
+  const viaComposedLevel = viaComposed
+    ? getRelationshipLevel(viaComposed)
+    : 3;
+
+  // ── Submit: create offline_family_members row using the COMPUTED
+  // relation. We store the row from the VIEWER's perspective so it
+  // displays correctly on the family tree without needing the
+  // derived-label pass that handles transitive rows. ──
+  const handleAddVia = async () => {
+    if (!viaMember) {
+      setError('परिवार से एक सदस्य चुनें — Pick a family member first');
+      return;
+    }
+    if (!viaRelType) {
+      setError(`${viaMember.member?.display_name_hindi || viaMember.member?.display_name || 'this person'} से रिश्ता चुनें — Pick their relationship to the new person`);
+      return;
+    }
+    if (!viaName.trim()) {
+      setError('नया सदस्य का नाम लिखें — Enter the new member\'s name');
+      return;
+    }
+    setIsAdding(true);
+    setError('');
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user) {
+        setError('लॉगिन करें — Please login first');
+        setIsAdding(false);
+        return;
+      }
+      // Use computed relation if the kinship table covers it; otherwise
+      // fall back to 'other' with a custom_relationship_label noting the
+      // via-chain so the renderer can still show something useful.
+      const finalRelType = viaComposed || 'other';
+      const finalRelHindi = viaComposed
+        ? (RELATIONSHIP_MAP[viaComposed] ?? viaComposed)
+        : `${viaMember.member?.display_name_hindi || viaMember.member?.display_name || ''} के माध्यम से`;
+      const finalLevel = viaComposed ? getRelationshipLevel(viaComposed) : 3;
+
+      const { error: dbError } = await supabase.from('offline_family_members').insert({
+        added_by: session.user.id,
+        display_name: viaName.trim(),
+        display_name_hindi: viaNameHindi.trim() || null,
+        relationship_type: finalRelType,
+        relationship_label_hindi: finalRelHindi,
+        custom_relationship_label: viaComposed ? null
+          : `via ${viaMember.member?.display_name || 'family member'} (${viaRelType})`,
+        connection_level: finalLevel,
+        is_deceased: false,
+      });
+      if (dbError) {
+        setError(friendlyError(dbError.message));
+        setIsAdding(false);
+        return;
+      }
+      setSuccess('सदस्य जोड़ा गया! — Member added via family member');
+      setTimeout(() => onClose(), 1500);
+    } catch (e: unknown) {
+      setError(friendlyError(e instanceof Error ? e.message : 'Failed to add member'));
+    }
+    setIsAdding(false);
+  };
+
   // ── Relationship picker — grouped, with locked auto-derived level chip ──
   const renderRelationshipPicker = () => (
     <div className="mb-4">
@@ -345,17 +435,25 @@ export default function AddMemberDrawer({ onClose }: Props) {
         <div className="flex gap-1 bg-cream-dark rounded-xl p-1 mb-4">
           <button
             onClick={() => { setActiveTab('search'); setError(''); setSuccess(''); }}
-            className={`flex-1 py-3 rounded-lg font-body text-base font-semibold transition-all ${activeTab === 'search' ? 'bg-white shadow text-haldi-gold' : 'text-brown-light'}`}
+            className={`flex-1 py-3 rounded-lg font-body text-sm font-semibold transition-all ${activeTab === 'search' ? 'bg-white shadow text-haldi-gold' : 'text-brown-light'}`}
           >
             🔍 खोजें
-            <span className="block text-base font-normal opacity-70">Search</span>
+            <span className="block text-sm font-normal opacity-70">Search</span>
           </button>
           <button
             onClick={() => { setActiveTab('manual'); setError(''); setSuccess(''); }}
-            className={`flex-1 py-3 rounded-lg font-body text-base font-semibold transition-all ${activeTab === 'manual' ? 'bg-white shadow text-haldi-gold' : 'text-brown-light'}`}
+            className={`flex-1 py-3 rounded-lg font-body text-sm font-semibold transition-all ${activeTab === 'manual' ? 'bg-white shadow text-haldi-gold' : 'text-brown-light'}`}
           >
             ✍️ मैन्युअल
-            <span className="block text-base font-normal opacity-70">Add Manually</span>
+            <span className="block text-sm font-normal opacity-70">Manual</span>
+          </button>
+          <button
+            onClick={() => { setActiveTab('via'); setError(''); setSuccess(''); }}
+            className={`flex-1 py-3 rounded-lg font-body text-sm font-semibold transition-all ${activeTab === 'via' ? 'bg-white shadow text-haldi-gold' : 'text-brown-light'}`}
+            title="किसी सदस्य के ज़रिए — Add via existing family member"
+          >
+            🔗 के ज़रिए
+            <span className="block text-sm font-normal opacity-70">Via Member</span>
           </button>
         </div>
 
@@ -653,6 +751,141 @@ export default function AddMemberDrawer({ onClose }: Props) {
                   ? '✍️📲 जोड़ें + निमंत्रण — Add + Invite'
                   : '✍️ परिवार में जोड़ें — Add to Family'}
             </GoldButton>
+          </div>
+        )}
+
+        {/* ═══ VIA-MEMBER TAB ═══ (v0.13.13)
+            Add a new person by saying "X is my brother's wife" instead
+            of computing "X = bhabhi" yourself. The kinship lib does the
+            composition; user just picks an existing family member and
+            their relation to the new person. */}
+        {activeTab === 'via' && (
+          <div className="space-y-3">
+            <p className="font-body text-base text-brown-light mb-2">
+              किसी मौजूदा सदस्य के ज़रिए नए सदस्य को जोड़ें
+              <br />
+              <span className="text-brown-light/70">
+                Add via an existing family member — say "X is my brother&rsquo;s wife"
+                instead of figuring out the exact relation yourself.
+              </span>
+            </p>
+
+            {members.length === 0 ? (
+              <div className="bg-yellow-50 border border-yellow-200 rounded-xl px-4 py-3">
+                <p className="font-body text-base text-brown">
+                  पहले कोई सदस्य खोजें या मैन्युअल जोड़ें।
+                </p>
+                <p className="font-body text-sm text-brown-light mt-1">
+                  This flow needs at least one existing family member to
+                  branch from. Use 🔍 खोजें or ✍️ मैन्युअल first.
+                </p>
+              </div>
+            ) : (
+              <>
+                {/* Step 1: pick the via-member */}
+                <div>
+                  <label className="block font-body font-semibold text-brown mb-2">
+                    1. किस सदस्य के ज़रिए? — Via which family member?
+                  </label>
+                  <select
+                    value={viaMemberId}
+                    onChange={(e) => setViaMemberId(e.target.value)}
+                    className="w-full border-2 border-gray-300 rounded-xl px-4 py-3 font-body text-base focus:border-haldi-gold focus:outline-none bg-white"
+                  >
+                    <option value="">सदस्य चुनें — Pick a family member</option>
+                    {(members as FamilyMember[]).map((m) => {
+                      const name = m.member?.display_name_hindi ?? m.member?.display_name ?? 'Unknown';
+                      const rel = m.relationship_label_hindi || m.relationship_type;
+                      return (
+                        <option key={m.id} value={m.family_member_id}>
+                          {name} ({rel})
+                        </option>
+                      );
+                    })}
+                  </select>
+                </div>
+
+                {/* Step 2: pick THEIR relation to the new person */}
+                {viaMember && (
+                  <div>
+                    <label className="block font-body font-semibold text-brown mb-2">
+                      2. {viaMember.member?.display_name_hindi || viaMember.member?.display_name} से नए सदस्य का रिश्ता क्या है?
+                      <br />
+                      <span className="font-normal text-brown-light text-sm">
+                        Their relationship to the new person
+                      </span>
+                    </label>
+                    <select
+                      value={viaRelType}
+                      onChange={(e) => setViaRelType(e.target.value)}
+                      className="w-full border-2 border-gray-300 rounded-xl px-4 py-3 font-body text-base focus:border-haldi-gold focus:outline-none bg-white"
+                    >
+                      <option value="">रिश्ता चुनें — Select relationship</option>
+                      {GROUP_ORDER.map((g) => (
+                        grouped[g] && grouped[g].length > 0 && (
+                          <optgroup key={g} label={GROUP_LABELS[g]}>
+                            {grouped[g].map((opt) => (
+                              <option key={opt.key} value={opt.key}>
+                                {opt.hindi} — {opt.english}
+                              </option>
+                            ))}
+                          </optgroup>
+                        )
+                      ))}
+                    </select>
+                  </div>
+                )}
+
+                {/* Live computed result */}
+                {viaMember && viaRelType && (
+                  <div className="bg-haldi-gold/10 border-2 border-haldi-gold rounded-xl px-4 py-3">
+                    <p className="font-body text-sm text-brown-light mb-1">
+                      🧮 Computed — आपके लिए रिश्ता:
+                    </p>
+                    {viaComposed ? (
+                      <>
+                        <p className="font-heading text-xl text-brown">{viaComposedHindi}</p>
+                        <p className="font-body text-sm text-brown-light mt-1">
+                          {viaMember.relationship_label_hindi || viaMember.relationship_type} + {RELATIONSHIP_MAP[viaRelType] ?? viaRelType} = <strong>{viaComposedHindi}</strong> (L{viaComposedLevel})
+                        </p>
+                      </>
+                    ) : (
+                      <p className="font-body text-base text-brown italic">
+                        Stored as &ldquo;via {viaMember.member?.display_name}&rdquo; — the kinship
+                        table doesn&rsquo;t cover this exact combination automatically.
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                {/* Step 3: name the new person */}
+                {viaMember && viaRelType && (
+                  <>
+                    <InputField
+                      label="3. नाम — Name (English)"
+                      value={viaName}
+                      onChange={(e) => setViaName(e.target.value)}
+                      placeholder="e.g. Chhaya"
+                    />
+                    <InputField
+                      label="नाम हिंदी में — Name in Hindi (optional)"
+                      value={viaNameHindi}
+                      onChange={(e) => setViaNameHindi(e.target.value)}
+                      placeholder="e.g. छाया"
+                    />
+
+                    <GoldButton
+                      className="w-full"
+                      loading={isAdding}
+                      onClick={handleAddVia}
+                      disabled={!viaName.trim()}
+                    >
+                      🔗 जोड़ें — Add via {viaMember.member?.display_name_hindi || viaMember.member?.display_name}
+                    </GoldButton>
+                  </>
+                )}
+              </>
+            )}
           </div>
         )}
       </div>
