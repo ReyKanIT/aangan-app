@@ -13,6 +13,8 @@ import {
 import type { User } from '@/types/database';
 import { supabase } from '@/lib/supabase/client';
 import { friendlyError } from '@/lib/errorMessages';
+import { useAuthStore } from '@/stores/authStore';
+import { buildWhatsAppShareUrl } from '@/lib/inviteMessage';
 
 const REVERSE_MAP: Record<string, string> = {
   father: 'son', mother: 'son', son: 'father', daughter: 'father',
@@ -46,6 +48,9 @@ interface Props { onClose: () => void; }
 
 export default function AddMemberDrawer({ onClose }: Props) {
   const { searchUsers, searchResults, addMember, clearSearch, error: storeError } = useFamilyStore();
+  // Inviter context — needed to personalize the WhatsApp invite message
+  // ("Kumar ने आपको ... के रूप में बुलाया है" + Aangan ID footer).
+  const { user: inviter } = useAuthStore();
   const [activeTab, setActiveTab] = useState<Tab>('search');
 
   // Search tab state
@@ -80,6 +85,12 @@ export default function AddMemberDrawer({ onClose }: Props) {
   const [isAdding, setIsAdding] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  // Whether to also fire a WhatsApp invite after adding the offline
+  // member. Default ON (most users WANT the relative to actually join,
+  // not just sit as a placeholder). Disabled if the relative is
+  // deceased — no one to invite. Disabled if relType='other' — too
+  // unstructured to use the v0.13.0 invite-code flow.
+  const [sendInvite, setSendInvite] = useState(true);
 
   // Auto-derived level from relationship type
   const level = useMemo(() => (relType ? getRelationshipLevel(relType) : 1), [relType]);
@@ -220,8 +231,52 @@ export default function AddMemberDrawer({ onClose }: Props) {
         return;
       }
 
-      setSuccess('सदस्य जोड़ा गया! — Member added successfully');
-      setTimeout(() => onClose(), 1200);
+      // ── Optional: open WhatsApp invite (v0.13.12) ────────────────
+      // After the offline_family_members row is safely written, if the
+      // user opted in (sendInvite=true) AND the member is alive AND the
+      // relationship is structured (not 'other'), generate a per-relation
+      // invite code via create_family_invite RPC and pop a wa.me link
+      // with the centralized bilingual app-description message.
+      // The window.open is intentional — keeps the drawer open so the
+      // user can confirm the invite went out, then close the drawer
+      // themselves. If WhatsApp open fails (uninstalled), wa.me opens
+      // in browser as fallback. RPC failure is non-fatal — we still
+      // report add-success since the offline row WAS created.
+      let inviteNote = '';
+      if (sendInvite && !isDeceased && relType !== 'other') {
+        const reverseType = (REVERSE_MAP[relType] ?? 'other');
+        const reverseHindi = RELATIONSHIP_MAP[reverseType] ?? null;
+        const { data: code, error: inviteErr } = await supabase.rpc(
+          'create_family_invite',
+          {
+            p_relationship_type: relType,
+            p_relationship_label_hindi: relHindi,
+            p_connection_level: level,
+            p_reverse_relationship_type: reverseType,
+            p_reverse_relationship_label_hindi: reverseHindi,
+          }
+        );
+        if (!inviteErr && code) {
+          const waUrl = buildWhatsAppShareUrl({
+            inviterName: inviter?.display_name_hindi || inviter?.display_name,
+            inviterAanganId: inviter?.aangan_id,
+            relationshipHindi: relHindi,
+            inviteCode: code as string,
+          });
+          // window.open in a new tab — wa.me handles the OS app
+          // hand-off (opens WhatsApp on Mac/Win desktop, web.whatsapp
+          // on browser-only). Best-effort — popup blockers may catch
+          // this on first interaction; we log but don't block success.
+          try { window.open(waUrl, '_blank', 'noopener'); } catch {}
+          inviteNote = ' • WhatsApp niyantran khol diya — invite sent';
+        } else if (inviteErr) {
+          // Don't block success; just note the invite hiccup.
+          console.warn('[AddMember] invite RPC failed:', inviteErr.message);
+        }
+      }
+
+      setSuccess('सदस्य जोड़ा गया! — Member added successfully' + inviteNote);
+      setTimeout(() => onClose(), inviteNote ? 2500 : 1200);
     } catch (e: unknown) {
       setError(friendlyError(e instanceof Error ? e.message : 'Failed to add member'));
     }
@@ -558,8 +613,45 @@ export default function AddMemberDrawer({ onClose }: Props) {
               />
             </div>
 
+            {/* WhatsApp invite opt-in (v0.13.12).
+                - Hidden for deceased members (no one to invite).
+                - Hidden for relType='other' (no structured reverse for the
+                  v0.13.0 invite-code flow — would surface as confusing
+                  custom string in the join URL pre-fill).
+                - Default ON because adding a relative without inviting
+                  them is the rare case, not the common one. */}
+            {!isDeceased && relType && relType !== 'other' && (
+              <button
+                type="button"
+                onClick={() => setSendInvite(!sendInvite)}
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl border-2 border-cream-dark bg-cream/40 hover:bg-cream-dark/40 transition-colors text-left min-h-dadi"
+                aria-pressed={sendInvite}
+              >
+                <span
+                  className={`w-6 h-6 rounded-md border-2 flex items-center justify-center text-base ${
+                    sendInvite ? 'bg-mehndi-green border-mehndi-green text-white' : 'border-gray-300 bg-white'
+                  }`}
+                  aria-hidden
+                >
+                  {sendInvite && '✓'}
+                </span>
+                <div className="flex-1 min-w-0">
+                  <p className="font-body font-semibold text-brown text-base">
+                    📲 WhatsApp पर निमंत्रण भेजें
+                  </p>
+                  <p className="font-body text-sm text-brown-light">
+                    Send a WhatsApp invite to join Aangan after adding
+                  </p>
+                </div>
+              </button>
+            )}
+
             <GoldButton className="w-full" loading={isAdding} onClick={handleAddManual}>
-              {isDeceased ? '🕊️ स्मृति में जोड़ें — Add in Memory' : '✍️ परिवार में जोड़ें — Add to Family'}
+              {isDeceased
+                ? '🕊️ स्मृति में जोड़ें — Add in Memory'
+                : sendInvite && relType !== 'other'
+                  ? '✍️📲 जोड़ें + निमंत्रण — Add + Invite'
+                  : '✍️ परिवार में जोड़ें — Add to Family'}
             </GoldButton>
           </div>
         )}
