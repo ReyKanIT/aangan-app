@@ -73,6 +73,21 @@ export const INDUS_LISTING_URL =
 
 export const RELEASES: ReleaseNote[] = [
   {
+    version: '0.13.16',
+    releasedAt: '2026-05-03T01:25:00+05:30',
+    stamp: '[1:25am - 3May26]',
+    summary: 'Restore Google sign-in button on /login (silent regression from v0.10.1) + add CRITICAL_FEATURES.md guardrail',
+    category: 'fix',
+    highlights: [
+      'Google "Continue with Google" button restored at top of login page (above phone OTP)',
+      'Backend (signInWithGoogle in authStore + /auth/callback) was always intact — only the UI was missing',
+      'Root cause: v0.10.1 mobile-OTP bug-fix commit silently stripped the button while restoring email-OTP',
+      'New CRITICAL_FEATURES.md manifest lists features that must always be present in the UI',
+      'New Playwright smoke test (smoke/login.spec.ts) fails CI if Google/phone-OTP/email-OTP buttons disappear',
+      'CLAUDE.md hardened with explicit "no silent feature removal" rule',
+    ],
+  },
+  {
     version: '0.13.15',
     releasedAt: '2026-05-03T00:30:00+05:30',
     stamp: '[12:30am - 3May26]',
