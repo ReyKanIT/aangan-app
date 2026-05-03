@@ -493,7 +493,7 @@ export default function AddMemberDrawer({ onClose, prefillVia }: Props) {
                   className="w-full border-2 border-gray-300 rounded-xl px-4 py-3 font-body text-base focus:border-haldi-gold focus:outline-none mb-1"
                   autoFocus
                 />
-                <p className="font-body text-xs text-brown-light mb-3">
+                <p className="font-body text-base text-brown-light mb-3">
                   💡 आपके रिश्तेदार की आँगन ID सबसे पक्का तरीका है —
                   Their Aangan ID (e.g. <code className="font-mono">AAN-X7K2P9</code>) is the surest way to find them.
                 </p>
@@ -520,7 +520,7 @@ export default function AddMemberDrawer({ onClose, prefillVia }: Props) {
                     <div className="min-w-0 flex-1">
                       <p className="font-body font-semibold text-brown truncate">{user.display_name_hindi ?? user.display_name}</p>
                       {user.aangan_id && (
-                        <p className="font-mono text-xs text-haldi-gold-dark truncate">{user.aangan_id}</p>
+                        <p className="font-mono text-base text-haldi-gold-dark truncate">{user.aangan_id}</p>
                       )}
                       {user.village_city && <p className="font-body text-base text-brown-light truncate">📍 {user.village_city}</p>}
                     </div>

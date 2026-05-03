@@ -73,6 +73,21 @@ export const INDUS_LISTING_URL =
 
 export const RELEASES: ReleaseNote[] = [
   {
+    version: '0.13.15',
+    releasedAt: '2026-05-03T00:30:00+05:30',
+    stamp: '[12:30am - 3May26]',
+    summary: 'CEO Mode batch — Hindi-first sign-out dialog, route error boundary, Dadi-rule tap targets, share UTM tracking',
+    category: 'fix',
+    highlights: [
+      'Settings sign-out: replaced browser confirm() with Hindi-first useConfirm() dialog (Jyotsna ticket regression)',
+      'Added (app)/error.tsx route boundary — events RLS-style P0s no longer white-screen the whole shell',
+      'FamilyTreeDiagram: Edit/Remove/Add buttons bumped from 36–44px to 52px (Aangan Dadi rule)',
+      'Tree relationship label promoted from text-sm → text-base (most-read text on every card)',
+      'AddMemberDrawer: Aangan ID hint + search-result ID font-size promoted to text-base',
+      'Landing-page hero shares now carry UTM tags (utm_source=whatsapp&utm_medium=share&utm_campaign=landing_hero) — share→install funnel measurable',
+    ],
+  },
+  {
     version: '0.13.14',
     releasedAt: '2026-05-02T15:05:00+05:30',
     stamp: '[3:05pm - 2May26]',

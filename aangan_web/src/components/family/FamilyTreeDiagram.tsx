@@ -262,11 +262,14 @@ function TreeNodeCard({ node }: { node: TreeNode }) {
         )}
       </div>
 
-      {/* Dadi test: name = base, relation = sm (≥14px), badges = sm. */}
-      <p className={`font-body font-semibold text-base truncate ${node.isDeceased ? 'text-gray-600' : 'text-brown'}`}>
+      {/* Dadi test (v0.13.15): name = lg, relation = base. The relationship
+          label is the most-read text on the card — a grandma scans these to
+          figure out "who is this person to me?" Promoting from text-sm to
+          text-base bumps it to ≥16px which is the Aangan rule. */}
+      <p className={`font-body font-semibold text-lg truncate ${node.isDeceased ? 'text-gray-600' : 'text-brown'}`}>
         {node.name}
       </p>
-      <p className="font-body text-sm text-brown-light truncate">{node.relationLabel}</p>
+      <p className="font-body text-base text-brown-light truncate">{node.relationLabel}</p>
 
       <div className="mt-1.5 flex flex-wrap justify-center gap-1">
         {!node.isSelf && (
@@ -310,22 +313,22 @@ function TreeNodeCard({ node }: { node: TreeNode }) {
       {node.onEdit && (
         // Edit-relationship pencil. Sits to the LEFT of the remove ✕ so
         // grandma's "I want to fix the rishtaa" tap doesn't hit delete.
-        // Same opacity dance — visible by default on touch, hover-only
-        // on desktop so the card stays clean at rest.
+        // 52×52 = Aangan dadi rule (was 44 — WCAG min, but not enough for
+        // arthritic fingers wearing reading glasses).
         <button
           onClick={node.onEdit}
-          className="absolute top-0 left-0 opacity-70 sm:opacity-0 sm:group-hover:opacity-100 text-brown-light hover:text-haldi-gold-dark transition-all w-11 h-11 flex items-center justify-center text-base rounded-lg hover:bg-haldi-gold/10"
+          className="absolute top-0 left-0 opacity-80 sm:opacity-100 text-brown-light hover:text-haldi-gold-dark transition-all w-[52px] h-[52px] flex items-center justify-center text-lg rounded-lg hover:bg-haldi-gold/10"
           aria-label="रिश्ता बदलें — Edit relationship"
           title="रिश्ता बदलें — Edit relationship"
         >✏️</button>
       )}
 
       {node.onRemove && (
-        // Dadi tap target: 44×44 minimum (44 = WCAG, 52 = Aangan dadi rule).
-        // Was 28px which is unreachable for arthritic fingers.
+        // Dadi tap target: 52×52 (Aangan rule). Always visible on touch +
+        // desktop so removing a wrong-relation isn't hidden behind hover.
         <button
           onClick={node.onRemove}
-          className="absolute top-0 right-0 opacity-70 sm:opacity-0 sm:group-hover:opacity-100 text-gray-500 hover:text-error transition-all w-11 h-11 flex items-center justify-center text-base rounded-lg hover:bg-red-50"
+          className="absolute top-0 right-0 opacity-80 sm:opacity-100 text-gray-500 hover:text-error transition-all w-[52px] h-[52px] flex items-center justify-center text-lg rounded-lg hover:bg-red-50"
           aria-label="सदस्य हटाएं — Remove member"
         >✕</button>
       )}
@@ -335,12 +338,11 @@ function TreeNodeCard({ node }: { node: TreeNode }) {
         // of the card. Tap → opens AddMemberDrawer pre-seeded to the Via
         // tab with this person as the via-anchor, so the user can say
         // "add X as the wife of THIS person" without navigating.
-        // Always visible (not hover-only) because the whole point is
-        // discoverability — grandma needs to SEE that she can add via
-        // any relative without remembering a hidden affordance.
+        // 52px = Dadi rule. Was 36px in v0.13.14 — too small for the very
+        // affordance we wanted dadi to discover. Always visible.
         <button
           onClick={node.onAdd}
-          className="absolute bottom-1 right-1 w-9 h-9 rounded-full bg-mehndi-green text-white text-xl font-bold flex items-center justify-center shadow-md hover:scale-110 hover:bg-mehndi-green-dark transition-all"
+          className="absolute bottom-1 right-1 w-[52px] h-[52px] rounded-full bg-mehndi-green text-white text-2xl font-bold flex items-center justify-center shadow-md hover:scale-110 hover:bg-mehndi-green-dark transition-all"
           aria-label={`${node.name} के माध्यम से सदस्य जोड़ें — Add a relative via ${node.name}`}
           title={`${node.name} के माध्यम से जोड़ें — Add via ${node.name}`}
         >+</button>

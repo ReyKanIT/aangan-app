@@ -44,7 +44,7 @@
       "android": {
         "autoIncrement": true,
         "buildType": "app-bundle",
-        "credentialsSource": "local"
+        "credentialsSource": "remote"
       },
       "env": {
         "EXPO_PUBLIC_SUPABASE_URL": "https://okzmeuhxodzkbdilvkyu.supabase.co",

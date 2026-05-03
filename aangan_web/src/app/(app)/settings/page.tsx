@@ -9,6 +9,7 @@ import AvatarCircle from '@/components/ui/AvatarCircle';
 import { uploadAvatar } from '@/lib/utils/uploadMedia';
 import { RELEASES } from '@/data/versions';
 import FestivalNotificationsSettings from '@/components/festivals/FestivalNotificationsSettings';
+import { useConfirm } from '@/components/ui/ConfirmDialog';
 
 const FEEDBACK_CATEGORIES = [
   { value: 'feature_request', label: 'सुझाव — Feature Request', emoji: '💡' },
@@ -19,6 +20,7 @@ const FEEDBACK_CATEGORIES = [
 
 export default function SettingsPage() {
   const router = useRouter();
+  const confirm = useConfirm();
   const { user, session, updateProfile, signOut, fetchProfile } = useAuthStore();
   const [name, setName] = useState('');
   const [nameHindi, setNameHindi] = useState('');
@@ -88,10 +90,17 @@ export default function SettingsPage() {
   const handleSignOut = async () => {
     if (isSigningOut) return;
     // Dadi test: a grandma could tap this by mistake. Require one explicit
-    // confirmation so we don't silently drop her session.
-    if (!confirm('क्या आप वाकई साइन आउट करना चाहते हैं? — Are you sure you want to sign out?')) {
-      return;
-    }
+    // confirmation so we don't silently drop her session. Use the Hindi-first
+    // ConfirmDialog (not browser-native confirm() which is the worst grandma
+    // surface in the app — see Jyotsna's "popup msgs not clear" ticket).
+    const ok = await confirm({
+      title: 'साइन आउट करें?',
+      subtitle: 'Sign out',
+      body: 'क्या आप वाकई साइन आउट करना चाहते हैं? — Are you sure you want to sign out?',
+      confirmLabel: 'हाँ, साइन आउट — Yes, sign out',
+      cancelLabel: 'नहीं — No',
+    });
+    if (!ok) return;
     setIsSigningOut(true);
     try {
       await signOut();

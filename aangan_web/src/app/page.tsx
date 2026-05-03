@@ -87,7 +87,12 @@ const APK_URL = `https://media.aangan.app/releases/Aangan-v${CURRENT_VERSION}.ap
 // lead with the Play listing and keep the APK as a secondary option for users
 // who can't use Play (e.g., Huawei devices, OEMs without GMS).
 const PLAY_STORE_URL: string | null = null;
-const SHARE_URL = 'https://aangan.app';
+// Landing-page hero shares — UTM-tagged so we can measure share→install funnel
+// in Vercel Analytics / Plausible. Without these tags every viral install is
+// invisible (Bug-Hunter audit, v0.13.15). Anyone clicking a hero share lands
+// on aangan.app with the source attached and gets attributed correctly.
+const SHARE_URL = 'https://aangan.app?utm_source=whatsapp&utm_medium=share&utm_campaign=landing_hero';
+const SHARE_URL_WHATSAPP_HREF = 'https://aangan.app?utm_source=whatsapp&utm_medium=share&utm_campaign=landing_hero_wa';
 const SHARE_TEXT = 'Aangan — परिवार से जुड़ें! डाउनलोड करें:';
 
 export default function LandingPage() {
@@ -326,7 +331,7 @@ export default function LandingPage() {
             <div className="flex flex-col sm:flex-row justify-center gap-4 mb-8">
               {/* WhatsApp Share */}
               <a
-                href={`https://wa.me/?text=${encodeURIComponent('Aangan आँगन — परिवार से जुड़ें! India\'s first Hindi-first family social network 🏠\nhttps://aangan.app')}`}
+                href={`https://wa.me/?text=${encodeURIComponent(`Aangan आँगन — परिवार से जुड़ें! India's first Hindi-first family social network 🏠\n${SHARE_URL_WHATSAPP_HREF}`)}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center justify-center gap-3 px-8 py-4 min-h-dadi rounded-2xl bg-[#25D366] text-white font-semibold text-lg hover:bg-[#1DA851] transition-colors shadow-lg shadow-[#25D366]/25"
