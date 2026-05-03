@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase/client';
 import { captureReferralFromUrl } from '@/lib/utils/referral';
 import { RELEASES, STORE_VERSIONS, INDUS_LIVE, INDUS_LISTING_URL } from '@/data/versions';
+import LanguageToggle from '@/components/ui/LanguageToggle';
 
 const CURRENT_VERSION = RELEASES[0].version;
 
@@ -157,16 +158,24 @@ export default function LandingPage() {
     <main className="min-h-screen bg-cream font-body text-brown overflow-x-hidden">
       {/* ─── Navbar ─── */}
       <nav className="sticky top-0 z-50 bg-cream/90 backdrop-blur-md border-b border-haldi-gold/20">
-        <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
+        <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between gap-3">
           <span className="font-heading text-2xl text-haldi-gold tracking-wide">
             Aangan <span className="text-haldi-gold-dark">आँगन</span>
           </span>
-          <a
-            href="/login"
-            className="inline-flex items-center justify-center min-h-dadi px-6 py-3 rounded-full bg-haldi-gold text-white font-semibold text-base hover:bg-haldi-gold-dark transition-colors"
-          >
-            लॉगिन / साइन अप
-          </a>
+          <div className="flex items-center gap-3">
+            {/* Language toggle (v0.13.18) — Kumar's spec: language selection
+                on the first page itself. Persists to localStorage so the
+                preference survives across visits. See LanguageToggle.tsx
+                for what this actually changes (currently: html lang attr +
+                preference capture; full UI translation comes in v0.14.x). */}
+            <LanguageToggle />
+            <a
+              href="/login"
+              className="inline-flex items-center justify-center min-h-dadi px-6 py-3 rounded-full bg-haldi-gold text-white font-semibold text-base hover:bg-haldi-gold-dark transition-colors"
+            >
+              {'लॉगिन / साइन अप'}
+            </a>
+          </div>
         </div>
       </nav>
 

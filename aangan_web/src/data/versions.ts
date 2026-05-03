@@ -73,6 +73,20 @@ export const INDUS_LISTING_URL =
 
 export const RELEASES: ReleaseNote[] = [
   {
+    version: '0.13.18',
+    releasedAt: '2026-05-03T01:55:00+05:30',
+    stamp: '[1:55am - 3May26]',
+    summary: 'Language selector on landing page header (Hindi/English pill)',
+    category: 'feature',
+    highlights: [
+      "New LanguageToggle component in landing-page navbar — 🇮🇳 हिंदी / EN pill",
+      "Persists choice to localStorage as 'aangan_lang_pref' so visits remember the preference",
+      "Sets <html lang='hi|en'> dynamically — improves screen-reader + Chrome translate behavior",
+      "Captures preference for future use (Vercel Analytics distribution, English-first content variant in v0.14.x)",
+      "Full UI translation deferred to v0.14.x with next-intl",
+    ],
+  },
+  {
     version: '0.13.17',
     releasedAt: '2026-05-03T01:45:00+05:30',
     stamp: '[1:45am - 3May26]',
