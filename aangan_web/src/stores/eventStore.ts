@@ -83,23 +83,28 @@ export const useEventStore = create<EventState>((set, get) => ({
       if (error) { set({ error: friendlyError(error.message) }); return null; }
 
       // Notify Level-1 family about the new event (in-app + push).
-      const { data: me } = await supabase
-        .from('users')
-        .select('display_name, display_name_hindi')
-        .eq('id', user.id)
-        .single();
-      const senderName = me?.display_name_hindi || me?.display_name || 'किसी ने';
-      const senderNameEn = me?.display_name || 'Someone';
-      const eventTitle = created?.title || (data.title as string | undefined) || '';
-      void notifyFamilyL1({
-        actorId: user.id,
-        type: 'event_invite',
-        titleHi: 'नया कार्यक्रम 🎉',
-        titleEn: 'New event 🎉',
-        bodyHi: `${senderName} ने ${eventTitle ? `"${eventTitle}" ` : ''}कार्यक्रम बनाया`,
-        bodyEn: `${senderNameEn} created a new event${eventTitle ? `: ${eventTitle}` : ''}`,
-        data: { type: 'event_invite', eventId: created?.id, actorId: user.id },
-      });
+      // Defer behind void IIFE so a slow `users` lookup or notif insert can't
+      // delay returning created.id to the caller — the same defensive pattern
+      // postStore now uses to avoid the v0.13.19 stuck-modal regression.
+      void (async () => {
+        const { data: me } = await supabase
+          .from('users')
+          .select('display_name, display_name_hindi')
+          .eq('id', user.id)
+          .single();
+        const senderName = me?.display_name_hindi || me?.display_name || 'किसी ने';
+        const senderNameEn = me?.display_name || 'Someone';
+        const eventTitle = created?.title || (data.title as string | undefined) || '';
+        notifyFamilyL1({
+          actorId: user.id,
+          type: 'event_invite',
+          titleHi: 'नया कार्यक्रम 🎉',
+          titleEn: 'New event 🎉',
+          bodyHi: `${senderName} ने ${eventTitle ? `"${eventTitle}" ` : ''}कार्यक्रम बनाया`,
+          bodyEn: `${senderNameEn} created a new event${eventTitle ? `: ${eventTitle}` : ''}`,
+          data: { type: 'event_invite', eventId: created?.id, actorId: user.id },
+        });
+      })();
 
       return created.id;
     } catch (e: unknown) {

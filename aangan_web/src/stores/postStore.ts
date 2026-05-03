@@ -96,7 +96,7 @@ export const usePostStore = create<PostState>((set, get) => ({
         mediaUrls.push(url);
       }
 
-      const { data: created, error } = await supabase.from('posts').insert({
+      const { error } = await supabase.from('posts').insert({
         author_id: user.id,
         content,
         audience_type: audienceType === 'all' ? 'all' : 'level',
@@ -105,28 +105,34 @@ export const usePostStore = create<PostState>((set, get) => ({
         like_count: 0,
         comment_count: 0,
         is_pinned: false,
-      }).select('id').single();
+      });
 
       if (error) { set({ error: friendlyError(error.message) }); return false; }
 
       // Fan out notifications to Level-1 family — fire-and-forget so a slow
-      // edge function doesn't block the UI from showing the new post.
-      const { data: me } = await supabase
-        .from('users')
-        .select('display_name, display_name_hindi')
-        .eq('id', user.id)
-        .single();
-      const senderName = me?.display_name_hindi || me?.display_name || 'किसी ने';
-      const senderNameEn = me?.display_name || 'Someone';
-      void notifyFamilyL1({
-        actorId: user.id,
-        type: 'new_post',
-        titleHi: 'नई पोस्ट 📸',
-        titleEn: 'New post 📸',
-        bodyHi: `${senderName} ने नई पोस्ट डाली`,
-        bodyEn: `${senderNameEn} shared a new post`,
-        data: { type: 'new_post', postId: created?.id, actorId: user.id },
-      });
+      // edge function doesn't block the modal-close + feed-refresh sequence.
+      // No postId in the payload: chaining `.select('id').single()` to the
+      // insert above caused v0.13.19 to fail silently for posts whose RLS
+      // SELECT policy didn't return the just-inserted row, leaving the modal
+      // stuck on submit. Recipients can find the post in /feed via actorId.
+      void (async () => {
+        const { data: me } = await supabase
+          .from('users')
+          .select('display_name, display_name_hindi')
+          .eq('id', user.id)
+          .single();
+        const senderName = me?.display_name_hindi || me?.display_name || 'किसी ने';
+        const senderNameEn = me?.display_name || 'Someone';
+        notifyFamilyL1({
+          actorId: user.id,
+          type: 'new_post',
+          titleHi: 'नई पोस्ट 📸',
+          titleEn: 'New post 📸',
+          bodyHi: `${senderName} ने नई पोस्ट डाली`,
+          bodyEn: `${senderNameEn} shared a new post`,
+          data: { type: 'new_post', actorId: user.id },
+        });
+      })();
 
       await get().fetchPosts(true);
       return true;
