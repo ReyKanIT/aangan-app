@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { supabase } from '@/lib/supabase/client';
 import type { AanganEvent, EventRsvp, RsvpStatus } from '@/types/database';
 import { friendlyError } from '@/lib/errorMessages';
+import { notifyFamilyL1 } from '@/lib/utils/notifyFamilyL1';
 
 interface EventState {
   events: AanganEvent[];
@@ -77,9 +78,29 @@ export const useEventStore = create<EventState>((set, get) => ({
     try {
       const { data: created, error } = await supabase.from('events')
         .insert({ ...data, creator_id: user.id })
-        .select('id')
+        .select('id, title')
         .single();
       if (error) { set({ error: friendlyError(error.message) }); return null; }
+
+      // Notify Level-1 family about the new event (in-app + push).
+      const { data: me } = await supabase
+        .from('users')
+        .select('display_name, display_name_hindi')
+        .eq('id', user.id)
+        .single();
+      const senderName = me?.display_name_hindi || me?.display_name || 'किसी ने';
+      const senderNameEn = me?.display_name || 'Someone';
+      const eventTitle = created?.title || (data.title as string | undefined) || '';
+      void notifyFamilyL1({
+        actorId: user.id,
+        type: 'event_invite',
+        titleHi: 'नया कार्यक्रम 🎉',
+        titleEn: 'New event 🎉',
+        bodyHi: `${senderName} ने ${eventTitle ? `"${eventTitle}" ` : ''}कार्यक्रम बनाया`,
+        bodyEn: `${senderNameEn} created a new event${eventTitle ? `: ${eventTitle}` : ''}`,
+        data: { type: 'event_invite', eventId: created?.id, actorId: user.id },
+      });
+
       return created.id;
     } catch (e: unknown) {
       set({ error: friendlyError(e instanceof Error ? e.message : 'Failed to create event') });

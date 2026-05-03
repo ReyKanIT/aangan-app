@@ -188,6 +188,22 @@ export const usePostStore = create<PostState>((set, get) => ({
           .limit(50);
 
         if (l1Members?.length) {
+          // In-app bell badge — works even when recipient has no push token.
+          // Single batched insert; failure is non-fatal.
+          const notifRows = l1Members.map((m) => ({
+            user_id: m.family_member_id,
+            type: 'new_post',
+            title: 'New post 📸',
+            title_hindi: 'नई पोस्ट 📸',
+            body: `${me.display_name || senderName} shared a new post`,
+            body_hindi: `${senderName} ने नई पोस्ट डाली`,
+            data: { type: 'new_post', postId: post?.id, actorId: session.user.id },
+            is_read: false,
+          }));
+          supabase.from('notifications').insert(notifRows).then(({ error: nErr }) => {
+            if (nErr) secureLog.warn('[postStore] in-app notif insert failed:', nErr.message);
+          });
+
           for (const m of l1Members) {
             sendPushToUser(
               m.family_member_id,

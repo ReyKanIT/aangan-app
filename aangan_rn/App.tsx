@@ -74,10 +74,25 @@ export default function App() {
 
   // Register push notifications after auth
   useEffect(() => {
+    // Initial session restore (e.g. cold-start with cached session) does NOT
+    // re-fire the subscriber if it lands before this effect mounts. Check the
+    // current state once so the push token still gets registered for already-
+    // signed-in users — root cause of the empty users.push_token in production
+    // through v0.13.18 (no users had tokens; push fan-out silently no-op'd).
+    const initialSession = useAuthStore.getState().session;
+    if (initialSession?.user) {
+      registerForPushNotifications().catch(() => {});
+    }
+
     // Register push after auth state changes
-    const unsubAuth = useAuthStore.subscribe(async (state) => {
-      if (state.session?.user) {
-        await registerForPushNotifications();
+    let lastUserId: string | null = initialSession?.user?.id ?? null;
+    const unsubAuth = useAuthStore.subscribe((state) => {
+      const uid = state.session?.user?.id ?? null;
+      if (uid && uid !== lastUserId) {
+        lastUserId = uid;
+        registerForPushNotifications().catch(() => {});
+      } else if (!uid) {
+        lastUserId = null;
       }
     });
 

@@ -3,6 +3,7 @@ import { supabase } from '@/lib/supabase/client';
 import type { Post } from '@/types/database';
 import { uploadPostMedia } from '@/lib/utils/uploadMedia';
 import { friendlyError } from '@/lib/errorMessages';
+import { notifyFamilyL1 } from '@/lib/utils/notifyFamilyL1';
 
 interface PostState {
   posts: Post[];
@@ -95,7 +96,7 @@ export const usePostStore = create<PostState>((set, get) => ({
         mediaUrls.push(url);
       }
 
-      const { error } = await supabase.from('posts').insert({
+      const { data: created, error } = await supabase.from('posts').insert({
         author_id: user.id,
         content,
         audience_type: audienceType === 'all' ? 'all' : 'level',
@@ -104,9 +105,29 @@ export const usePostStore = create<PostState>((set, get) => ({
         like_count: 0,
         comment_count: 0,
         is_pinned: false,
-      });
+      }).select('id').single();
 
       if (error) { set({ error: friendlyError(error.message) }); return false; }
+
+      // Fan out notifications to Level-1 family — fire-and-forget so a slow
+      // edge function doesn't block the UI from showing the new post.
+      const { data: me } = await supabase
+        .from('users')
+        .select('display_name, display_name_hindi')
+        .eq('id', user.id)
+        .single();
+      const senderName = me?.display_name_hindi || me?.display_name || 'किसी ने';
+      const senderNameEn = me?.display_name || 'Someone';
+      void notifyFamilyL1({
+        actorId: user.id,
+        type: 'new_post',
+        titleHi: 'नई पोस्ट 📸',
+        titleEn: 'New post 📸',
+        bodyHi: `${senderName} ने नई पोस्ट डाली`,
+        bodyEn: `${senderNameEn} shared a new post`,
+        data: { type: 'new_post', postId: created?.id, actorId: user.id },
+      });
+
       await get().fetchPosts(true);
       return true;
     } catch (e: unknown) {

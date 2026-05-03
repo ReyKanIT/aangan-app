@@ -39,7 +39,26 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'File type not allowed' }, { status: 400 });
   }
 
-  const ext = file.name.split('.').pop() ?? 'jpg';
+  // Derive extension from MIME type (compressed files lose their original
+  // name and end up as `.blob`, which is cosmetically wrong even if next/image
+  // serves them via Content-Type).
+  const MIME_TO_EXT: Record<string, string> = {
+    'image/jpeg': 'jpg',
+    'image/png': 'png',
+    'image/webp': 'webp',
+    'image/gif': 'gif',
+    'video/mp4': 'mp4',
+    'video/quicktime': 'mov',
+    'audio/webm': 'webm',
+    'audio/ogg': 'ogg',
+    'audio/mpeg': 'mp3',
+    'audio/mp3': 'mp3',
+    'audio/mp4': 'm4a',
+    'audio/x-m4a': 'm4a',
+  };
+  const nameParts = file.name.split('.');
+  const nameExt = nameParts.length > 1 ? nameParts.pop()!.toLowerCase() : '';
+  const ext = MIME_TO_EXT[file.type] || (nameExt && nameExt.length <= 4 ? nameExt : 'bin');
   const timestamp = Date.now();
   const random = Math.random().toString(36).slice(2, 8);
   const key = `${user.id}/${timestamp}_${random}.${ext}`;
