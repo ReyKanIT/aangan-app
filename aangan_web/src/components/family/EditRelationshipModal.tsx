@@ -204,7 +204,7 @@ export default function EditRelationshipModal({
                 type="text"
                 value={customLabel}
                 onChange={(e) => setCustomLabel(e.target.value)}
-                placeholder="e.g. गुरु, मित्र, धर्मपिता…"
+                placeholder={'e.g. गुरु, मित्र, धर्मपिता…'}
                 className="w-full border-2 border-gray-300 rounded-xl px-4 py-3 font-body text-base focus:border-haldi-gold focus:outline-none bg-white"
               />
             </div>

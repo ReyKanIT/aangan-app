@@ -69,7 +69,7 @@ export default function FeedPage() {
           // Brand-new user — no family yet. Guide them there first.
           <EmptyState
             emoji="👨‍👩‍👧‍👦"
-            title="पहले परिवार जोड़ें"
+            title={'पहले परिवार जोड़ें'}
             subtitle="Add your family first so they can see your posts"
             action={
               <div className="flex flex-col sm:flex-row gap-3 items-center">
@@ -88,7 +88,7 @@ export default function FeedPage() {
         ) : (
           <EmptyState
             emoji="📝"
-            title="अभी कोई पोस्ट नहीं"
+            title={'अभी कोई पोस्ट नहीं'}
             subtitle="No posts yet — be the first!"
             action={
               <GoldButton size="sm" onClick={() => setComposerOpen(true)}>
@@ -113,7 +113,7 @@ export default function FeedPage() {
       <button
         onClick={() => setComposerOpen(true)}
         className="fixed bottom-24 right-6 lg:hidden w-14 h-14 bg-haldi-gold rounded-full shadow-lg flex items-center justify-center text-white text-2xl z-40"
-        aria-label="नई पोस्ट लिखें — New Post"
+        aria-label={'नई पोस्ट लिखें — New Post'}
       >
         ✏️
       </button>

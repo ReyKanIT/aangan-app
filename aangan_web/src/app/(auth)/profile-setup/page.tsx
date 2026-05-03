@@ -147,7 +147,7 @@ export default function ProfileSetupPage() {
           <div className="absolute inset-0 rounded-full bg-black/30 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
             <span className="text-white text-2xl">📷</span>
           </div>
-          <input type="file" accept="image/*" onChange={handleAvatarChange} className="hidden" aria-label="फ़ोटो जोड़ें" />
+          <input type="file" accept="image/*" onChange={handleAvatarChange} className="hidden" aria-label={'फ़ोटो जोड़ें'} />
         </label>
         <p className="font-body text-base text-brown mt-2 font-semibold">फ़ोटो जोड़ें — Add Photo</p>
         <p className="font-body text-sm text-brown-light">वैकल्पिक — Optional, you can add later</p>
@@ -159,7 +159,7 @@ export default function ProfileSetupPage() {
         </div>
       )}
 
-      <InputField label="आपका नाम *" sublabel="Your Name (required)" value={name} onChange={(e) => setName(e.target.value)} placeholder="अपना नाम डालें" autoFocus />
+      <InputField label={'आपका नाम *'} sublabel="Your Name (required)" value={name} onChange={(e) => setName(e.target.value)} placeholder={'अपना नाम डालें'} autoFocus />
 
       {/* Optional fields are hidden behind a disclosure to shorten the first-run
           funnel. Every required field is one more dropoff risk — most Indian
@@ -171,8 +171,8 @@ export default function ProfileSetupPage() {
           और विवरण जोड़ें (वैकल्पिक) — Add more (optional)
         </summary>
         <div className="pt-2 space-y-0">
-          <InputField label="हिंदी में नाम" sublabel="Name in Hindi" value={nameHindi} onChange={(e) => setNameHindi(e.target.value)} placeholder="हिंदी में नाम" />
-          <InputField label="गाँव / शहर" sublabel="Village or City" value={city} onChange={(e) => setCity(e.target.value)} placeholder="अपना गाँव या शहर" />
+          <InputField label={'हिंदी में नाम'} sublabel="Name in Hindi" value={nameHindi} onChange={(e) => setNameHindi(e.target.value)} placeholder={'हिंदी में नाम'} />
+          <InputField label={'गाँव / शहर'} sublabel="Village or City" value={city} onChange={(e) => setCity(e.target.value)} placeholder={'अपना गाँव या शहर'} />
           <div className="mb-4">
             <label className="block mb-1">
               <span className="font-body font-semibold text-brown text-base">अपने बारे में</span>
@@ -181,7 +181,7 @@ export default function ProfileSetupPage() {
             <textarea
               value={bio}
               onChange={(e) => setBio(e.target.value)}
-              placeholder="अपने बारे में कुछ बताएं..."
+              placeholder={'अपने बारे में कुछ बताएं...'}
               maxLength={200}
               rows={3}
               className="w-full border-2 border-gray-300 rounded-lg px-4 py-3 font-body text-base text-brown bg-white focus:border-haldi-gold focus:outline-none placeholder-gray-400 resize-none"

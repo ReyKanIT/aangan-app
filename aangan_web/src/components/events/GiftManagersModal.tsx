@@ -146,7 +146,7 @@ export default function GiftManagersModal({ eventId, onClose }: Props) {
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="नाम या फोन नंबर से ढूंढें"
+            placeholder={'नाम या फोन नंबर से ढूंढें'}
             className="w-full border-2 border-gray-300 rounded-xl px-4 py-3 mb-2 font-body text-base text-brown focus:border-haldi-gold focus:outline-none"
           />
 

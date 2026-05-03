@@ -110,7 +110,7 @@ export default function PWAInstallPrompt() {
           <button
             onClick={handleDismiss}
             className="text-brown-light text-lg min-w-[36px] min-h-[36px] flex items-center justify-center rounded-lg hover:bg-cream-dark transition-colors"
-            aria-label="बंद करें"
+            aria-label={'बंद करें'}
           >
             ✕
           </button>

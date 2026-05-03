@@ -92,8 +92,8 @@ export default function CommentSection({ postId }: { postId: string }) {
                   <button
                     onClick={() => deleteComment(c.id, postId)}
                     className="text-gray-400 hover:text-error transition-colors p-2 flex-shrink-0 self-start min-w-dadi min-h-dadi flex items-center justify-center"
-                    aria-label="टिप्पणी हटाएं (Delete comment)"
-                    title="हटाएं / Delete"
+                    aria-label={'टिप्पणी हटाएं (Delete comment)'}
+                    title={'हटाएं / Delete'}
                   >
                     🗑️
                   </button>
@@ -114,7 +114,7 @@ export default function CommentSection({ postId }: { postId: string }) {
             }
           }}
           onKeyDown={handleKeyDown}
-          placeholder="टिप्पणी लिखें..."
+          placeholder={'टिप्पणी लिखें...'}
           rows={1}
           className="flex-1 min-h-dadi font-body text-base text-brown bg-cream rounded-lg px-3 py-3 border border-cream-dark focus:border-haldi-gold focus:outline-none focus:ring-1 focus:ring-haldi-gold resize-none placeholder:text-brown-light"
         />

@@ -303,7 +303,7 @@ function AddEventForm({ storageMode, onSave, onCancel }: { storageMode: 'supabas
           type="text"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          placeholder="जैसे: दादाजी की बरसी, राहुल का जन्मदिन"
+          placeholder={'जैसे: दादाजी की बरसी, राहुल का जन्मदिन'}
           className="w-full px-4 py-3 min-h-dadi rounded-xl border border-cream-dark bg-cream/30 text-brown text-base focus:outline-none focus:ring-2 focus:ring-haldi-gold/40"
           required
         />
@@ -412,7 +412,7 @@ function AddEventForm({ storageMode, onSave, onCancel }: { storageMode: 'supabas
           type="text"
           value={note}
           onChange={(e) => setNote(e.target.value)}
-          placeholder="कोई विशेष बात?"
+          placeholder={'कोई विशेष बात?'}
           className="w-full px-4 py-3 min-h-dadi rounded-xl border border-cream-dark bg-cream/30 text-brown text-base focus:outline-none focus:ring-2 focus:ring-haldi-gold/40"
         />
       </div>

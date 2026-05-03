@@ -125,20 +125,20 @@ export default function EventEditModal({ event, onClose }: Props) {
           <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={(e) => handleCoverPick(e.target.files?.[0] ?? null)} />
         </div>
 
-        <InputField label="उत्सव का नाम *" sublabel="Event Title" value={title} onChange={(e) => setTitle(e.target.value)} />
-        <InputField label="हिंदी में नाम" sublabel="Hindi Title" value={titleHindi} onChange={(e) => setTitleHindi(e.target.value)} />
+        <InputField label={'उत्सव का नाम *'} sublabel="Event Title" value={title} onChange={(e) => setTitle(e.target.value)} />
+        <InputField label={'हिंदी में नाम'} sublabel="Hindi Title" value={titleHindi} onChange={(e) => setTitleHindi(e.target.value)} />
         <div className="grid grid-cols-2 gap-3">
-          <InputField label="तारीख *" sublabel="Date" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
-          <InputField label="समय *" sublabel="Time" type="time" value={time} onChange={(e) => setTime(e.target.value)} />
+          <InputField label={'तारीख *'} sublabel="Date" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+          <InputField label={'समय *'} sublabel="Time" type="time" value={time} onChange={(e) => setTime(e.target.value)} />
         </div>
-        <InputField label="स्थान" sublabel="Location" value={location} onChange={(e) => setLocation(e.target.value)} />
+        <InputField label={'स्थान'} sublabel="Location" value={location} onChange={(e) => setLocation(e.target.value)} />
         <LocationPicker latitude={lat} longitude={lng} onChange={(la, ln) => { setLat(la); setLng(ln); }} />
         <InputField
-          label="किनकी ओर से — On behalf of"
+          label={'किनकी ओर से — On behalf of'}
           sublabel="Elders/hosts on the invite"
           value={hostedBy}
           onChange={(e) => setHostedBy(e.target.value)}
-          placeholder="श्री सुखदेव शर्मा एवं परिवार"
+          placeholder={'श्री सुखदेव शर्मा एवं परिवार'}
         />
         <VoiceInviteRecorder
           existingUrl={voiceUrl}

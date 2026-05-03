@@ -167,7 +167,7 @@ export default function PotluckSection({ eventId, currentUserId, canManage }: Pr
                     onClick={() => handleDeleteItem(item.id)}
                     disabled={busy === item.id}
                     className="min-h-dadi min-w-dadi flex items-center justify-center rounded-lg text-brown-light hover:text-red-500 hover:bg-red-50 text-xl transition-colors disabled:opacity-50"
-                    aria-label="आइटम हटाएं"
+                    aria-label={'आइटम हटाएं'}
                   >
                     ✕
                   </button>
@@ -200,7 +200,7 @@ export default function PotluckSection({ eventId, currentUserId, canManage }: Pr
             <input
               value={newItem}
               onChange={(e) => setNewItem(e.target.value)}
-              placeholder="जैसे — गाजर का हलवा"
+              placeholder={'जैसे — गाजर का हलवा'}
               className="flex-1 border-2 border-gray-300 rounded-xl px-4 py-3 font-body text-base text-brown focus:border-haldi-gold focus:outline-none"
             />
             <input

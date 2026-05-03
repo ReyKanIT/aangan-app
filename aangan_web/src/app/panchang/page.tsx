@@ -179,10 +179,10 @@ export default function PanchangPage() {
       </div>
 
       <PublicShareCTA
-        titleHi="आज का पंचांग परिवार को भेजें"
+        titleHi={'आज का पंचांग परिवार को भेजें'}
         titleEn="Share today's panchang with your family"
         shareMessage={`आज का पंचांग — तिथि: ${panchang.tithi}, नक्षत्र: ${panchang.nakshatra}। पूरा padhein:`}
-        loginLabel="Daily reminders के लिए login करें"
+        loginLabel={'Daily reminders के लिए login करें'}
       />
 
       {/* Footer */}

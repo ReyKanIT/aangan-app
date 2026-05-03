@@ -39,28 +39,28 @@ export default function PrivacyPolicyPage() {
           <p className="text-sm text-gray-500 mb-3">Data We Collect</p>
           <div className="bg-white rounded-xl p-6 border border-[#C8A84B]/20 space-y-3">
             <DataItem
-              hi="नाम, ईमेल और फ़ोन नंबर"
+              hi={'नाम, ईमेल और फ़ोन नंबर'}
               en="Name, email, and phone number"
             />
-            <DataItem hi="प्रोफ़ाइल फ़ोटो" en="Profile photo" />
+            <DataItem hi={'प्रोफ़ाइल फ़ोटो'} en="Profile photo" />
             <DataItem
-              hi="पारिवारिक रिश्ते और वंश वृक्ष की जानकारी"
+              hi={'पारिवारिक रिश्ते और वंश वृक्ष की जानकारी'}
               en="Family relationships and family tree data"
             />
             <DataItem
-              hi="पोस्ट, टिप्पणियाँ और इवेंट की जानकारी"
+              hi={'पोस्ट, टिप्पणियाँ और इवेंट की जानकारी'}
               en="Posts, comments, and event information"
             />
             <DataItem
-              hi="इवेंट के लिए स्थान की जानकारी"
+              hi={'इवेंट के लिए स्थान की जानकारी'}
               en="Location data (for events)"
             />
             <DataItem
-              hi="वॉइस मैसेज के लिए ऑडियो रिकॉर्डिंग"
+              hi={'वॉइस मैसेज के लिए ऑडियो रिकॉर्डिंग'}
               en="Voice recordings (for voice messages)"
             />
             <DataItem
-              hi="डिवाइस की जानकारी और ऐप उपयोग डेटा"
+              hi={'डिवाइस की जानकारी और ऐप उपयोग डेटा'}
               en="Device information and app usage data"
             />
           </div>

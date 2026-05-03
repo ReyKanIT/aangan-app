@@ -415,11 +415,11 @@ export default function AddMemberDrawer({ onClose, prefillVia }: Props) {
       {relType === 'other' && (
         <div className="mt-3">
           <InputField
-            label="रिश्ते का नाम लिखें"
+            label={'रिश्ते का नाम लिखें'}
             sublabel="Custom relationship name"
             value={customRelLabel}
             onChange={(e) => setCustomRelLabel(e.target.value)}
-            placeholder="e.g. गुरु, मित्र, धर्मपिता…"
+            placeholder={'e.g. गुरु, मित्र, धर्मपिता…'}
           />
         </div>
       )}
@@ -466,7 +466,7 @@ export default function AddMemberDrawer({ onClose, prefillVia }: Props) {
           <button
             onClick={() => { setActiveTab('via'); setError(''); setSuccess(''); }}
             className={`flex-1 py-3 rounded-lg font-body text-sm font-semibold transition-all ${activeTab === 'via' ? 'bg-white shadow text-haldi-gold' : 'text-brown-light'}`}
-            title="किसी सदस्य के ज़रिए — Add via existing family member"
+            title={'किसी सदस्य के ज़रिए — Add via existing family member'}
           >
             🔗 के ज़रिए
             <span className="block text-sm font-normal opacity-70">Via Member</span>
@@ -489,7 +489,7 @@ export default function AddMemberDrawer({ onClose, prefillVia }: Props) {
                   type="text"
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
-                  placeholder="नाम या आँगन ID — Name or Aangan ID"
+                  placeholder={'नाम या आँगन ID — Name or Aangan ID'}
                   className="w-full border-2 border-gray-300 rounded-xl px-4 py-3 font-body text-base focus:border-haldi-gold focus:outline-none mb-1"
                   autoFocus
                 />
@@ -562,7 +562,7 @@ export default function AddMemberDrawer({ onClose, prefillVia }: Props) {
                 type="button"
                 onClick={() => photoInputRef.current?.click()}
                 className="w-20 h-20 rounded-full border-2 border-dashed border-haldi-gold flex items-center justify-center bg-cream-dark/40 hover:bg-cream-dark transition-colors overflow-hidden"
-                aria-label="फ़ोटो जोड़ें — Upload photo"
+                aria-label={'फ़ोटो जोड़ें — Upload photo'}
               >
                 {photoPreview ? (
                   /* eslint-disable-next-line @next/next/no-img-element */
@@ -597,7 +597,7 @@ export default function AddMemberDrawer({ onClose, prefillVia }: Props) {
             </div>
 
             <InputField
-              label="नाम"
+              label={'नाम'}
               sublabel="Name (English)"
               value={manualName}
               onChange={(e) => setManualName(e.target.value)}
@@ -605,11 +605,11 @@ export default function AddMemberDrawer({ onClose, prefillVia }: Props) {
             />
 
             <InputField
-              label="नाम हिंदी में"
+              label={'नाम हिंदी में'}
               sublabel="Name in Hindi (optional)"
               value={manualNameHindi}
               onChange={(e) => setManualNameHindi(e.target.value)}
-              placeholder="e.g. रमेश कुमार"
+              placeholder={'e.g. रमेश कुमार'}
             />
 
             {/* Relationship + auto level */}
@@ -623,7 +623,7 @@ export default function AddMemberDrawer({ onClose, prefillVia }: Props) {
                 className={`w-14 h-8 rounded-full transition-colors relative shrink-0 ${isDeceased ? 'bg-brown' : 'bg-gray-300'}`}
                 role="switch"
                 aria-checked={isDeceased}
-                aria-label="स्वर्गवासी — Deceased"
+                aria-label={'स्वर्गवासी — Deceased'}
               >
                 <span className={`absolute top-1 w-6 h-6 rounded-full bg-white shadow transition-transform ${isDeceased ? 'translate-x-7' : 'translate-x-1'}`} />
               </button>
@@ -636,7 +636,7 @@ export default function AddMemberDrawer({ onClose, prefillVia }: Props) {
 
             {/* Contact */}
             <InputField
-              label="मोबाइल नंबर"
+              label={'मोबाइल नंबर'}
               sublabel="Mobile (optional)"
               prefix="+91"
               value={mobile}
@@ -647,7 +647,7 @@ export default function AddMemberDrawer({ onClose, prefillVia }: Props) {
             />
 
             <InputField
-              label="ईमेल"
+              label={'ईमेल'}
               sublabel="Email (optional)"
               type="email"
               value={email}
@@ -657,7 +657,7 @@ export default function AddMemberDrawer({ onClose, prefillVia }: Props) {
 
             {/* Dates */}
             <InputField
-              label="जन्म तिथि"
+              label={'जन्म तिथि'}
               sublabel="Date of birth (optional)"
               type="date"
               value={dob}
@@ -666,7 +666,7 @@ export default function AddMemberDrawer({ onClose, prefillVia }: Props) {
 
             {isDeceased && (
               <InputField
-                label="मृत्यु तिथि"
+                label={'मृत्यु तिथि'}
                 sublabel="Date of passing (optional)"
                 type="date"
                 value={dod}
@@ -693,7 +693,7 @@ export default function AddMemberDrawer({ onClose, prefillVia }: Props) {
             </div>
 
             <InputField
-              label="व्यवसाय"
+              label={'व्यवसाय'}
               sublabel="Occupation (optional)"
               value={occupation}
               onChange={(e) => setOccupation(e.target.value)}
@@ -701,7 +701,7 @@ export default function AddMemberDrawer({ onClose, prefillVia }: Props) {
             />
 
             <InputField
-              label="गाँव / पैतृक स्थान"
+              label={'गाँव / पैतृक स्थान'}
               sublabel="Native village / city (optional)"
               value={village}
               onChange={(e) => setVillage(e.target.value)}
@@ -709,7 +709,7 @@ export default function AddMemberDrawer({ onClose, prefillVia }: Props) {
             />
 
             <InputField
-              label="वर्तमान पता"
+              label={'वर्तमान पता'}
               sublabel="Current address (optional)"
               value={address}
               onChange={(e) => setAddress(e.target.value)}
@@ -722,7 +722,7 @@ export default function AddMemberDrawer({ onClose, prefillVia }: Props) {
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 rows={3}
-                placeholder="कोई याद, विशेष बात…"
+                placeholder={'कोई याद, विशेष बात…'}
                 className="w-full border-2 border-gray-300 rounded-xl px-4 py-3 font-body text-base focus:border-haldi-gold focus:outline-none bg-white resize-none"
               />
             </div>
@@ -878,16 +878,16 @@ export default function AddMemberDrawer({ onClose, prefillVia }: Props) {
                 {viaMember && viaRelType && (
                   <>
                     <InputField
-                      label="3. नाम — Name (English)"
+                      label={'3. नाम — Name (English)'}
                       value={viaName}
                       onChange={(e) => setViaName(e.target.value)}
                       placeholder="e.g. Chhaya"
                     />
                     <InputField
-                      label="नाम हिंदी में — Name in Hindi (optional)"
+                      label={'नाम हिंदी में — Name in Hindi (optional)'}
                       value={viaNameHindi}
                       onChange={(e) => setViaNameHindi(e.target.value)}
-                      placeholder="e.g. छाया"
+                      placeholder={'e.g. छाया'}
                     />
 
                     <GoldButton

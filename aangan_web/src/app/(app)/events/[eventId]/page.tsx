@@ -59,12 +59,18 @@ export default function EventDetailPage() {
     if (!user?.id) return;
     let cancelled = false;
     (async () => {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from('event_co_hosts')
         .select('user_id')
         .eq('event_id', eventId)
         .eq('user_id', user.id)
         .maybeSingle();
+      if (error && error.code !== '42P01') {
+        // 42P01 = table doesn't exist (pre-migration env), treated as "no
+        // co-hosts feature here". Other errors should be visible — they were
+        // silently stripping the edit UI from legitimate co-hosts.
+        console.warn('[event] co-host check error:', error.message, error.code);
+      }
       if (!cancelled) setIsCoHost(!!data);
     })();
     return () => { cancelled = true; };
@@ -136,7 +142,7 @@ export default function EventDetailPage() {
               <button
                 onClick={() => setEditOpen(true)}
                 className="min-h-dadi px-4 rounded-xl border-2 border-gray-200 text-brown font-body text-base font-semibold hover:border-haldi-gold hover:bg-cream-dark transition-colors"
-                aria-label="संपादन"
+                aria-label={'संपादन'}
               >
                 ✏️ संपादन
               </button>

@@ -62,7 +62,7 @@ export default function FeedbackWidget() {
         <button
           onClick={() => setOpen(true)}
           className="fixed bottom-24 lg:bottom-6 right-4 lg:right-6 z-[55] bg-haldi-gold text-white rounded-full shadow-lg hover:bg-haldi-gold-dark transition-all flex items-center gap-2 px-4 py-3 min-h-dadi font-body font-semibold text-base"
-          aria-label="सुझाव दें — Give Feedback"
+          aria-label={'सुझाव दें — Give Feedback'}
         >
           <span className="text-xl">💬</span>
           <span className="hidden sm:inline">सुझाव दें</span>
@@ -132,7 +132,7 @@ export default function FeedbackWidget() {
                     id="fw-message"
                     value={message}
                     onChange={(e) => setMessage(e.target.value)}
-                    placeholder="अपना सुझाव या शिकायत यहाँ लिखें..."
+                    placeholder={'अपना सुझाव या शिकायत यहाँ लिखें...'}
                     rows={3}
                     maxLength={1000}
                     autoFocus

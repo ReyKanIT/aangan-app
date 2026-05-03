@@ -71,7 +71,7 @@ export default function NotificationsPage() {
       {isLoading ? (
         <div className="flex justify-center py-20"><LoadingSpinner /></div>
       ) : notifications.length === 0 ? (
-        <EmptyState emoji="🔔" title="कोई सूचना नहीं" subtitle="अभी कोई सूचना नहीं — No notifications yet" />
+        <EmptyState emoji="🔔" title={'कोई सूचना नहीं'} subtitle={'अभी कोई सूचना नहीं — No notifications yet'} />
       ) : (
         <div className="space-y-2">
           {notifications.map((notif) => (

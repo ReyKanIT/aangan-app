@@ -24,7 +24,7 @@ export default function TopBar() {
         <Link
           href="/notifications"
           className="relative lg:hidden min-h-dadi min-w-dadi flex items-center justify-center"
-          aria-label="सूचनाएं — Notifications"
+          aria-label={'सूचनाएं — Notifications'}
         >
           <span className="text-2xl">🔔</span>
           {unreadCount > 0 && (
@@ -38,7 +38,7 @@ export default function TopBar() {
         <Link
           href="/settings"
           className="min-h-dadi min-w-dadi flex items-center justify-center"
-          aria-label="सेटिंग्स — Settings"
+          aria-label={'सेटिंग्स — Settings'}
         >
           <AvatarCircle src={user?.avatar_url} name={user?.display_name} size={40} />
         </Link>

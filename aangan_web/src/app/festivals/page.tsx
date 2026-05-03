@@ -191,10 +191,10 @@ export default function FestivalsPage() {
       </div>
 
       <PublicShareCTA
-        titleHi="त्योहार कैलेंडर परिवार को भेजें"
+        titleHi={'त्योहार कैलेंडर परिवार को भेजें'}
         titleEn="Share this festivals calendar with your family"
-        shareMessage="2026 के सभी प्रमुख भारतीय त्योहार एक जगह — शुभ मुहूर्त, तिथियां। Aangan पर देखें:"
-        loginLabel="Festival reminders के लिए login करें"
+        shareMessage={'2026 के सभी प्रमुख भारतीय त्योहार एक जगह — शुभ मुहूर्त, तिथियां। Aangan पर देखें:'}
+        loginLabel={'Festival reminders के लिए login करें'}
       />
 
       {/* Footer */}

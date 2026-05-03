@@ -318,8 +318,8 @@ function TreeNodeCard({ node }: { node: TreeNode }) {
         <button
           onClick={node.onEdit}
           className="absolute top-0 left-0 opacity-80 sm:opacity-100 text-brown-light hover:text-haldi-gold-dark transition-all w-[52px] h-[52px] flex items-center justify-center text-lg rounded-lg hover:bg-haldi-gold/10"
-          aria-label="रिश्ता बदलें — Edit relationship"
-          title="रिश्ता बदलें — Edit relationship"
+          aria-label={'रिश्ता बदलें — Edit relationship'}
+          title={'रिश्ता बदलें — Edit relationship'}
         >✏️</button>
       )}
 
@@ -329,7 +329,7 @@ function TreeNodeCard({ node }: { node: TreeNode }) {
         <button
           onClick={node.onRemove}
           className="absolute top-0 right-0 opacity-80 sm:opacity-100 text-gray-500 hover:text-error transition-all w-[52px] h-[52px] flex items-center justify-center text-lg rounded-lg hover:bg-red-50"
-          aria-label="सदस्य हटाएं — Remove member"
+          aria-label={'सदस्य हटाएं — Remove member'}
         >✕</button>
       )}
 

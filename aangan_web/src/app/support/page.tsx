@@ -78,27 +78,27 @@ export default function SupportPage() {
           <h2 className="text-2xl font-bold text-[#C8A84B] mb-4">आम सवाल — FAQ</h2>
           <div className="space-y-5">
             <FaqItem
-              q="OTP नहीं आ रहा है"
+              q={'OTP नहीं आ रहा है'}
               qEn="My OTP isn't arriving"
-              a="कृपया जाँच करें कि आपका फ़ोन नंबर सही है और नेटवर्क उपलब्ध है। 60 सेकंड बाद &lsquo;दोबारा भेजें&rsquo; दबाएँ। अगर फिर भी समस्या हो, support@aangan.app पर ईमेल करें।"
+              a={'कृपया जाँच करें कि आपका फ़ोन नंबर सही है और नेटवर्क उपलब्ध है। 60 सेकंड बाद &lsquo;दोबारा भेजें&rsquo; दबाएँ। अगर फिर भी समस्या हो, support@aangan.app पर ईमेल करें।'}
               aEn="Check your phone number and network. Tap &lsquo;Resend&rsquo; after 60 seconds. If it still fails, email support@aangan.app."
             />
             <FaqItem
-              q="परिवार में सदस्य कैसे जोड़ें?"
+              q={'परिवार में सदस्य कैसे जोड़ें?'}
               qEn="How do I add family members?"
-              a="Family टैब खोलें → ऊपर दाएँ &lsquo;+&rsquo; बटन दबाएँ → नाम से खोजें → रिश्ता चुनें → जोड़ें।"
+              a={'Family टैब खोलें → ऊपर दाएँ &lsquo;+&rsquo; बटन दबाएँ → नाम से खोजें → रिश्ता चुनें → जोड़ें।'}
               aEn="Open Family tab → tap &lsquo;+&rsquo; top right → search by name → choose relationship → add."
             />
             <FaqItem
-              q="मेरा डेटा सुरक्षित है?"
+              q={'मेरा डेटा सुरक्षित है?'}
               qEn="Is my data safe?"
-              a="हाँ। हम Supabase पर encrypted-at-rest data रखते हैं, केवल आप और आपके परिवार के जुड़े सदस्य आपकी पोस्ट देख सकते हैं।"
+              a={'हाँ। हम Supabase पर encrypted-at-rest data रखते हैं, केवल आप और आपके परिवार के जुड़े सदस्य आपकी पोस्ट देख सकते हैं।'}
               aEn="Yes. Data is encrypted at rest on Supabase. Only you and connected family members see your posts."
             />
             <FaqItem
-              q="खाता कैसे हटाएँ?"
+              q={'खाता कैसे हटाएँ?'}
               qEn="How to delete my account?"
-              a="Settings → खाता हटाएँ। या support@aangan.app पर ईमेल करें — 7 दिन में डेटा मिटा दिया जाएगा।"
+              a={'Settings → खाता हटाएँ। या support@aangan.app पर ईमेल करें — 7 दिन में डेटा मिटा दिया जाएगा।'}
               aEn="Settings → Delete Account. Or email support@aangan.app — we delete within 7 days."
             />
           </div>

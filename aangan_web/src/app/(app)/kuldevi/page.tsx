@@ -112,7 +112,7 @@ export default function KuldeviPage() {
       {!hasData && !isEditing ? (
         <EmptyState
           emoji="🛕"
-          title="अभी तक जानकारी नहीं भरी"
+          title={'अभी तक जानकारी नहीं भरी'}
           subtitle="Add your family deity information"
           action={
             <GoldButton onClick={() => setIsEditing(true)}>
@@ -138,11 +138,11 @@ export default function KuldeviPage() {
                   <div className="flex items-end gap-2">
                     <div className="flex-1">
                       <InputField
-                        label="नाम"
+                        label={'नाम'}
                         sublabel="Name"
                         value={kuldeviName}
                         onChange={(e) => setKuldeviName(e.target.value)}
-                        placeholder="कुलदेवी का नाम"
+                        placeholder={'कुलदेवी का नाम'}
                       />
                     </div>
                     <div className="mb-4">
@@ -152,11 +152,11 @@ export default function KuldeviPage() {
                   <div className="flex items-end gap-2">
                     <div className="flex-1">
                       <InputField
-                        label="मंदिर स्थान"
+                        label={'मंदिर स्थान'}
                         sublabel="Temple Location"
                         value={kuldeviTemple}
                         onChange={(e) => setKuldeviTemple(e.target.value)}
-                        placeholder="मंदिर कहाँ है"
+                        placeholder={'मंदिर कहाँ है'}
                       />
                     </div>
                     <div className="mb-4">
@@ -192,11 +192,11 @@ export default function KuldeviPage() {
                   <div className="flex items-end gap-2">
                     <div className="flex-1">
                       <InputField
-                        label="नाम"
+                        label={'नाम'}
                         sublabel="Name"
                         value={kuldevtaName}
                         onChange={(e) => setKuldevtaName(e.target.value)}
-                        placeholder="कुलदेवता का नाम"
+                        placeholder={'कुलदेवता का नाम'}
                       />
                     </div>
                     <div className="mb-4">
@@ -206,11 +206,11 @@ export default function KuldeviPage() {
                   <div className="flex items-end gap-2">
                     <div className="flex-1">
                       <InputField
-                        label="मंदिर स्थान"
+                        label={'मंदिर स्थान'}
                         sublabel="Temple Location"
                         value={kuldevtaTemple}
                         onChange={(e) => setKuldevtaTemple(e.target.value)}
-                        placeholder="मंदिर कहाँ है"
+                        placeholder={'मंदिर कहाँ है'}
                       />
                     </div>
                     <div className="mb-4">
@@ -251,7 +251,7 @@ export default function KuldeviPage() {
               <textarea
                 value={pujaPaddhati}
                 onChange={(e) => setPujaPaddhati(e.target.value)}
-                placeholder="पूजा की विधि यहाँ लिखें..."
+                placeholder={'पूजा की विधि यहाँ लिखें...'}
                 rows={4}
                 className="w-full border-2 border-gray-300 rounded-xl px-4 py-3 font-body text-base text-brown focus:border-haldi-gold focus:outline-none resize-none"
               />
@@ -278,7 +278,7 @@ export default function KuldeviPage() {
               <textarea
                 value={pujaNiyam}
                 onChange={(e) => setPujaNiyam(e.target.value)}
-                placeholder="पूजा के नियम और विशेष बातें..."
+                placeholder={'पूजा के नियम और विशेष बातें...'}
                 rows={4}
                 className="w-full border-2 border-gray-300 rounded-xl px-4 py-3 font-body text-base text-brown focus:border-haldi-gold focus:outline-none resize-none"
               />

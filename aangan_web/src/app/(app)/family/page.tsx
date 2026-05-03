@@ -42,10 +42,17 @@ export default function FamilyPage() {
       // The RPC reproduces the family-of-family superset for the tree
       // view but redacts PII columns on rows the caller doesn't own.
       const { data, error } = await supabase.rpc('get_visible_offline_family_members');
-      if (!error && data) setOfflineMembers(data as OfflineFamilyMember[]);
-    } catch {
+      if (error) {
+        // Surface to console + Sentry so future RLS / migration regressions
+        // don't hide as "empty offline list". Non-fatal — page continues.
+        console.warn('[family] get_visible_offline_family_members error:', error.message, error.code);
+        return;
+      }
+      if (data) setOfflineMembers(data as OfflineFamilyMember[]);
+    } catch (e) {
       // RPC may not exist yet on stale environments — silently degrade
       // to an empty offline list rather than blocking the page.
+      console.warn('[family] get_visible_offline_family_members threw:', e);
     }
   }, []);
 
@@ -141,8 +148,8 @@ export default function FamilyPage() {
       ) : totalCount === 0 ? (
         <EmptyState
           emoji="👨‍👩‍👧‍👦"
-          title="कोई परिवार नहीं"
-          subtitle="शुरू करने के लिए परिवार के सदस्य जोड़ें — Add family members to get started"
+          title={'कोई परिवार नहीं'}
+          subtitle={'शुरू करने के लिए परिवार के सदस्य जोड़ें — Add family members to get started'}
           action={<GoldButton size="sm" onClick={() => setDrawerOpen(true)}>सदस्य जोड़ें</GoldButton>}
         />
       ) : (

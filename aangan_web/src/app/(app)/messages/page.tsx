@@ -179,8 +179,8 @@ export default function MessagesPage() {
           ) : conversations.length === 0 ? (
             <EmptyState
               emoji="💬"
-              title="कोई संदेश नहीं"
-              subtitle="परिवार से बातचीत शुरू करें — Start a conversation with family"
+              title={'कोई संदेश नहीं'}
+              subtitle={'परिवार से बातचीत शुरू करें — Start a conversation with family'}
               action={
                 <GoldButton size="sm" onClick={handleNewChat}>
                   नया संदेश भेजें — New Message
@@ -322,7 +322,7 @@ export default function MessagesPage() {
                     value={messageText}
                     onChange={(e) => setMessageText(e.target.value)}
                     onKeyDown={handleKeyDown}
-                    placeholder="संदेश लिखें... Type a message..."
+                    placeholder={'संदेश लिखें... Type a message...'}
                     maxLength={VALIDATION.maxMessageLength}
                     className="w-full min-h-dadi px-4 text-brown font-body text-dadi bg-transparent outline-none placeholder-gray-400"
                   />

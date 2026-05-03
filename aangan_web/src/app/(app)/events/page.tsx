@@ -41,8 +41,8 @@ export default function EventsPage() {
       ) : events.length === 0 ? (
         <EmptyState
           emoji="🎉"
-          title="कोई उत्सव नहीं"
-          subtitle="आने वाला कोई उत्सव नहीं — No upcoming events"
+          title={'कोई उत्सव नहीं'}
+          subtitle={'आने वाला कोई उत्सव नहीं — No upcoming events'}
           action={<GoldButton size="sm" onClick={() => setModalOpen(true)}>उत्सव बनाएं</GoldButton>}
         />
       ) : (

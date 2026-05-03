@@ -117,7 +117,7 @@ export default function EventCreatorModal({ onClose, parentEventId = null }: Pro
                 type="button"
                 onClick={() => fileRef.current?.click()}
                 className="w-full h-36 rounded-xl border-2 border-dashed border-haldi-gold/60 bg-cream flex items-center justify-center overflow-hidden hover:bg-cream-dark transition-colors"
-                aria-label="कवर फ़ोटो जोड़ें"
+                aria-label={'कवर फ़ोटो जोड़ें'}
               >
                 {coverPreview ? (
                   // eslint-disable-next-line @next/next/no-img-element
@@ -146,20 +146,20 @@ export default function EventCreatorModal({ onClose, parentEventId = null }: Pro
                 onChange={(e) => handleCoverPick(e.target.files?.[0] ?? null)}
               />
             </div>
-            <InputField label="उत्सव का नाम *" sublabel="Event Title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. शादी समारोह" />
-            <InputField label="हिंदी में नाम" sublabel="Hindi Title" value={titleHindi} onChange={(e) => setTitleHindi(e.target.value)} placeholder="हिंदी में नाम" />
+            <InputField label={'उत्सव का नाम *'} sublabel="Event Title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder={'e.g. शादी समारोह'} />
+            <InputField label={'हिंदी में नाम'} sublabel="Hindi Title" value={titleHindi} onChange={(e) => setTitleHindi(e.target.value)} placeholder={'हिंदी में नाम'} />
             <div className="grid grid-cols-2 gap-3">
-              <InputField label="तारीख *" sublabel="Date" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
-              <InputField label="समय *" sublabel="Time" type="time" value={time} onChange={(e) => setTime(e.target.value)} />
+              <InputField label={'तारीख *'} sublabel="Date" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+              <InputField label={'समय *'} sublabel="Time" type="time" value={time} onChange={(e) => setTime(e.target.value)} />
             </div>
-            <InputField label="स्थान" sublabel="Location" value={location} onChange={(e) => setLocation(e.target.value)} placeholder="गाँव / शहर / हॉल" />
+            <InputField label={'स्थान'} sublabel="Location" value={location} onChange={(e) => setLocation(e.target.value)} placeholder={'गाँव / शहर / हॉल'} />
             <LocationPicker latitude={lat} longitude={lng} onChange={(la, ln) => { setLat(la); setLng(ln); }} />
             <InputField
-              label="किनकी ओर से — On behalf of"
+              label={'किनकी ओर से — On behalf of'}
               sublabel="Elders/hosts whose name appears on the invite"
               value={hostedBy}
               onChange={(e) => setHostedBy(e.target.value)}
-              placeholder="जैसे — श्री सुखदेव शर्मा एवं परिवार"
+              placeholder={'जैसे — श्री सुखदेव शर्मा एवं परिवार'}
             />
             <VoiceInviteRecorder
               existingUrl={voiceUrl}
@@ -173,7 +173,7 @@ export default function EventCreatorModal({ onClose, parentEventId = null }: Pro
             )}
             <div className="mb-4">
               <label className="block font-body font-semibold text-brown mb-1">विवरण <span className="text-brown-light text-sm font-normal">Description</span></label>
-              <textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="उत्सव के बारे में..." rows={3} className="w-full border-2 border-gray-300 rounded-xl px-4 py-3 font-body text-base text-brown focus:border-haldi-gold focus:outline-none resize-none" />
+              <textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder={'उत्सव के बारे में...'} rows={3} className="w-full border-2 border-gray-300 rounded-xl px-4 py-3 font-body text-base text-brown focus:border-haldi-gold focus:outline-none resize-none" />
             </div>
             <div className="flex gap-3">
               <GoldButton variant="outline" className="flex-1" onClick={() => setStep(1)}>← वापस</GoldButton>

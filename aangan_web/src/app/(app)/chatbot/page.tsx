@@ -294,7 +294,7 @@ export default function ChatbotPage() {
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="कुछ पूछें... Ask anything..."
+            placeholder={'कुछ पूछें... Ask anything...'}
             className="flex-1 font-body text-base text-brown placeholder-gray-400 bg-cream-dark rounded-full px-4 py-3 border-0 focus:outline-none focus:ring-2 focus:ring-haldi-gold/30"
           />
           <GoldButton type="submit" size="sm" disabled={!input.trim() || isTyping}>

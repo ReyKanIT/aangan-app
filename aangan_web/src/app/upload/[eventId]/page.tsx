@@ -315,7 +315,7 @@ export default function GuestUploadPage({ params }: { params: Promise<{ eventId:
             type="text"
             value={guestName}
             onChange={(e) => setGuestName(e.target.value)}
-            placeholder="जैसे: दादी, राहुल भैया…"
+            placeholder={'जैसे: दादी, राहुल भैया…'}
             maxLength={50}
             className="w-full min-h-[52px] border-2 border-gray-300 focus:border-[#C8A84B] rounded-xl px-4 text-base font-body text-[#3E2723] bg-white outline-none"
             disabled={uploading}
@@ -398,7 +398,7 @@ export default function GuestUploadPage({ params }: { params: Promise<{ eventId:
                   <button
                     onClick={() => removeFile(uf.id)}
                     className="absolute -top-1 -right-1 w-9 h-9 bg-black/70 hover:bg-black rounded-full text-white text-base flex items-center justify-center shadow"
-                    aria-label="हटाएं — Remove file"
+                    aria-label={'हटाएं — Remove file'}
                   >
                     ✕
                   </button>

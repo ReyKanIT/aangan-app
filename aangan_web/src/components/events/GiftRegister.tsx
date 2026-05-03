@@ -177,7 +177,7 @@ export default function GiftRegister({ eventId, currentUserId, isCreator, onOpen
                 <button
                   onClick={() => handleDelete(g.id)}
                   className="text-brown-light hover:text-red-500 text-xl p-1"
-                  aria-label="हटाएं"
+                  aria-label={'हटाएं'}
                 >
                   🗑️
                 </button>
@@ -203,7 +203,7 @@ export default function GiftRegister({ eventId, currentUserId, isCreator, onOpen
             <input
               value={giverName}
               onChange={(e) => setGiverName(e.target.value)}
-              placeholder="जैसे — चाचा रामकुमार"
+              placeholder={'जैसे — चाचा रामकुमार'}
               className="w-full border-2 border-gray-300 rounded-xl px-4 py-3 font-body text-base text-brown focus:border-haldi-gold focus:outline-none"
             />
           </div>
@@ -242,7 +242,7 @@ export default function GiftRegister({ eventId, currentUserId, isCreator, onOpen
               <input
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="जैसे — सोने की अँगूठी"
+                placeholder={'जैसे — सोने की अँगूठी'}
                 className="w-full border-2 border-gray-300 rounded-xl px-4 py-3 font-body text-base text-brown focus:border-haldi-gold focus:outline-none"
               />
             </div>
@@ -254,7 +254,7 @@ export default function GiftRegister({ eventId, currentUserId, isCreator, onOpen
               rows={2}
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              placeholder="कोई निजी नोट..."
+              placeholder={'कोई निजी नोट...'}
               className="w-full border-2 border-gray-300 rounded-xl px-4 py-3 font-body text-base text-brown focus:border-haldi-gold focus:outline-none resize-none"
             />
           </div>

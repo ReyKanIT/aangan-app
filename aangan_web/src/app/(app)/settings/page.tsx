@@ -157,7 +157,13 @@ export default function SettingsPage() {
           <div className="absolute inset-0 rounded-full bg-black/30 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
             <span className="text-white text-2xl">📷</span>
           </div>
-          <input type="file" accept="image/*" onChange={handleAvatarChange} className="hidden" />
+          <input
+            type="file"
+            accept="image/*"
+            onChange={handleAvatarChange}
+            className="hidden"
+            aria-label={'फ़ोटो बदलें — Change Photo'}
+          />
         </label>
         <p className="font-body text-sm text-brown-light mt-2">फ़ोटो बदलें — Change Photo</p>
       </div>
@@ -165,9 +171,9 @@ export default function SettingsPage() {
       {error && <div className="bg-red-50 border border-error rounded-lg px-4 py-3 mb-4"><p className="font-body text-base text-error">{error}</p></div>}
       {success && <div className="bg-green-50 border border-mehndi-green rounded-lg px-4 py-3 mb-4"><p className="font-body text-base text-mehndi-green">✓ प्रोफाइल सेव हो गई — Profile saved!</p></div>}
 
-      <InputField label="आपका नाम *" sublabel="Display Name" value={name} onChange={(e) => setName(e.target.value)} />
-      <InputField label="हिंदी में नाम" sublabel="Hindi Name" value={nameHindi} onChange={(e) => setNameHindi(e.target.value)} />
-      <InputField label="गाँव / शहर" sublabel="Village or City" value={city} onChange={(e) => setCity(e.target.value)} />
+      <InputField label={'आपका नाम *'} sublabel="Display Name" value={name} onChange={(e) => setName(e.target.value)} />
+      <InputField label={'हिंदी में नाम'} sublabel="Hindi Name" value={nameHindi} onChange={(e) => setNameHindi(e.target.value)} />
+      <InputField label={'गाँव / शहर'} sublabel="Village or City" value={city} onChange={(e) => setCity(e.target.value)} />
 
       <div className="mb-4">
         <label className="block font-body font-semibold text-brown mb-1">अपने बारे में <span className="text-brown-light text-sm font-normal">Bio</span></label>
@@ -218,7 +224,7 @@ export default function SettingsPage() {
                       // select-all so user can long-press copy.
                     }
                   }}
-                  aria-label="कॉपी करें — Copy"
+                  aria-label={'कॉपी करें — Copy'}
                   className="flex-1 min-h-dadi px-3 py-2 bg-haldi-gold/10 text-haldi-gold-dark text-base font-semibold rounded-lg hover:bg-haldi-gold/20 flex items-center justify-center gap-2"
                 >
                   📋 कॉपी
@@ -227,7 +233,7 @@ export default function SettingsPage() {
                   href={waHref}
                   target="_blank"
                   rel="noopener noreferrer"
-                  aria-label="WhatsApp पर भेजें — Share on WhatsApp"
+                  aria-label={'WhatsApp पर भेजें — Share on WhatsApp'}
                   className="flex-1 min-h-dadi px-3 py-2 bg-[#25D366] text-white text-base font-semibold rounded-lg hover:bg-[#1DA851] flex items-center justify-center gap-2"
                 >
                   📲 WhatsApp
@@ -293,7 +299,7 @@ export default function SettingsPage() {
           </div>
           <button
             onClick={() => setShowFeedback(!showFeedback)}
-            aria-label="फीडबैक लिखें — Write Feedback"
+            aria-label={'फीडबैक लिखें — Write Feedback'}
             className="px-4 py-2 bg-haldi-gold text-white font-body font-semibold text-base rounded-xl min-h-dadi hover:bg-haldi-gold-dark transition-colors"
           >
             {showFeedback ? 'बंद करें' : 'लिखें — Write'}
@@ -345,7 +351,7 @@ export default function SettingsPage() {
                 type="text"
                 value={fbSubject}
                 onChange={(e) => setFbSubject(e.target.value)}
-                placeholder="संक्षेप में बताएं..."
+                placeholder={'संक्षेप में बताएं...'}
                 maxLength={100}
                 className="w-full border-2 border-gray-300 rounded-xl px-4 py-3 font-body text-base text-brown focus:border-haldi-gold focus:outline-none placeholder-gray-400"
               />
@@ -360,7 +366,7 @@ export default function SettingsPage() {
                 id="fb-message"
                 value={fbMessage}
                 onChange={(e) => setFbMessage(e.target.value)}
-                placeholder="अपना सुझाव या शिकायत यहाँ लिखें... Write your feedback here..."
+                placeholder={'अपना सुझाव या शिकायत यहाँ लिखें... Write your feedback here...'}
                 rows={4}
                 maxLength={1000}
                 className="w-full border-2 border-gray-300 rounded-xl px-4 py-3 font-body text-base text-brown focus:border-haldi-gold focus:outline-none resize-none placeholder-gray-400"

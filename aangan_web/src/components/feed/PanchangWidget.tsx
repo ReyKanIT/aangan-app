@@ -102,13 +102,13 @@ export default function PanchangWidget() {
         <div className="px-5 pb-5 pt-1 border-t border-haldi-gold/10">
           <p className="text-base text-brown-light mb-3 font-heading">आज का पंचांग &middot; Today&apos;s Panchang</p>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-            <PanchangRow label="तिथि / Tithi" value={panchang.tithi} subvalue={`${panchang.tithiEndTime} तक`} />
-            <PanchangRow label="पक्ष / Paksha" value={panchang.paksha} />
-            <PanchangRow label="नक्षत्र / Nakshatra" value={panchang.nakshatra} subvalue={`${panchang.nakshatraEndTime} तक`} />
-            <PanchangRow label="करण / Karana" value={panchang.karana} subvalue={`${panchang.karanaEndTime} तक`} />
-            <PanchangRow label="वार / Day" value={`${panchang.vara} (${WEEKDAYS_EN[today.getDay()]})`} />
-            <PanchangRow label="सूर्योदय / Sunrise" value={`🌅 ${panchang.sunrise}`} />
-            <PanchangRow label="सूर्यास्त / Sunset" value={`🌇 ${panchang.sunset}`} />
+            <PanchangRow label={'तिथि / Tithi'} value={panchang.tithi} subvalue={`${panchang.tithiEndTime} तक`} />
+            <PanchangRow label={'पक्ष / Paksha'} value={panchang.paksha} />
+            <PanchangRow label={'नक्षत्र / Nakshatra'} value={panchang.nakshatra} subvalue={`${panchang.nakshatraEndTime} तक`} />
+            <PanchangRow label={'करण / Karana'} value={panchang.karana} subvalue={`${panchang.karanaEndTime} तक`} />
+            <PanchangRow label={'वार / Day'} value={`${panchang.vara} (${WEEKDAYS_EN[today.getDay()]})`} />
+            <PanchangRow label={'सूर्योदय / Sunrise'} value={`🌅 ${panchang.sunrise}`} />
+            <PanchangRow label={'सूर्यास्त / Sunset'} value={`🌇 ${panchang.sunset}`} />
           </div>
           <div className="mt-4 pt-3 border-t border-haldi-gold/10 flex items-center justify-between">
             <div className="flex flex-col">

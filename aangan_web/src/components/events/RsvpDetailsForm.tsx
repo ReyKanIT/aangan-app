@@ -77,7 +77,7 @@ export default function RsvpDetailsForm({ eventId, myRsvp }: Props) {
             type="button"
             onClick={() => setGuests(Math.max(0, guests - 1))}
             className="w-12 h-12 rounded-xl border-2 border-haldi-gold text-haldi-gold-dark text-2xl font-semibold hover:bg-unread-bg transition-colors"
-            aria-label="कम करें"
+            aria-label={'कम करें'}
           >−</button>
           <span className="font-body text-xl font-semibold text-brown min-w-[7ch] text-center">
             {guests === 0 ? 'सिर्फ़ मैं' : `मैं +${guests}`}
@@ -86,7 +86,7 @@ export default function RsvpDetailsForm({ eventId, myRsvp }: Props) {
             type="button"
             onClick={() => setGuests(guests + 1)}
             className="w-12 h-12 rounded-xl border-2 border-haldi-gold text-haldi-gold-dark text-2xl font-semibold hover:bg-unread-bg transition-colors"
-            aria-label="बढ़ाएं"
+            aria-label={'बढ़ाएं'}
           >+</button>
           <span className="font-body text-sm text-brown-light">अपने हिसाब से / custom</span>
         </div>
@@ -101,7 +101,7 @@ export default function RsvpDetailsForm({ eventId, myRsvp }: Props) {
           onChange={(e) => setNote(e.target.value)}
           rows={3}
           maxLength={500}
-          placeholder="जैसे — श्री राम, श्रीमती सीता, बच्चे · 7 बजे पहुँचेंगे"
+          placeholder={'जैसे — श्री राम, श्रीमती सीता, बच्चे · 7 बजे पहुँचेंगे'}
           className="w-full border-2 border-gray-300 rounded-xl px-4 py-3 font-body text-base text-brown focus:border-haldi-gold focus:outline-none resize-none"
         />
         <p className="font-body text-xs text-brown-light mt-1">मेज़बान देखेंगे — Visible to the host</p>

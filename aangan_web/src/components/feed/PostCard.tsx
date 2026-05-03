@@ -75,7 +75,7 @@ export default function PostCard({ post }: { post: Post }) {
               onClick={handleDelete}
               disabled={deleting}
               className="text-gray-400 hover:text-error transition-colors min-w-dadi min-h-dadi flex items-center justify-center"
-              aria-label="पोस्ट हटाएं — Delete post"
+              aria-label={'पोस्ट हटाएं — Delete post'}
             >
               🗑️
             </button>
@@ -134,7 +134,7 @@ export default function PostCard({ post }: { post: Post }) {
           <span>{post.comment_count}</span>
         </button>
         <ShareButton
-          title="Aangan आँगन"
+          title={'Aangan आँगन'}
           text={content.length > 100 ? `${content.slice(0, 100)}...` : content}
           className="min-h-dadi px-3 text-base"
         />
