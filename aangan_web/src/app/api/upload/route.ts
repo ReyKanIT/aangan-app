@@ -13,7 +13,14 @@ const ALLOWED_TYPES = [
 
 // Buckets that use Supabase Storage (service role) rather than B2.
 // B2 credentials are local-only; Supabase service key is always on Vercel.
-const SUPABASE_STORAGE_FOLDERS = ['avatars'];
+//
+// 2026-05-03: added 'posts'. Backblaze B2 refused to flip the bucket to
+// public ("Account has no payment history. Please make a payment before
+// making a public bucket"), so every uploaded image was returning 401 from
+// media.aangan.app. Routing posts through Supabase Storage instead — the
+// `posts` bucket is public, mirrors what the RN app already does, and uses
+// the same code path that already works for avatars.
+const SUPABASE_STORAGE_FOLDERS = ['avatars', 'posts'];
 
 export async function POST(request: NextRequest) {
   // Auth check
