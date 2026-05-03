@@ -52,6 +52,11 @@ const MANIFEST = [
       { name: 'Google handler call', match: 'signInWithGoogle' },
       { name: 'Phone number input', match: /input.*type=["']tel["']/s },
       { name: 'Email-OTP fallback link', match: 'sendEmailOtp' },
+      // v0.13.17 hardening — Hindi label MUST be wrapped in {'...'} so the
+      // \u escape sequences get parsed as Devanagari. v0.13.16 shipped with
+      // a bare JSX text "Google से..." which renders as literal
+      // text on the live site. This marker would have caught it pre-deploy.
+      { name: 'Google label is in JS expression (Devanagari escapes parsed)', match: /\{['"]Google[^'"]*Continue with Google['"]\}/ },
     ],
   },
   // /(app)/settings — useConfirm() must NOT regress to native confirm() for

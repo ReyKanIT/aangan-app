@@ -73,6 +73,20 @@ export const INDUS_LISTING_URL =
 
 export const RELEASES: ReleaseNote[] = [
   {
+    version: '0.13.17',
+    releasedAt: '2026-05-03T01:45:00+05:30',
+    stamp: '[1:45am - 3May26]',
+    summary: 'Fix v0.13.16 Hindi-escape bug on Google button + strengthen check-critical-features to catch this class',
+    category: 'fix',
+    highlights: [
+      "Google button label was rendering as literal 'Google \\u0938\\u0947 \\u091C\\u093E...' text on live site",
+      "Root cause: Hindi chars written as raw JSX text were saved by tooling as \\u escape sequences. JSX text + HTML attributes do NOT process \\u escapes (only JS string literals do).",
+      "Fix: wrap visible button text and aria-label in JS expressions so the escapes get parsed as Hindi chars",
+      "check-critical-features.mjs strengthened: now also asserts the Google label is wrapped in a JS expression — would have caught v0.13.16 before it shipped",
+      "CLAUDE.md hardened: any Hindi/Devanagari text inside JSX MUST be wrapped in a JS expression for escape processing",
+    ],
+  },
+  {
     version: '0.13.16',
     releasedAt: '2026-05-03T01:25:00+05:30',
     stamp: '[1:25am - 3May26]',
