@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 
 export const metadata: Metadata = {
-  title: 'Support | Aangan आँगन',
+  title: 'Support',
   description: 'Aangan support — हमसे संपर्क करें, सुझाव भेजें, या समस्या रिपोर्ट करें।',
   alternates: { canonical: 'https://aangan.app/support' },
   openGraph: {

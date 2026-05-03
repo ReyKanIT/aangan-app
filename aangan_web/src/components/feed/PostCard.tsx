@@ -28,6 +28,7 @@ export default function PostCard({ post }: { post: Post }) {
   const isOwn = user?.id === post.author_id;
   const content = post.content ?? '';
   const shouldTruncate = content.length > 300 && !expanded;
+  const isWisdom = post.post_type === 'wisdom';
 
   const handleDelete = async () => {
     if (!confirm('यह पोस्ट हटाएं? Delete this post?')) return;
@@ -43,7 +44,17 @@ export default function PostCard({ post }: { post: Post }) {
   };
 
   return (
-    <article className="bg-white rounded-2xl shadow-sm p-4 mb-4">
+    <article
+      className={`bg-white rounded-2xl shadow-sm p-4 mb-4 ${
+        isWisdom ? 'border-2 border-haldi-gold ring-1 ring-haldi-gold/30' : ''
+      }`}
+    >
+      {isWisdom && (
+        <div className="-mx-4 -mt-4 mb-3 px-4 py-2 bg-unread-bg rounded-t-2xl border-b border-haldi-gold/40 flex items-center gap-2">
+          <span className="text-xl">📿</span>
+          <span className="font-heading text-base text-haldi-gold-dark">{'ज्ञान — Wisdom Note'}</span>
+        </div>
+      )}
       {/* Header */}
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-center gap-3">

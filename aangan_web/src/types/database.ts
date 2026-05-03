@@ -81,6 +81,7 @@ export interface Post {
   author_id: string;
   content: string;
   content_hindi: string | null;
+  post_type: 'text' | 'photo' | 'video' | 'document' | 'wisdom';
   audience_type: AudienceType;
   audience_level: number | null;
   media_urls: string[];

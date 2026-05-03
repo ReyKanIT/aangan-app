@@ -19,6 +19,7 @@ export default function PostComposer({ onClose }: PostComposerProps) {
   const [files, setFiles] = useState<File[]>([]);
   const [previews, setPreviews] = useState<string[]>([]);
   const [isPosting, setIsPosting] = useState(false);
+  const [isWisdom, setIsWisdom] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   // Track latest previews in a ref so the unmount cleanup sees the current list.
@@ -51,7 +52,7 @@ export default function PostComposer({ onClose }: PostComposerProps) {
     setIsPosting(true);
     const audienceLevel = audience.startsWith('level_') ? parseInt(audience.split('_')[1]) : undefined;
     const audienceType = audience === 'all' ? 'all' : 'level';
-    const ok = await createPost(content, files, audienceType, audienceLevel);
+    const ok = await createPost(content, files, audienceType, audienceLevel, isWisdom ? 'wisdom' : 'text');
     setIsPosting(false);
     if (ok) onClose();
   };
@@ -81,11 +82,28 @@ export default function PostComposer({ onClose }: PostComposerProps) {
         <textarea
           value={content}
           onChange={(e) => setContent(e.target.value.slice(0, VALIDATION.maxPostLength))}
-          placeholder="परिवार के साथ कुछ साझा करें... Share something with family..."
+          placeholder={isWisdom
+            ? "एक छोटा ज्ञान या उपदेश साझा करें… A short wisdom or saying…"
+            : "परिवार के साथ कुछ साझा करें... Share something with family..."}
           rows={4}
-          className="w-full font-body text-base text-brown placeholder-gray-400 border-0 focus:outline-none resize-none mb-3"
+          className={`w-full font-body text-base text-brown placeholder-gray-400 border-0 focus:outline-none resize-none mb-3 ${isWisdom ? 'border-l-4 border-haldi-gold pl-3 italic' : ''}`}
           autoFocus
         />
+
+        {/* Wisdom note toggle — pin to top of family feed + special card style */}
+        <button
+          type="button"
+          onClick={() => setIsWisdom((p) => !p)}
+          className={`flex items-center gap-2 mb-3 px-3 py-2 min-h-dadi rounded-lg border-2 transition-colors text-base font-body ${
+            isWisdom
+              ? 'border-haldi-gold bg-unread-bg text-haldi-gold-dark'
+              : 'border-gray-200 text-brown-light hover:border-haldi-gold-light'
+          }`}
+          aria-pressed={isWisdom}
+        >
+          <span className="text-xl">📿</span>
+          <span>{isWisdom ? '✓ ' : ''}{'ज्ञान — Wisdom note'}</span>
+        </button>
 
         {previews.length > 0 && (
           <div className="flex gap-2 flex-wrap mb-3">

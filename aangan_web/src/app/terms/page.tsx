@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Terms of Service | Aangan आँगन',
+  title: 'Terms of Service',
   description: 'Aangan Terms of Service — सेवा की शर्तें',
 };
 

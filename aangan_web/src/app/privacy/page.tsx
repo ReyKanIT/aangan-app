@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Privacy Policy | Aangan आँगन',
+  title: 'Privacy Policy',
   description: 'Aangan Privacy Policy — गोपनीयता नीति',
 };
 

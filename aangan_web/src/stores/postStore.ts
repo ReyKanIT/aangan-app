@@ -14,7 +14,7 @@ interface PostState {
   error: string | null;
 
   fetchPosts: (reset?: boolean) => Promise<void>;
-  createPost: (content: string, mediaFiles: File[], audienceType: string, audienceLevel?: number) => Promise<boolean>;
+  createPost: (content: string, mediaFiles: File[], audienceType: string, audienceLevel?: number, postType?: 'text' | 'wisdom') => Promise<boolean>;
   likePost: (postId: string) => Promise<void>;
   deletePost: (postId: string) => Promise<boolean>;
   setError: (error: string | null) => void;
@@ -84,7 +84,7 @@ export const usePostStore = create<PostState>((set, get) => ({
     }
   },
 
-  createPost: async (content, mediaFiles, audienceType, audienceLevel) => {
+  createPost: async (content, mediaFiles, audienceType, audienceLevel, postType = 'text') => {
     set({ error: null });
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return false;
@@ -96,15 +96,21 @@ export const usePostStore = create<PostState>((set, get) => ({
         mediaUrls.push(url);
       }
 
+      // Wisdom notes get post_type='wisdom' so the feed can render them with
+      // a gold-bordered "ज्ञान" card and the family can find them later via
+      // a wisdom-only filter (planned). Otherwise default 'text' (or 'photo'
+      // when there's media — the schema CHECK doesn't enforce this distinction
+      // today, kept simple).
       const { error } = await supabase.from('posts').insert({
         author_id: user.id,
         content,
+        post_type: postType === 'wisdom' ? 'wisdom' : (mediaUrls.length ? 'photo' : 'text'),
         audience_type: audienceType === 'all' ? 'all' : 'level',
         audience_level: audienceLevel ?? null,
         media_urls: mediaUrls,
         like_count: 0,
         comment_count: 0,
-        is_pinned: false,
+        is_pinned: postType === 'wisdom',
       });
 
       if (error) { set({ error: friendlyError(error.message) }); return false; }
@@ -123,14 +129,19 @@ export const usePostStore = create<PostState>((set, get) => ({
           .single();
         const senderName = me?.display_name_hindi || me?.display_name || 'किसी ने';
         const senderNameEn = me?.display_name || 'Someone';
+        const isWisdom = postType === 'wisdom';
         notifyFamilyL1({
           actorId: user.id,
           type: 'new_post',
-          titleHi: 'नई पोस्ट 📸',
-          titleEn: 'New post 📸',
-          bodyHi: `${senderName} ने नई पोस्ट डाली`,
-          bodyEn: `${senderNameEn} shared a new post`,
-          data: { type: 'new_post', actorId: user.id },
+          titleHi: isWisdom ? 'नया ज्ञान 📿' : 'नई पोस्ट 📸',
+          titleEn: isWisdom ? 'New wisdom 📿' : 'New post 📸',
+          bodyHi: isWisdom
+            ? `${senderName} ने एक ज्ञान साझा किया`
+            : `${senderName} ने नई पोस्ट डाली`,
+          bodyEn: isWisdom
+            ? `${senderNameEn} shared a wisdom note`
+            : `${senderNameEn} shared a new post`,
+          data: { type: 'new_post', actorId: user.id, postType: postType ?? 'text' },
         });
       })();
 
