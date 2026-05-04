@@ -1,13 +1,15 @@
 # Auto-Run Status — Morning Update 2026-05-04
 
-**Window covered:** [10:30pm 3 May] → [12:35am 4 May 2026] (now)
-**Latest deploy:** v0.14.3 — live at https://www.aangan.app
+**Window covered:** [10:30pm 3 May] → [1:50am 4 May 2026] (latest update)
+**Latest deploy:** v0.14.4 — live at https://www.aangan.app
 
 ---
 
 ## TL;DR
 
-7 deploys this run (v0.13.19 → v0.14.3). 24/24 synthetic backend tests pass. Three NEW major findings from synthetic testing. Three migrations + edge-function deployment + storage-strategy decision waiting on you.
+8 deploys this run (v0.13.19 → v0.14.4). 25/25 synthetic backend tests pass. Multiple major findings from synthetic + schema-gap audits. Three migrations + edge-function deployment + storage-strategy decision waiting on you.
+
+**Latest fix (v0.14.4):** RSVP `guests_count`/`note` → `plus_count`/`response_note` to match prod columns. Pre-existing bug — RSVP-with-guests + RSVP notes were silently 400ing on every save. Verified with extended synthetic test.
 
 ---
 
@@ -39,6 +41,22 @@ HTTP/2 400 PGRST204
 
 Migration `20260503a_events_subevent_voice_duration.sql` must be applied. SQL in `AUTO_RUN_STATUS_2026-05-03_OVERNIGHT.md`.
 
+### 🔴 More schema gaps found (writes hit non-existent columns/tables)
+
+Schema-vs-client audit found these P0 gaps where client code writes to columns/tables that don't exist on prod:
+
+| Object | Status | Impact |
+|---|---|---|
+| `event_rsvps.guests_count` / `note` | ✅ **FIXED in v0.14.4** | RSVPs with extras silently 400'd |
+| `users.referred_by` / `referred_at` | ❌ Need migration | Referral attribution silently broken on every signup with referral |
+| `users.admin_role` / `is_app_admin` | ❌ Need migration | Admin role-changes 400; the v0.4 RLS migration assumes these exist |
+| `post_likes` table | ✅ exists on prod | Confirmed via direct GET. False positive from agent. |
+| `direct_messages`, `event_co_hosts`, `event_gift_managers`, `event_gifts`, `event_planned_invites`, `event_potluck_*`, `support_tickets`, `support_messages`, `report_messages`, `content_reports` | ❓ unknown | Code defensively catches `42P01` table-doesn't-exist; features silently degrade if migration not applied. Worth a single audit sweep. |
+
+### 🟡 Auth user delete doesn't cascade to public.users
+
+Observed during synthetic testing: `DELETE /auth/v1/admin/users/{uid}` removes the auth row but leaves the `public.users` row orphaned, despite `public.users.id` declaring `REFERENCES auth.users(id) ON DELETE CASCADE` in the schema. Data integrity issue worth flagging (might be a Supabase Auth admin API quirk, not a schema bug). Synthetic test now cleans up explicitly.
+
 ### 🟡 New signups still get random aangan_ids
 
 Test user created tonight got `AAN-FLSJVVDH` (random, not serial). The renumber script handled the existing 24 users, but until migration `20260503b_aangan_id_serial.sql` is applied, every new signup continues to get a random ID and breaks the serial sequence.
@@ -53,6 +71,7 @@ Test user created tonight got `AAN-FLSJVVDH` (random, not serial). The renumber 
 | **v0.14.1** | event-covers + event-audio routes use Supabase Storage; cleanup test routes |
 | **v0.14.2** | 146 Hindi-attr wraps via codemod + P0 error logging on /family + /events/[id] + aria-label on settings avatar input |
 | **v0.14.3** | Build-time lint check that blocks bare-Devanagari JSX attrs going forward; messages restore text on send failure |
+| **v0.14.4** | RSVP `guests_count`→`plus_count`, `note`→`response_note` to match prod schema (5 files) |
 
 ### Synthetic test results (24/24 ✓)
 - ✅ User creation via auth admin
