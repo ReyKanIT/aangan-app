@@ -287,8 +287,18 @@ for bucket in ['avatars', 'posts', 'event-covers', 'event-audio', 'family-photos
 
 # ── Cleanup ────────────────────────────────────────────────────────
 print("\n[9] Cleanup synthetic users...")
+# Delete public.users rows BEFORE the auth row — observed 2026-05-04 that
+# admin auth.users delete does NOT cascade to public.users despite the FK
+# declaring ON DELETE CASCADE in supabase_schema.sql:42. Worth flagging to
+# Kumar; for now we work around it.
 for u in users:
     try:
+        # Best-effort: clean up FK references first to avoid restrict-FKs blocking the user delete.
+        for tbl in ('post_likes', 'event_rsvps', 'family_members', 'notifications', 'posts', 'events'):
+            for col in ('user_id', 'author_id', 'creator_id', 'family_member_id'):
+                req('DELETE', f"{SUPA_URL}/rest/v1/{tbl}?{col}=eq.{u['id']}")
+        # Then the public.users row, then the auth row.
+        req('DELETE', f"{SUPA_URL}/rest/v1/users?id=eq.{u['id']}")
         admin_delete_user(u['id'])
         log_pass(f"deleted {u['role']}")
     except Exception as e:
