@@ -1,0 +1,87 @@
+name: Supabase deploy (migrations + edge functions)
+
+# Production-grade rule: never apply migrations or deploy edge functions
+# manually from a laptop. Every push to main runs through this workflow,
+# scoped to a least-privilege Supabase Personal Access Token stored in
+# GitHub repo secrets.
+#
+# Setup (one-time, by Kumar):
+#   1. Supabase Dashboard → Account → Access Tokens → Generate new token
+#      (name: "github-actions-aangan", scope: project access)
+#   2. GitHub repo → Settings → Secrets and variables → Actions:
+#        SUPABASE_ACCESS_TOKEN = sbp_...
+#        SUPABASE_DB_PASSWORD  = <project DB password from Supabase Dashboard
+#                                  → Project Settings → Database → Database
+#                                  password>
+#   3. Push to main triggers this workflow.
+#
+# Behaviour:
+#   - migrations: `supabase db push` applies any new migration files in
+#     supabase/migrations/ that haven't been applied yet (tracked by
+#     supabase_migrations.schema_migrations).
+#   - functions: deploys every edge function in supabase/functions/.
+#     `--no-verify-jwt` is set per-function in their own config.
+#
+# Safety:
+#   - workflow_dispatch lets Kumar trigger manually if push is gated.
+#   - paths-ignore avoids spinning up the runner on doc-only commits.
+#   - Both jobs are idempotent — re-running is safe.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'supabase/migrations/**'
+      - 'supabase/functions/**'
+      - '.github/workflows/supabase-deploy.yml'
+  workflow_dispatch:
+
+env:
+  SUPABASE_PROJECT_REF: okzmeuhxodzkbdilvkyu
+  SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+
+jobs:
+  apply-migrations:
+    name: Apply pending migrations
+    runs-on: ubuntu-latest
+    if: ${{ contains(github.event.head_commit.modified, 'supabase/migrations/') || contains(github.event.head_commit.added, 'supabase/migrations/') || github.event_name == 'workflow_dispatch' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Link project
+        run: supabase link --project-ref $SUPABASE_PROJECT_REF --password "${{ secrets.SUPABASE_DB_PASSWORD }}"
+
+      - name: Push migrations
+        run: supabase db push --password "${{ secrets.SUPABASE_DB_PASSWORD }}"
+
+  deploy-edge-functions:
+    name: Deploy edge functions
+    runs-on: ubuntu-latest
+    if: ${{ contains(github.event.head_commit.modified, 'supabase/functions/') || contains(github.event.head_commit.added, 'supabase/functions/') || github.event_name == 'workflow_dispatch' }}
+    strategy:
+      matrix:
+        function:
+          # Listed explicitly so removing a function from the directory
+          # doesn't accidentally undeploy it from prod (Supabase has no
+          # "delete-if-removed" command). Add new functions here when they
+          # land in supabase/functions/.
+          - send-push
+          - send-otp-sms
+          - daily-reminders
+          - rate-limit
+          - audit-log
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Deploy ${{ matrix.function }}
+        run: supabase functions deploy ${{ matrix.function }} --project-ref $SUPABASE_PROJECT_REF
