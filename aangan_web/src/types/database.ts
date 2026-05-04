@@ -144,8 +144,12 @@ export interface EventRsvp {
   event_id: string;
   user_id: string;
   status: RsvpStatus;
-  guests_count: number;
-  note: string | null;
+  // 2026-05-04: renamed to match prod columns. Code through v0.14.3 used
+  // `guests_count` / `note` which 400'd whenever the user added guests or
+  // a note (synthetic test missed because it sent only {event_id, user_id,
+  // status}). Bug surfaced by missing-column scan.
+  plus_count: number;
+  response_note: string | null;
   dietary_preferences: string[] | null;
   created_at: string;
   updated_at: string;

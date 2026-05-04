@@ -106,7 +106,7 @@ export default function EventDetailPage() {
 
   const totalGuests = rsvps
     .filter((r) => r.status === 'going')
-    .reduce((sum, r) => sum + 1 + (r.guests_count ?? 0), 0);
+    .reduce((sum, r) => sum + 1 + (r.plus_count ?? 0), 0);
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-6">
@@ -288,14 +288,14 @@ export default function EventDetailPage() {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
                     <p className="font-body text-base font-semibold text-brown">{r.user?.display_name_hindi ?? r.user?.display_name}</p>
-                    {(r.guests_count ?? 0) > 0 && (
-                      <span className="font-body text-sm text-haldi-gold-dark bg-unread-bg px-2 py-0.5 rounded-full">+{r.guests_count}</span>
+                    {(r.plus_count ?? 0) > 0 && (
+                      <span className="font-body text-sm text-haldi-gold-dark bg-unread-bg px-2 py-0.5 rounded-full">+{r.plus_count}</span>
                     )}
                   </div>
                   {r.user?.village_city && <p className="font-body text-sm text-brown-light">📍 {r.user.village_city}</p>}
-                  {r.note && (
+                  {r.response_note && (
                     <p className="font-body text-base text-brown-light mt-1 bg-cream rounded-lg px-3 py-2 whitespace-pre-wrap">
-                      💬 {r.note}
+                      💬 {r.response_note}
                     </p>
                   )}
                 </div>

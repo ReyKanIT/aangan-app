@@ -22,26 +22,26 @@ const QUICK_COUNTS = [
  */
 export default function RsvpDetailsForm({ eventId, myRsvp }: Props) {
   const { submitRsvp } = useEventStore();
-  const [guests, setGuests] = useState(myRsvp?.guests_count ?? 0);
-  const [note, setNote] = useState(myRsvp?.note ?? '');
+  const [guests, setGuests] = useState(myRsvp?.plus_count ?? 0);
+  const [note, setNote] = useState(myRsvp?.response_note ?? '');
   const [saving, setSaving] = useState(false);
   const [savedAt, setSavedAt] = useState<number | null>(null);
 
   useEffect(() => {
-    setGuests(myRsvp?.guests_count ?? 0);
-    setNote(myRsvp?.note ?? '');
-  }, [myRsvp?.id, myRsvp?.guests_count, myRsvp?.note]);
+    setGuests(myRsvp?.plus_count ?? 0);
+    setNote(myRsvp?.response_note ?? '');
+  }, [myRsvp?.id, myRsvp?.plus_count, myRsvp?.response_note]);
 
   if (!myRsvp || myRsvp.status === 'not_going') return null;
 
   const canSave =
-    (guests !== (myRsvp.guests_count ?? 0) || note.trim() !== (myRsvp.note ?? '')) && !saving;
+    (guests !== (myRsvp.plus_count ?? 0) || note.trim() !== (myRsvp.response_note ?? '')) && !saving;
 
   const handleSave = async () => {
     setSaving(true);
     const ok = await submitRsvp(eventId, myRsvp.status, {
-      guests_count: guests,
-      note: note.trim() || null,
+      plus_count: guests,
+      response_note: note.trim() || null,
     });
     setSaving(false);
     if (ok) {

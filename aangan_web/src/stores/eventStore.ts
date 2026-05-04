@@ -16,7 +16,7 @@ interface EventState {
   createEvent: (data: Partial<AanganEvent>) => Promise<string | null>;
   updateEvent: (eventId: string, patch: Partial<AanganEvent>) => Promise<boolean>;
   deleteEvent: (eventId: string) => Promise<boolean>;
-  submitRsvp: (eventId: string, status: RsvpStatus, opts?: { guests_count?: number; note?: string | null }) => Promise<boolean>;
+  submitRsvp: (eventId: string, status: RsvpStatus, opts?: { plus_count?: number; response_note?: string | null }) => Promise<boolean>;
   fetchRsvps: (eventId: string) => Promise<void>;
   setError: (error: string | null) => void;
 }
@@ -165,10 +165,10 @@ export const useEventStore = create<EventState>((set, get) => ({
         if (status === 'going' && event.max_attendees != null) {
           const myRsvp = get().rsvps.find((r) => r.user_id === user.id);
           const goingCount = get().rsvps.filter((r) => r.status === 'going').length;
-          const myself = opts?.guests_count ?? myRsvp?.guests_count ?? 0;
-          const currentSeats = goingCount + get().rsvps.reduce((sum, r) => r.status === 'going' ? sum + (r.guests_count ?? 0) : sum, 0);
+          const myself = opts?.plus_count ?? myRsvp?.plus_count ?? 0;
+          const currentSeats = goingCount + get().rsvps.reduce((sum, r) => r.status === 'going' ? sum + (r.plus_count ?? 0) : sum, 0);
           const newSeats = myRsvp?.status === 'going'
-            ? currentSeats - 1 - (myRsvp.guests_count ?? 0) + 1 + myself
+            ? currentSeats - 1 - (myRsvp.plus_count ?? 0) + 1 + myself
             : currentSeats + 1 + myself;
           if (newSeats > event.max_attendees) {
             set({ error: `जगह पूरी भर गई — ${event.max_attendees} की सीमा` });
@@ -178,8 +178,8 @@ export const useEventStore = create<EventState>((set, get) => ({
       }
 
       const payload: Record<string, unknown> = { event_id: eventId, user_id: user.id, status };
-      if (opts?.guests_count !== undefined) payload.guests_count = opts.guests_count;
-      if (opts?.note !== undefined) payload.note = opts.note;
+      if (opts?.plus_count !== undefined) payload.plus_count = opts.plus_count;
+      if (opts?.response_note !== undefined) payload.response_note = opts.response_note;
       const { error } = await supabase.from('event_rsvps')
         .upsert(payload, { onConflict: 'event_id,user_id' });
       if (error) { set({ error: friendlyError(error.message) }); return false; }

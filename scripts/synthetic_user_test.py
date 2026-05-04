@@ -223,6 +223,15 @@ if event_id:
     else:
         log_fail("child RSVPs", f"{s} {b[:200]}")
 
+    # Child updates RSVP with plus_count + response_note (the v0.14.4 fix path).
+    # PATCH (not POST upsert) since the row already exists from the previous case.
+    s, b = child_call('PATCH', f"{SUPA_URL}/rest/v1/event_rsvps?event_id=eq.{event_id}&user_id=eq.{child['id']}",
+                       body={'plus_count': 2, 'response_note': 'पूरा परिवार आ रहा है'})
+    if s in (200, 204):
+        log_pass("RSVP with plus_count + response_note (the v0.14.4 fix)")
+    else:
+        log_fail("RSVP with plus_count + response_note", f"{s} {b[:300]}")
+
 # ── 5. Notifications: insert + read ─────────────────────────────────
 print("\n[5] Notifications...")
 s, b = req('POST', f"{SUPA_URL}/rest/v1/notifications", body={
