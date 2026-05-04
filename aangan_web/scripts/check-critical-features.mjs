@@ -133,9 +133,46 @@ function escapeRegex(s) {
   return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
+// ─── Global rule: no bare Devanagari in JSX attribute values ──────────────
+// Per CLAUDE.md hard rule, Hindi text in JSX attribute values like
+// `aria-label="हिंदी"`, `placeholder="हिंदी"`, etc. MUST be wrapped in a JS
+// expression (`={'हिंदी'}`) — otherwise some build tooling silently turns
+// the Devanagari into literal `\u` escape sequences (the v0.13.16 Google
+// button regression). Walks every *.tsx + *.ts under src/ and fails if any
+// matches `(aria-label|placeholder|title|alt)="…देवनागरी…"`.
+import { readdirSync, statSync } from 'node:fs';
+
+const HINDI_ATTR_RE = /\b(aria-label|placeholder|title|alt)="[^"]*[ऀ-ॿ][^"]*"/;
+
+function walk(dir, out = []) {
+  for (const entry of readdirSync(dir)) {
+    const p = resolve(dir, entry);
+    const s = statSync(p);
+    if (s.isDirectory()) walk(p, out);
+    else if (entry.endsWith('.tsx') || entry.endsWith('.ts')) out.push(p);
+  }
+  return out;
+}
+
+const srcDir = resolve(ROOT, 'src');
+const hindiAttrFails = [];
+for (const file of walk(srcDir)) {
+  const lines = readFileSync(file, 'utf8').split('\n');
+  for (let i = 0; i < lines.length; i++) {
+    if (HINDI_ATTR_RE.test(lines[i])) {
+      hindiAttrFails.push(`${file.replace(ROOT + '/', '')}:${i + 1}: ${lines[i].trim().slice(0, 120)}`);
+    }
+  }
+}
+if (hindiAttrFails.length) {
+  errors.push(`HINDI-ATTR-REGRESSION (${hindiAttrFails.length}): bare Devanagari in JSX attribute values. Wrap in {'…'}. See CLAUDE.md hard rule.`);
+  for (const f of hindiAttrFails.slice(0, 20)) errors.push('    ' + f);
+  if (hindiAttrFails.length > 20) errors.push(`    … and ${hindiAttrFails.length - 20} more`);
+}
+
 if (errors.length === 0) {
   const total = MANIFEST.reduce((n, e) => n + e.markers.length, 0);
-  console.log(`✅ check-critical-features: ${total} markers across ${MANIFEST.length} routes — all present.`);
+  console.log(`✅ check-critical-features: ${total} markers across ${MANIFEST.length} routes + 0 Hindi-attr regressions — all present.`);
   process.exit(0);
 }
 

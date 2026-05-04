@@ -56,8 +56,21 @@ export default function MessagesPage() {
 
     setSending(true);
     setMessageText('');
-    await sendMessage(selectedUserId, text);
-    setSending(false);
+    try {
+      const ok = await sendMessage(selectedUserId, text);
+      if (ok === false) {
+        // Restore the user's text so they can retry rather than lose it.
+        setMessageText(text);
+        // The store sets messageStore.error which is read elsewhere; this
+        // log is for Sentry breadcrumbs so we can debug delivery failures.
+        console.warn('[messages] sendMessage returned falsy — likely store error set');
+      }
+    } catch (e) {
+      setMessageText(text);
+      console.warn('[messages] sendMessage threw:', e);
+    } finally {
+      setSending(false);
+    }
   }, [selectedUserId, messageText, sending, sendMessage]);
 
   const handleKeyDown = useCallback(
