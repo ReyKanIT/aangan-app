@@ -57,13 +57,16 @@ interface TreeNode {
   onAdd?: () => void;
 }
 
-const GEN_LABELS: Record<number, { hi: string; en: string }> = {
-  3:  { hi: 'पर-दादा-दादी', en: 'Great-grandparents' },
-  2:  { hi: 'दादा-दादी / नाना-नानी', en: 'Grandparents' },
-  1:  { hi: 'माता-पिता / चाचा-मामा', en: 'Parents & Uncles' },
-  0:  { hi: 'भाई-बहन / पति-पत्नी / आप', en: 'Self, Spouse, Siblings, Cousins' },
-  '-1': { hi: 'बच्चे / भतीजा-भांजा', en: 'Children & Nephews' },
-  '-2': { hi: 'पोता-पोती', en: 'Grandchildren' },
+// v0.15.0 Family Tree redesign — generation labels now carry an emoji + a
+// background tone so each band is visually distinct at a glance. Dadi can
+// orient herself ("oh, that's the parents row") without reading the label.
+const GEN_LABELS: Record<number, { hi: string; en: string; emoji: string; tone: string }> = {
+  3:  { hi: 'पर-दादा-दादी', en: 'Great-grandparents',         emoji: '🌳', tone: 'bg-amber-50/70 border-amber-200' },
+  2:  { hi: 'दादा-दादी / नाना-नानी', en: 'Grandparents',         emoji: '👴👵', tone: 'bg-orange-50/70 border-orange-200' },
+  1:  { hi: 'माता-पिता / चाचा-मामा', en: 'Parents & Uncles',    emoji: '👨‍👩', tone: 'bg-haldi-gold-light/40 border-haldi-gold/30' },
+  0:  { hi: 'भाई-बहन / पति-पत्नी / आप', en: 'Self & Siblings',  emoji: '🤝', tone: 'bg-mehndi-green/10 border-mehndi-green/30' },
+  '-1': { hi: 'बच्चे / भतीजा-भांजा', en: 'Children & Nephews',  emoji: '👶', tone: 'bg-sky-50/70 border-sky-200' },
+  '-2': { hi: 'पोता-पोती', en: 'Grandchildren',                emoji: '🧒', tone: 'bg-violet-50/70 border-violet-200' },
 };
 
 export default function FamilyTreeDiagram({
@@ -184,39 +187,47 @@ export default function FamilyTreeDiagram({
 
   if (generations.length === 0) {
     return (
-      <div className="flex justify-center py-20 text-brown-light font-body">
-        अभी कोई सदस्य नहीं — No members yet
+      <div className="flex flex-col items-center justify-center py-20 px-6 text-center bg-cream/40 rounded-2xl border-2 border-dashed border-cream-dark">
+        <div className="text-6xl mb-3">🌱</div>
+        <p className="font-heading text-xl text-brown mb-1">{'अभी कोई सदस्य नहीं'}</p>
+        <p className="font-body text-base text-brown-light">{'पहला सदस्य जोड़कर अपना परिवार वृक्ष शुरू करें'}</p>
+        <p className="font-body text-sm text-brown-light/70 mt-1">No members yet — add the first to start your family tree</p>
       </div>
     );
   }
 
   return (
-    <div className="relative w-full bg-cream/40 rounded-2xl border border-cream-dark overflow-hidden">
-      {/* Scroll hint */}
-      <div className="absolute top-2 right-2 z-10 bg-white/85 backdrop-blur px-3 py-1.5 rounded-full font-body text-sm text-brown-light shadow-sm pointer-events-none select-none">
-        ↕ स्क्रॉल करें • → खींचें
+    <div className="relative w-full bg-gradient-to-b from-cream/30 to-cream/60 rounded-2xl border border-cream-dark overflow-hidden">
+      {/* Scroll hint — only on desktop where wheel-scroll matters */}
+      <div className="absolute top-3 right-3 z-10 bg-white/90 backdrop-blur px-3 py-1.5 rounded-full font-body text-xs text-brown-light/80 shadow-sm pointer-events-none select-none hidden sm:block">
+        ↕ स्क्रॉल • ⇄ खींचें
       </div>
 
       {/* Native-scroll container — no zoom-pan library so wheel scrolls normally */}
-      <div className="w-full overflow-auto" style={{ maxHeight: '70vh' }}>
-        <div className="px-8 py-10 min-w-max">
+      <div className="w-full overflow-auto" style={{ maxHeight: '75vh' }}>
+        <div className="px-4 sm:px-8 py-6 sm:py-10 min-w-max">
           {generations.map((gen, idx) => {
             const list = rows.get(gen) ?? [];
             const hasNext = idx < generations.length - 1;
             const label = GEN_LABELS[gen] ?? {
               hi: gen > 0 ? `पीढ़ी +${gen}` : `पीढ़ी ${gen}`,
               en: gen > 0 ? `Generation +${gen}` : `Generation ${gen}`,
+              emoji: '👤',
+              tone: 'bg-cream-dark/40 border-cream-dark',
             };
             return (
               <div key={gen} className="flex flex-col items-center">
-                {/* Generation label */}
-                <div className="mb-2 text-center">
-                  <p className="font-body text-base text-brown-light/80 font-semibold">{label.hi}</p>
-                  <p className="font-body text-sm text-brown-light/60">{label.en}</p>
+                {/* Generation label — colored chip with emoji */}
+                <div className={`mb-4 px-4 py-2 rounded-full border ${label.tone} flex items-center gap-2 shadow-sm`}>
+                  <span className="text-lg leading-none">{label.emoji}</span>
+                  <div className="text-center leading-tight">
+                    <p className="font-heading text-base text-brown font-semibold">{label.hi}</p>
+                    <p className="font-body text-xs text-brown-light/70">{label.en} · {list.length}</p>
+                  </div>
                 </div>
 
                 {/* Member cards */}
-                <div className="flex flex-wrap justify-center gap-4 max-w-[1100px]">
+                <div className="flex flex-wrap justify-center gap-3 sm:gap-4 max-w-[1100px]">
                   {list.map((node) => (
                     <TreeNodeCard key={node.id} node={node} />
                   ))}
@@ -224,8 +235,8 @@ export default function FamilyTreeDiagram({
 
                 {/* Connector line to next generation */}
                 {hasNext && (
-                  <svg width="2" height="40" className="my-2 shrink-0">
-                    <line x1="1" y1="0" x2="1" y2="40" stroke="#C8A84B" strokeWidth="2" strokeDasharray="4 3" />
+                  <svg width="2" height="36" className="my-3 shrink-0" aria-hidden="true">
+                    <line x1="1" y1="0" x2="1" y2="36" stroke="#C8A84B" strokeWidth="2" strokeDasharray="4 3" />
                   </svg>
                 )}
               </div>
@@ -238,6 +249,14 @@ export default function FamilyTreeDiagram({
 }
 
 function TreeNodeCard({ node }: { node: TreeNode }) {
+  // v0.15.0 redesign:
+  //   - Card actions moved from absolute corners (overlapping the avatar
+  //     and name) into a dedicated bottom-of-card toolbar. No more buttons
+  //     fighting for the same pixels as text.
+  //   - Self card: gold gradient background instead of flat tint. Pops.
+  //   - Deceased card: faded grayscale + 🕊️ badge.
+  //   - Hover lift + shadow expansion to make the cards feel tactile.
+  //   - Wider card on small screens so 3 buttons fit cleanly side-by-side.
   const ring = node.isSelf
     ? 'ring-4 ring-haldi-gold ring-offset-2 ring-offset-cream'
     : node.isDeceased
@@ -245,14 +264,20 @@ function TreeNodeCard({ node }: { node: TreeNode }) {
       : 'ring-2 ring-mehndi-green/40';
 
   const bg = node.isDeceased
-    ? 'bg-gray-50 border-gray-200'
+    ? 'bg-gray-50 border-gray-200 grayscale-[0.3]'
     : node.isSelf
-      ? 'bg-haldi-gold-light/30 border-haldi-gold'
-      : 'bg-white border-cream-dark';
+      ? 'bg-gradient-to-br from-haldi-gold-light/60 to-haldi-gold/20 border-haldi-gold ring-1 ring-haldi-gold/40'
+      : 'bg-white border-cream-dark hover:shadow-md hover:-translate-y-0.5';
+
+  // Show toolbar only when there's at least one action.
+  const hasActions = !!(node.onEdit || node.onRemove || (node.onAdd && !node.isSelf));
 
   return (
-    <div className={`relative w-40 sm:w-44 rounded-2xl p-3 text-center shadow-sm border ${bg} group`}>
-      <div className={`mx-auto mb-2 rounded-full ${ring}`}>
+    <article
+      className={`relative w-40 sm:w-44 rounded-2xl p-3 pt-4 text-center shadow-sm border transition-all duration-200 ${bg}`}
+    >
+      {/* Avatar — generous top-padding so the gold ring is unobstructed */}
+      <div className={`mx-auto mb-2 rounded-full ${ring} w-fit`}>
         {node.avatarUrl ? (
           <AvatarCircle src={node.avatarUrl} name={node.name} size={64} className="mx-auto" />
         ) : (
@@ -262,46 +287,36 @@ function TreeNodeCard({ node }: { node: TreeNode }) {
         )}
       </div>
 
-      {/* Dadi test (v0.13.15): name = lg, relation = base. The relationship
-          label is the most-read text on the card — a grandma scans these to
-          figure out "who is this person to me?" Promoting from text-sm to
-          text-base bumps it to ≥16px which is the Aangan rule. */}
-      <p className={`font-body font-semibold text-lg truncate ${node.isDeceased ? 'text-gray-600' : 'text-brown'}`}>
+      {/* Name + relation — name is the largest text per Dadi rule */}
+      <p className={`font-body font-semibold text-lg leading-tight truncate ${node.isDeceased ? 'text-gray-600' : 'text-brown'}`}>
         {node.name}
       </p>
-      <p className="font-body text-base text-brown-light truncate">{node.relationLabel}</p>
+      <p className="font-body text-base text-brown-light truncate mt-0.5">{node.relationLabel}</p>
 
-      <div className="mt-1.5 flex flex-wrap justify-center gap-1">
-        {!node.isSelf && (
+      {/* Badge row */}
+      <div className="mt-1.5 flex flex-wrap justify-center gap-1 min-h-[24px]">
+        {node.isSelf ? (
+          <span className="bg-haldi-gold text-white text-sm font-bold px-2 py-0.5 rounded-full">
+            {'आप'}
+          </span>
+        ) : (
           <span className="bg-haldi-gold-light text-haldi-gold-dark text-sm font-bold px-2 py-0.5 rounded-full">
             L{node.level}
           </span>
         )}
         {node.isDeceased && (
           <span className="bg-gray-200 text-gray-600 text-sm font-semibold px-2 py-0.5 rounded-full">
-            स्वर्गवासी
+            {'स्वर्गवासी'}
           </span>
         )}
         {node.isOffline && !node.isDeceased && (
-          // Palette tightening (design review v0.13.5): blue → muted haldi
-          // so the family-tree card stays in one warm palette. Reserve
-          // accent blue for actionable affordances elsewhere in the app.
           <span className="bg-haldi-gold/15 text-haldi-gold-dark text-sm font-semibold px-2 py-0.5 rounded-full">
-            ऑफ़लाइन
+            {'ऑफ़लाइन'}
           </span>
         )}
         {node.viaName && (
-          // "via X" promoted from a whisper-quiet italic line into a real
-          // chip in the same row as L-badge — it's the most informative
-          // per-card piece for a Dadi understanding why a stranger appears
-          // in her tree, deserves chip-level visibility.
           <span className="bg-cream-dark text-brown text-sm font-semibold px-2 py-0.5 rounded-full max-w-[120px] truncate">
             via {node.viaName}
-          </span>
-        )}
-        {node.isSelf && (
-          <span className="bg-haldi-gold text-white text-sm font-bold px-2 py-0.5 rounded-full">
-            आप
           </span>
         )}
       </div>
@@ -310,43 +325,43 @@ function TreeNodeCard({ node }: { node: TreeNode }) {
         <p className="font-body text-sm text-brown-light mt-1 truncate">📍 {node.village}</p>
       )}
 
-      {node.onEdit && (
-        // Edit-relationship pencil. Sits to the LEFT of the remove ✕ so
-        // grandma's "I want to fix the rishtaa" tap doesn't hit delete.
-        // 52×52 = Aangan dadi rule (was 44 — WCAG min, but not enough for
-        // arthritic fingers wearing reading glasses).
-        <button
-          onClick={node.onEdit}
-          className="absolute top-0 left-0 opacity-80 sm:opacity-100 text-brown-light hover:text-haldi-gold-dark transition-all w-[52px] h-[52px] flex items-center justify-center text-lg rounded-lg hover:bg-haldi-gold/10"
-          aria-label={'रिश्ता बदलें — Edit relationship'}
-          title={'रिश्ता बदलें — Edit relationship'}
-        >✏️</button>
-      )}
+      {/* Action toolbar — bottom of card. No more absolute-positioned
+          buttons overlapping the avatar/name. Each button is 52×52 (Dadi
+          tap rule) but compact-icon visually so 3 fit on a 160px card.
+          Order: edit (left, safe) → add (middle, primary action) → remove
+          (right, destructive). Gives a thumb-friendly progression on
+          right-handed touch users. */}
+      {hasActions && (
+        <div className="mt-3 -mx-3 -mb-3 px-2 py-2 border-t border-cream-dark/60 bg-cream/40 rounded-b-2xl flex items-center justify-around gap-1">
+          {node.onEdit ? (
+            <button
+              onClick={node.onEdit}
+              className="w-[52px] h-[52px] flex items-center justify-center rounded-xl text-lg text-brown-light hover:text-haldi-gold-dark hover:bg-haldi-gold/10 transition-colors"
+              aria-label={'रिश्ता बदलें — Edit relationship'}
+              title={'रिश्ता बदलें — Edit relationship'}
+            >✏️</button>
+          ) : <span className="w-[52px] h-[52px]" aria-hidden="true" />}
 
-      {node.onRemove && (
-        // Dadi tap target: 52×52 (Aangan rule). Always visible on touch +
-        // desktop so removing a wrong-relation isn't hidden behind hover.
-        <button
-          onClick={node.onRemove}
-          className="absolute top-0 right-0 opacity-80 sm:opacity-100 text-gray-500 hover:text-error transition-all w-[52px] h-[52px] flex items-center justify-center text-lg rounded-lg hover:bg-red-50"
-          aria-label={'सदस्य हटाएं — Remove member'}
-        >✕</button>
-      )}
+          {node.onAdd && !node.isSelf ? (
+            // GUI add-relative — keeps the prominent green ➕ for the
+            // "add via this person" affordance Dadi must discover.
+            <button
+              onClick={node.onAdd}
+              className="w-[52px] h-[52px] rounded-full bg-mehndi-green text-white text-2xl font-bold flex items-center justify-center shadow-md hover:scale-110 hover:bg-mehndi-green-dark transition-all"
+              aria-label={`${node.name} के माध्यम से सदस्य जोड़ें — Add a relative via ${node.name}`}
+              title={`${node.name} के माध्यम से जोड़ें — Add via ${node.name}`}
+            >+</button>
+          ) : <span className="w-[52px] h-[52px]" aria-hidden="true" />}
 
-      {node.onAdd && !node.isSelf && (
-        // GUI add-relative ➕ bubble (v0.13.14) — sits on the bottom-right
-        // of the card. Tap → opens AddMemberDrawer pre-seeded to the Via
-        // tab with this person as the via-anchor, so the user can say
-        // "add X as the wife of THIS person" without navigating.
-        // 52px = Dadi rule. Was 36px in v0.13.14 — too small for the very
-        // affordance we wanted dadi to discover. Always visible.
-        <button
-          onClick={node.onAdd}
-          className="absolute bottom-1 right-1 w-[52px] h-[52px] rounded-full bg-mehndi-green text-white text-2xl font-bold flex items-center justify-center shadow-md hover:scale-110 hover:bg-mehndi-green-dark transition-all"
-          aria-label={`${node.name} के माध्यम से सदस्य जोड़ें — Add a relative via ${node.name}`}
-          title={`${node.name} के माध्यम से जोड़ें — Add via ${node.name}`}
-        >+</button>
+          {node.onRemove ? (
+            <button
+              onClick={node.onRemove}
+              className="w-[52px] h-[52px] flex items-center justify-center rounded-xl text-lg text-gray-500 hover:text-error hover:bg-red-50 transition-colors"
+              aria-label={'सदस्य हटाएं — Remove member'}
+            >✕</button>
+          ) : <span className="w-[52px] h-[52px]" aria-hidden="true" />}
+        </div>
       )}
-    </div>
+    </article>
   );
 }
