@@ -71,9 +71,10 @@
         "releaseStatus": "draft"
       },
       "ios": {
-        "appleId": "REPLACE_WITH_APPLE_ID_EMAIL",
-        "ascAppId": "REPLACE_WITH_ASC_APP_ID",
-        "appleTeamId": "REPLACE_WITH_TEAM_ID"
+        "//": "Fill AFTER creating the app in App Store Connect (see ASC_NEXT_STEPS_2026-05-06.md). Or set EXPO_APPLE_ID / ASC_APP_ID / APPLE_TEAM_ID env vars and EAS picks them up automatically.",
+        "appleId": "$EXPO_APPLE_ID",
+        "ascAppId": "$ASC_APP_ID",
+        "appleTeamId": "$APPLE_TEAM_ID"
       }
     }
   }
