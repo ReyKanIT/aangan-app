@@ -193,9 +193,15 @@ export const EVENT_TYPES = [
   { value: 'other', label: 'अन्य', emoji: '📅' },
 ];
 
+// v0.15.4: 'custom' option added so a post can be shared with an arbitrary
+// hand-picked set of family members regardless of their connection level
+// (Kumar's request 2026-05-06: "should have features to share with all and
+// also with only selected few irrespective of level"). Backed by the
+// existing post_audience table which already holds individual user_id rows.
 export const AUDIENCE_OPTIONS = [
-  { value: 'all', label: 'सभी परिवार', sublabel: 'All Family' },
-  { value: 'level_1', label: 'Level 1', sublabel: 'Direct Family' },
-  { value: 'level_2', label: 'Level 2', sublabel: 'Close Family' },
-  { value: 'level_3', label: 'Level 3', sublabel: 'Extended Family' },
+  { value: 'all',     label: 'सभी परिवार',  sublabel: 'All Family' },
+  { value: 'level_1', label: 'Level 1',       sublabel: 'Direct Family' },
+  { value: 'level_2', label: 'Level 2',       sublabel: 'Close Family' },
+  { value: 'level_3', label: 'Level 3',       sublabel: 'Extended Family' },
+  { value: 'custom',  label: 'चुने गए लोग',  sublabel: 'Selected People' },
 ];

@@ -14,7 +14,7 @@ interface PostState {
   error: string | null;
 
   fetchPosts: (reset?: boolean) => Promise<void>;
-  createPost: (content: string, mediaFiles: File[], audienceType: string, audienceLevel?: number, postType?: 'text' | 'wisdom') => Promise<boolean>;
+  createPost: (content: string, mediaFiles: File[], audienceType: string, audienceLevel?: number, postType?: 'text' | 'wisdom', selectedUserIds?: string[]) => Promise<boolean>;
   likePost: (postId: string) => Promise<void>;
   deletePost: (postId: string) => Promise<boolean>;
   setError: (error: string | null) => void;
@@ -84,7 +84,7 @@ export const usePostStore = create<PostState>((set, get) => ({
     }
   },
 
-  createPost: async (content, mediaFiles, audienceType, audienceLevel, postType = 'text') => {
+  createPost: async (content, mediaFiles, audienceType, audienceLevel, postType = 'text', selectedUserIds = []) => {
     set({ error: null });
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return false;
@@ -96,24 +96,48 @@ export const usePostStore = create<PostState>((set, get) => ({
         mediaUrls.push(url);
       }
 
+      // v0.15.4: 'custom' audience writes audience_type='custom' on the
+      // post and individual rows in post_audience for each selected user.
+      // RLS for posts already supports this path
+      // (audience_type='custom' OR EXISTS post_audience match).
+      const isCustom = audienceType === 'custom';
+      const dbAudienceType = isCustom ? 'custom' : (audienceType === 'all' ? 'all' : 'level');
+
       // Wisdom notes get post_type='wisdom' so the feed can render them with
       // a gold-bordered "ज्ञान" card and the family can find them later via
       // a wisdom-only filter (planned). Otherwise default 'text' (or 'photo'
       // when there's media — the schema CHECK doesn't enforce this distinction
       // today, kept simple).
-      const { error } = await supabase.from('posts').insert({
+      const { data: created, error } = await supabase.from('posts').insert({
         author_id: user.id,
         content,
         post_type: postType === 'wisdom' ? 'wisdom' : (mediaUrls.length ? 'photo' : 'text'),
-        audience_type: audienceType === 'all' ? 'all' : 'level',
-        audience_level: audienceLevel ?? null,
+        audience_type: dbAudienceType,
+        audience_level: isCustom ? null : (audienceLevel ?? null),
         media_urls: mediaUrls,
         like_count: 0,
         comment_count: 0,
         is_pinned: postType === 'wisdom',
-      });
+      }).select('id').maybeSingle();
 
       if (error) { set({ error: friendlyError(error.message) }); return false; }
+
+      // For 'custom' audience, batch-insert into post_audience so RLS will
+      // let the selected users (and only them) see this post. maybeSingle()
+      // is forgiving: if the SELECT-after-INSERT is RLS-blocked we skip the
+      // audience write rather than failing the whole post.
+      if (isCustom && created?.id && selectedUserIds.length > 0) {
+        const audienceRows = selectedUserIds.map((uid) => ({
+          post_id: created.id,
+          user_id: uid,
+          audience_group_id: null,
+        }));
+        const { error: audErr } = await supabase.from('post_audience').insert(audienceRows);
+        if (audErr) {
+          // Non-fatal: post exists, audience just won't see it. Log for triage.
+          console.warn('[postStore] post_audience insert failed:', audErr.message);
+        }
+      }
 
       // Fan out notifications to Level-1 family — fire-and-forget so a slow
       // edge function doesn't block the modal-close + feed-refresh sequence.

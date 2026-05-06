@@ -1,10 +1,19 @@
 'use client';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import AvatarCircle from '@/components/ui/AvatarCircle';
 import type { FamilyMember, OfflineFamilyMember, SecondaryRelationship, User } from '@/types/database';
 import { RELATIONSHIP_MAP, getRelationshipGeneration, getRelationshipLevel } from '@/lib/constants';
 import { deriveRowLabel, composeRelationship } from '@/lib/familyKinship';
 import { isFeatureEnabled } from '@/lib/features';
+
+// v0.15.4 — zoom support. Using CSS `zoom` (vs `transform: scale`) because
+// `zoom` resizes the layout box, so scrolling works without manual width/
+// height compensation. Range 0.5×–2× chosen to keep card text legible at
+// the low end and to avoid runaway memory at the high end.
+const ZOOM_MIN = 0.5;
+const ZOOM_MAX = 2.0;
+const ZOOM_STEP = 0.1;
+const ZOOM_DEFAULT = 1.0;
 
 interface Props {
   self: User | null;
@@ -204,15 +213,61 @@ export default function FamilyTreeDiagram({
   }
 
   return (
+    <FamilyTreeDiagramShell rows={rows} generations={generations} />
+  );
+}
+
+function FamilyTreeDiagramShell({
+  rows, generations,
+}: { rows: Map<number, TreeNode[]>; generations: number[] }) {
+  const [zoom, setZoom] = useState(ZOOM_DEFAULT);
+  const zoomIn   = () => setZoom((z) => Math.min(ZOOM_MAX, +(z + ZOOM_STEP).toFixed(2)));
+  const zoomOut  = () => setZoom((z) => Math.max(ZOOM_MIN, +(z - ZOOM_STEP).toFixed(2)));
+  const zoomReset = () => setZoom(ZOOM_DEFAULT);
+
+  return (
     <div className="relative w-full bg-gradient-to-b from-cream/30 to-cream/60 rounded-2xl border border-cream-dark overflow-hidden">
       {/* Scroll hint — only on desktop where wheel-scroll matters */}
       <div className="absolute top-3 right-3 z-10 bg-white/90 backdrop-blur px-3 py-1.5 rounded-full font-body text-xs text-brown-light/80 shadow-sm pointer-events-none select-none hidden sm:block">
         ↕ स्क्रॉल • ⇄ खींचें
       </div>
 
+      {/* v0.15.4 — Zoom controls. Bottom-right of the tree container so
+          they don't overlap the cards. Each button is min 44×44 (Dadi rule
+          minimum, smaller than 52 because they're a meta-control, not a
+          primary action). Reset button (1×) only shown when zoom != 1. */}
+      <div className="absolute bottom-3 right-3 z-10 flex items-center gap-1 bg-white/90 backdrop-blur rounded-full shadow-sm border border-cream-dark p-1">
+        <button
+          onClick={zoomOut}
+          disabled={zoom <= ZOOM_MIN + 0.001}
+          className="w-[44px] h-[44px] flex items-center justify-center rounded-full text-xl font-bold text-brown hover:bg-cream-dark transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+          aria-label={'ज़ूम आउट — Zoom out'}
+          title={'ज़ूम आउट — Zoom out'}
+        >−</button>
+        <button
+          onClick={zoomReset}
+          disabled={Math.abs(zoom - ZOOM_DEFAULT) < 0.001}
+          className="min-w-[52px] h-[44px] px-2 flex items-center justify-center rounded-full text-sm font-mono font-semibold text-brown-light hover:bg-cream-dark transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+          aria-label={'1× पर रीसेट — Reset to 100%'}
+          title={'1× पर रीसेट — Reset to 100%'}
+        >{Math.round(zoom * 100)}%</button>
+        <button
+          onClick={zoomIn}
+          disabled={zoom >= ZOOM_MAX - 0.001}
+          className="w-[44px] h-[44px] flex items-center justify-center rounded-full text-xl font-bold text-brown hover:bg-cream-dark transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+          aria-label={'ज़ूम इन — Zoom in'}
+          title={'ज़ूम इन — Zoom in'}
+        >+</button>
+      </div>
+
       {/* Native-scroll container — no zoom-pan library so wheel scrolls normally */}
       <div className="w-full overflow-auto" style={{ maxHeight: '75vh' }}>
-        <div className="px-4 sm:px-8 py-6 sm:py-10 min-w-max">
+        {/* Inner content uses CSS `zoom` so the layout box resizes with the
+            scale — that way scrolling fills the visible area at any zoom
+            level (unlike `transform: scale` which keeps the box at 100%
+            and either clips or leaves whitespace). Supported in modern
+            Chromium, WebKit, Gecko (Firefox shipped support in 2024). */}
+        <div className="px-4 sm:px-8 py-6 sm:py-10 min-w-max" style={{ zoom }}>
           {generations.map((gen, idx) => {
             const list = rows.get(gen) ?? [];
             const hasNext = idx < generations.length - 1;
