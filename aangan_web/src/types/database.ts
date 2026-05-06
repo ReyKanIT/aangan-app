@@ -36,6 +36,22 @@ export interface User {
   gps_lng: number | null;
 }
 
+/**
+ * Secondary kinship entry — a relationship "in addition to" the primary
+ * one captured in family_members.relationship_type. Powers the
+ * cousin-married-to-cousin case (she's both my बहन AND my भाभी). Set up
+ * 2026-05-06 via migration 20260506a; mutated only via the
+ * add_secondary_relationship + remove_secondary_relationship RPCs.
+ */
+export interface SecondaryRelationship {
+  type: string;                    // relationship key (e.g. 'bhabhi')
+  label_hindi: string;             // display label in Devanagari
+  label_en: string | null;
+  via_member_id: string | null;    // optional: which member connects this path
+  via_label: string | null;        // optional free-text path description
+  added_at: string;                // ISO timestamp set server-side
+}
+
 export interface FamilyMember {
   id: string;
   user_id: string;
@@ -46,6 +62,8 @@ export interface FamilyMember {
   is_verified: boolean;
   created_at: string;
   member?: User;
+  /** Additional relationships layered on top of the primary one. Default []. */
+  secondary_relationships?: SecondaryRelationship[];
 }
 
 export interface OfflineFamilyMember {
@@ -72,6 +90,8 @@ export interface OfflineFamilyMember {
   notes: string | null;
   linked_user_id: string | null;
   is_confirmed: boolean;
+  /** Same shape as FamilyMember.secondary_relationships. */
+  secondary_relationships?: SecondaryRelationship[];
   created_at: string;
   updated_at: string;
 }

@@ -364,6 +364,7 @@ export default function FamilyPage() {
           memberId={editing.family_member_id}
           memberName={editing.member?.display_name_hindi ?? editing.member?.display_name ?? ''}
           currentRelType={editing.relationship_type}
+          currentSecondary={editing.secondary_relationships ?? []}
           onSaved={() => {
             setEditing(null);
             fetchMembers();

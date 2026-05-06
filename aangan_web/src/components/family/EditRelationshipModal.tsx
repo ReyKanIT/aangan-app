@@ -28,6 +28,8 @@ import {
 } from '@/lib/constants';
 import { friendlyError } from '@/lib/errorMessages';
 import GoldButton from '@/components/ui/GoldButton';
+import { isFeatureEnabled } from '@/lib/features';
+import type { SecondaryRelationship } from '@/types/database';
 
 // Same reverse map used by AddMemberDrawer (the one source of truth for
 // "if I added X as my Y, what does X see ME as?"). Hard-coded here to
@@ -68,6 +70,9 @@ interface Props {
   memberName: string;
   /** Current relationship_type so the picker pre-selects it. */
   currentRelType: string;
+  /** v0.15.3 — current array of additional relationships for this member.
+   *  Defaults to empty when SECONDARY_RELATIONSHIPS feature flag is off. */
+  currentSecondary?: SecondaryRelationship[];
   /** Called on save success so the parent can refetch + close. */
   onSaved: () => void;
   /** Called when user dismisses without saving. */
@@ -78,6 +83,7 @@ export default function EditRelationshipModal({
   memberId,
   memberName,
   currentRelType,
+  currentSecondary = [],
   onSaved,
   onClose,
 }: Props) {
@@ -85,6 +91,14 @@ export default function EditRelationshipModal({
   const [customLabel, setCustomLabel] = useState('');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  // v0.15.3 — local mirror of secondary relationships so add/remove can
+  // update optimistically without a full parent refetch on every change.
+  // Reconciled with the server array on every successful RPC.
+  const [secondary, setSecondary] = useState<SecondaryRelationship[]>(currentSecondary);
+  const [secAddType, setSecAddType] = useState('');
+  const [secAddVia, setSecAddVia] = useState('');
+  const [secBusy, setSecBusy] = useState(false);
+  const showSecondary = isFeatureEnabled('SECONDARY_RELATIONSHIPS');
 
   const grouped = useMemo(() => {
     const out: Record<string, typeof RELATIONSHIP_OPTIONS> = {};
@@ -96,6 +110,71 @@ export default function EditRelationshipModal({
 
   const level = useMemo(() => (relType ? getRelationshipLevel(relType) : 1), [relType]);
   const dirty = relType !== currentRelType || (relType === 'other' && customLabel.trim().length > 0);
+
+  async function handleAddSecondary() {
+    if (!secAddType) {
+      setError('अतिरिक्त रिश्ता चुनें — Pick an additional relationship');
+      return;
+    }
+    if (secAddType === currentRelType) {
+      setError('यह तो पहले से ही प्राथमिक रिश्ता है — That is already the primary');
+      return;
+    }
+    if (secondary.some((s) => s.type === secAddType)) {
+      setError('यह रिश्ता पहले से जुड़ा है — Already added');
+      return;
+    }
+    setSecBusy(true);
+    setError('');
+    try {
+      const { data, error: rpcErr } = await supabase.rpc('add_secondary_relationship', {
+        p_pair_member_id: memberId,
+        p_relationship_type: secAddType,
+        p_label_hindi: RELATIONSHIP_MAP[secAddType] ?? secAddType,
+        p_label_en: null,
+        p_via_member_id: null,
+        p_via_label: secAddVia.trim() || null,
+        p_is_offline: false,
+        p_offline_id: null,
+      });
+      if (rpcErr) {
+        setError(friendlyError(rpcErr.message));
+        setSecBusy(false);
+        return;
+      }
+      // RPC returns the updated array.
+      if (Array.isArray(data)) setSecondary(data as SecondaryRelationship[]);
+      setSecAddType('');
+      setSecAddVia('');
+    } catch (e: unknown) {
+      setError(friendlyError(e instanceof Error ? e.message : 'Add failed'));
+    } finally {
+      setSecBusy(false);
+    }
+  }
+
+  async function handleRemoveSecondary(index: number) {
+    setSecBusy(true);
+    setError('');
+    try {
+      const { data, error: rpcErr } = await supabase.rpc('remove_secondary_relationship', {
+        p_pair_member_id: memberId,
+        p_index: index,
+        p_is_offline: false,
+        p_offline_id: null,
+      });
+      if (rpcErr) {
+        setError(friendlyError(rpcErr.message));
+        setSecBusy(false);
+        return;
+      }
+      if (Array.isArray(data)) setSecondary(data as SecondaryRelationship[]);
+    } catch (e: unknown) {
+      setError(friendlyError(e instanceof Error ? e.message : 'Remove failed'));
+    } finally {
+      setSecBusy(false);
+    }
+  }
 
   async function handleSave() {
     if (!relType) {
@@ -236,6 +315,75 @@ export default function EditRelationshipModal({
         >
           {dirty ? 'सेव करें — Save' : 'कोई बदलाव नहीं — No changes'}
         </GoldButton>
+
+        {/* v0.15.3 — Additional relationships section. Gated by feature flag
+            so it stays hidden until the migration adding
+            secondary_relationships JSONB is applied to prod. */}
+        {showSecondary && (
+          <div className="mt-6 pt-5 border-t-2 border-cream-dark">
+            <h4 className="font-heading text-lg text-brown mb-1">{'अतिरिक्त रिश्ते'}</h4>
+            <p className="font-body text-sm text-brown-light mb-3">
+              {'जैसे: बहन भी, भाभी भी (बुआ की बेटी जो मौसी के बेटे से शादी कर ली)'}
+              <br />
+              <span className="opacity-70">e.g. someone who is your cousin AND your sister-in-law</span>
+            </p>
+
+            {secondary.length > 0 && (
+              <div className="space-y-2 mb-4">
+                {secondary.map((s, i) => (
+                  <div key={`${s.type}-${i}`} className="flex items-center gap-2 bg-mehndi-green/10 rounded-xl px-3 py-2">
+                    <span className="text-mehndi-green font-semibold">+ {s.label_hindi}</span>
+                    {s.via_label && <span className="text-brown-light text-sm truncate">· {s.via_label}</span>}
+                    <button
+                      onClick={() => handleRemoveSecondary(i)}
+                      disabled={secBusy}
+                      className="ml-auto w-[44px] h-[44px] flex items-center justify-center rounded-lg text-brown-light hover:text-error hover:bg-red-50 disabled:opacity-40"
+                      aria-label={`हटाएं — Remove ${s.label_hindi}`}
+                    >✕</button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <div className="bg-cream/50 rounded-xl p-3 space-y-2">
+              <select
+                value={secAddType}
+                onChange={(e) => setSecAddType(e.target.value)}
+                className="w-full border-2 border-gray-300 rounded-xl px-3 py-2.5 font-body text-base focus:border-haldi-gold focus:outline-none bg-white"
+                aria-label={'अतिरिक्त रिश्ता चुनें — Select additional relationship'}
+              >
+                <option value="">{'अतिरिक्त रिश्ता चुनें — Select another relationship'}</option>
+                {GROUP_ORDER.map((g) => (
+                  grouped[g] && grouped[g].length > 0 && (
+                    <optgroup key={g} label={GROUP_LABELS[g]}>
+                      {grouped[g]
+                        .filter((opt) => opt.key !== currentRelType && !secondary.some((s) => s.type === opt.key))
+                        .map((opt) => (
+                          <option key={opt.key} value={opt.key}>
+                            {opt.hindi} — {opt.english}
+                          </option>
+                        ))}
+                    </optgroup>
+                  )
+                ))}
+              </select>
+              <input
+                type="text"
+                value={secAddVia}
+                onChange={(e) => setSecAddVia(e.target.value)}
+                placeholder={'किसके माध्यम से? जैसे: मौसी का बेटा (optional)'}
+                className="w-full border-2 border-gray-300 rounded-xl px-3 py-2.5 font-body text-base focus:border-haldi-gold focus:outline-none bg-white"
+              />
+              <button
+                onClick={handleAddSecondary}
+                disabled={!secAddType || secBusy}
+                className="w-full min-h-dadi bg-mehndi-green text-white font-body font-semibold rounded-xl py-2.5 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-mehndi-green-dark transition-colors"
+              >
+                {secBusy ? '…' : '+ अतिरिक्त रिश्ता जोड़ें — Add another relationship'}
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

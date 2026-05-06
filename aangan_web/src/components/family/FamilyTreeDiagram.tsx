@@ -1,9 +1,10 @@
 'use client';
 import { useMemo } from 'react';
 import AvatarCircle from '@/components/ui/AvatarCircle';
-import type { FamilyMember, OfflineFamilyMember, User } from '@/types/database';
+import type { FamilyMember, OfflineFamilyMember, SecondaryRelationship, User } from '@/types/database';
 import { RELATIONSHIP_MAP, getRelationshipGeneration, getRelationshipLevel } from '@/lib/constants';
 import { deriveRowLabel, composeRelationship } from '@/lib/familyKinship';
+import { isFeatureEnabled } from '@/lib/features';
 
 interface Props {
   self: User | null;
@@ -48,6 +49,10 @@ interface TreeNode {
   /** When set, render a small "via <name>" badge so the viewer knows the
    *  row was added by someone else and the label is derived/fallback. */
   viaName?: string | null;
+  /** v0.15.3: extra relationships beyond the primary one
+   *  (e.g. cousin who is also a bhabhi). Rendered as a tappable chip
+   *  row when SECONDARY_RELATIONSHIPS feature flag is on. */
+  secondary?: SecondaryRelationship[];
   onRemove?: () => void;
   /** Optional edit-relationship handler (online cards only). */
   onEdit?: () => void;
@@ -122,6 +127,7 @@ export default function FamilyTreeDiagram({
         avatarUrl: m.member?.avatar_url,
         generation: getRelationshipGeneration(m.relationship_type),
         village: m.member?.village_city,
+        secondary: m.secondary_relationships,
         onRemove: () => onRemoveOnline(m),
         onEdit: onEditOnline ? () => onEditOnline(m) : undefined,
         onAdd: onAddRelative ? () => onAddRelative(m) : undefined,
@@ -172,6 +178,7 @@ export default function FamilyTreeDiagram({
         generation: displayGeneration,
         village: o.village_city,
         viaName: !isOwnRow ? (adderName.get(o.added_by) || null) : null,
+        secondary: o.secondary_relationships,
         onRemove: isOwnRow ? () => onRemoveOffline(o) : undefined,
       });
     }
@@ -323,6 +330,25 @@ function TreeNodeCard({ node }: { node: TreeNode }) {
 
       {node.village && (
         <p className="font-body text-sm text-brown-light mt-1 truncate">📍 {node.village}</p>
+      )}
+
+      {/* v0.15.3: secondary relationships — chip row showing this person's
+          additional kinship paths (e.g. "बहन" primary + "भाभी" secondary
+          when a cousin married another cousin). Gated by feature flag so
+          it lands silent if the column hasn't been migrated yet. */}
+      {isFeatureEnabled('SECONDARY_RELATIONSHIPS') && node.secondary && node.secondary.length > 0 && (
+        <div className="mt-2 -mx-1 flex flex-wrap justify-center gap-1">
+          {node.secondary.map((sec, i) => (
+            <span
+              key={`${sec.type}-${i}`}
+              className="bg-mehndi-green/10 text-mehndi-green text-xs font-semibold px-2 py-0.5 rounded-full max-w-[140px] truncate"
+              title={sec.via_label ? `${sec.label_hindi} (${sec.via_label})` : sec.label_hindi}
+            >
+              + {sec.label_hindi}
+              {sec.via_label && <span className="opacity-60"> · {sec.via_label}</span>}
+            </span>
+          ))}
+        </div>
       )}
 
       {/* Action toolbar — bottom of card. No more absolute-positioned

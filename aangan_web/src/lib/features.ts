@@ -19,14 +19,16 @@
  */
 
 export type FeatureFlag =
-  | 'HERITAGE'        // Family heritage capture module (cultural items, oral history)
-  | 'WISDOM_NOTES_V2' // Standalone wisdom_notes entity (vs the post_type='wisdom' MVP)
-  | 'R2_STORAGE';     // Cloudflare R2 backend (vs current Supabase Storage)
+  | 'HERITAGE'                 // Family heritage capture module (cultural items, oral history)
+  | 'WISDOM_NOTES_V2'          // Standalone wisdom_notes entity (vs the post_type='wisdom' MVP)
+  | 'R2_STORAGE'               // Cloudflare R2 backend (vs current Supabase Storage)
+  | 'SECONDARY_RELATIONSHIPS'; // Multi-relationship support per family member (cousin + bhabhi)
 
 const FLAG_ENV: Record<FeatureFlag, string> = {
-  HERITAGE:         'NEXT_PUBLIC_FEATURE_HERITAGE',
-  WISDOM_NOTES_V2:  'NEXT_PUBLIC_FEATURE_WISDOM_NOTES_V2',
-  R2_STORAGE:       'NEXT_PUBLIC_FEATURE_R2_STORAGE',
+  HERITAGE:                'NEXT_PUBLIC_FEATURE_HERITAGE',
+  WISDOM_NOTES_V2:         'NEXT_PUBLIC_FEATURE_WISDOM_NOTES_V2',
+  R2_STORAGE:              'NEXT_PUBLIC_FEATURE_R2_STORAGE',
+  SECONDARY_RELATIONSHIPS: 'NEXT_PUBLIC_FEATURE_SECONDARY_RELATIONSHIPS',
 };
 
 export function isFeatureEnabled(flag: FeatureFlag): boolean {
