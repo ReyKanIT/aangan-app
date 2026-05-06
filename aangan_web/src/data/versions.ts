@@ -68,8 +68,14 @@ export const STORE_VERSIONS: StoreVersions = {
  * /apps/social/aangan-आँगन/app.aangan.family/?page=details&id=...
  */
 export const INDUS_LIVE = true;
+// 2026-05-06: the Devanagari-segment URL Indus generated
+// (`aangan-%E0%A4%86%E0%A4%81%E0%A4%97%E0%A4%A8`) issues a 302 redirect to
+// the form below with an empty Devanagari segment. Pointing the landing
+// page card directly at the redirect target avoids the round-trip and
+// guards against any future tightening of the canonicalisation rule on
+// Indus's side.
 export const INDUS_LISTING_URL =
-  'https://www.indusappstore.com/apps/social/aangan-%E0%A4%86%E0%A4%81%E0%A4%97%E0%A4%A8/app.aangan.family/?page=details&id=app.aangan.family';
+  'https://www.indusappstore.com/apps/social/aangan-/app.aangan.family/?page=details&id=app.aangan.family';
 
 export const RELEASES: ReleaseNote[] = [
   {
