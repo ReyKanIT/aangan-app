@@ -28,6 +28,10 @@ export default function FamilyPage() {
   const [offlineMembers, setOfflineMembers] = useState<OfflineFamilyMember[]>([]);
   const [activeLevel, setActiveLevel] = useState(0);
   const [searchQuery, setSearchQuery] = useState('');
+  // v0.15.1: status filter (orthogonal to level). Lets Dadi narrow to "only
+  // people on Aangan" or "only departed elders" without losing the tree
+  // shape. 'all' (default) leaves filter inert.
+  const [statusFilter, setStatusFilter] = useState<'all' | 'online' | 'offline' | 'deceased'>('all');
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [editing, setEditing] = useState<FamilyMember | null>(null);
   // GUI add-relative state (v0.13.14): when set, AddMemberDrawer opens
@@ -67,6 +71,7 @@ export default function FamilyPage() {
   // English and Hindi display names, plus the relationship label so a
   // user can search "भाई" / "brother" and surface every brother row.
   const filtered = useMemo(() => {
+    if (statusFilter === 'offline' || statusFilter === 'deceased') return [];
     let rows = activeLevel === 0 ? members : members.filter((m) => m.connection_level === activeLevel);
     const q = searchQuery.trim().toLowerCase();
     if (q) {
@@ -78,10 +83,13 @@ export default function FamilyPage() {
       );
     }
     return rows;
-  }, [members, activeLevel, searchQuery]);
+  }, [members, activeLevel, searchQuery, statusFilter]);
 
   const filteredOffline = useMemo(() => {
+    if (statusFilter === 'online') return [];
     let rows = activeLevel === 0 ? offlineMembers : offlineMembers.filter((m) => m.connection_level === activeLevel);
+    if (statusFilter === 'deceased') rows = rows.filter((m) => m.is_deceased);
+    if (statusFilter === 'offline') rows = rows.filter((m) => !m.is_deceased);
     const q = searchQuery.trim().toLowerCase();
     if (q) {
       rows = rows.filter((m) =>
@@ -92,7 +100,23 @@ export default function FamilyPage() {
       );
     }
     return rows;
-  }, [offlineMembers, activeLevel, searchQuery]);
+  }, [offlineMembers, activeLevel, searchQuery, statusFilter]);
+
+  // v0.15.1: tree-wide stats — total members + distinct generation count.
+  // Computed off the UNFILTERED arrays so the header reflects "you have N
+  // people across G generations" regardless of what's currently visible.
+  const stats = useMemo(() => {
+    const totalAll = members.length + offlineMembers.length + (self ? 1 : 0);
+    const onlineAll = members.length;
+    const offlineAlive = offlineMembers.filter((m) => !m.is_deceased).length;
+    const deceasedAll = offlineMembers.filter((m) => m.is_deceased).length;
+    // Generations are derived from connection_level magnitude — anything
+    // non-zero bumps a generation band. Plus self (gen 0).
+    const levels = new Set<number>([0]);
+    for (const m of members) levels.add(m.connection_level);
+    for (const o of offlineMembers) levels.add(o.connection_level);
+    return { totalAll, onlineAll, offlineAlive, deceasedAll, generations: levels.size };
+  }, [members, offlineMembers, self]);
 
   const handleRemove = useCallback(async (m: FamilyMember) => {
     // Was browser-native confirm() — replaced with bilingual Hindi-first
@@ -141,13 +165,42 @@ export default function FamilyPage() {
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-6">
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-4">
         <div>
           <h2 className="font-heading text-2xl text-brown">मेरा परिवार</h2>
           <p className="font-body text-base text-brown-light">My Family Tree</p>
         </div>
         <GoldButton size="sm" onClick={() => setDrawerOpen(true)}>+ जोड़ें</GoldButton>
       </div>
+
+      {/* v0.15.1 — at-a-glance stats so Dadi knows the size of the tree
+          without counting cards. Only render when there's something to
+          show; the EmptyState below handles the zero-member case. */}
+      {stats.totalAll > 1 && (
+        <div className="mb-4 flex flex-wrap items-center gap-2 text-sm font-body">
+          <span className="bg-haldi-gold/10 text-haldi-gold-dark px-3 py-1.5 rounded-full font-semibold">
+            {`${stats.totalAll} सदस्य · ${stats.totalAll} members`}
+          </span>
+          <span className="bg-mehndi-green/10 text-mehndi-green px-3 py-1.5 rounded-full">
+            {`${stats.generations} पीढ़ियां · ${stats.generations} generations`}
+          </span>
+          {stats.onlineAll > 0 && (
+            <span className="bg-cream-dark text-brown-light px-3 py-1.5 rounded-full">
+              {`🟢 ${stats.onlineAll} ऑनलाइन`}
+            </span>
+          )}
+          {stats.offlineAlive > 0 && (
+            <span className="bg-cream-dark text-brown-light px-3 py-1.5 rounded-full">
+              {`📝 ${stats.offlineAlive} ऑफ़लाइन`}
+            </span>
+          )}
+          {stats.deceasedAll > 0 && (
+            <span className="bg-cream-dark text-brown-light px-3 py-1.5 rounded-full">
+              {`🕊️ ${stats.deceasedAll} स्वर्गवासी`}
+            </span>
+          )}
+        </div>
+      )}
 
       {/* Invite Family CTA — viral loop */}
       <InviteShareCard className="mb-6" />
@@ -186,6 +239,37 @@ export default function FamilyPage() {
         ))}
       </div>
 
+      {/* v0.15.1 — Status filter chips. Orthogonal to level filter: shows
+          all generations but only members in the selected status. Useful
+          for "honor the elders" view (deceased only) or "who's actually on
+          Aangan?" view (online only) without losing the tree shape. */}
+      <div className="mb-4 flex flex-wrap gap-2">
+        {([
+          { key: 'all',      label: 'सभी',         sub: 'All',       count: stats.totalAll },
+          { key: 'online',   label: 'जुड़े',        sub: 'On Aangan', count: stats.onlineAll },
+          { key: 'offline',  label: 'ऑफ़लाइन',     sub: 'Offline',   count: stats.offlineAlive },
+          { key: 'deceased', label: 'स्वर्गवासी',  sub: 'Departed',  count: stats.deceasedAll },
+        ] as const).map((chip) => (
+          <button
+            key={chip.key}
+            onClick={() => setStatusFilter(chip.key)}
+            disabled={chip.key !== 'all' && chip.count === 0}
+            className={`min-h-dadi px-3 py-2 rounded-full font-body text-base font-semibold transition-all border-2 ${
+              statusFilter === chip.key
+                ? 'bg-haldi-gold border-haldi-gold text-white shadow'
+                : 'bg-white border-cream-dark text-brown-light hover:border-haldi-gold disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:border-cream-dark'
+            }`}
+            aria-pressed={statusFilter === chip.key}
+          >
+            {chip.label}
+            {' '}
+            <span className={`text-sm font-normal ${statusFilter === chip.key ? 'opacity-90' : 'opacity-70'}`}>
+              ({chip.count})
+            </span>
+          </button>
+        ))}
+      </div>
+
       {/* Legend — explains the badge + ring colors at a glance. Compact
           row that doesn't take vertical space from the actual tree. */}
       <div className="mb-4 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm font-body text-brown-light">
@@ -220,11 +304,14 @@ export default function FamilyPage() {
 
       {/* Result count when filtering — gives the user feedback that the
           tree below is a subset, not the full graph. */}
-      {(searchQuery || activeLevel !== 0) && totalCount > 0 && (
+      {(searchQuery || activeLevel !== 0 || statusFilter !== 'all') && totalCount > 0 && (
         <p className="font-body text-sm text-brown-light mb-3">
           {`${totalCount} सदस्य मिले — ${totalCount} members match`}
-          {searchQuery && (
-            <button onClick={() => { setSearchQuery(''); setActiveLevel(0); }} className="ml-3 text-haldi-gold underline">
+          {(searchQuery || activeLevel !== 0 || statusFilter !== 'all') && (
+            <button
+              onClick={() => { setSearchQuery(''); setActiveLevel(0); setStatusFilter('all'); }}
+              className="ml-3 text-haldi-gold underline"
+            >
               {'रीसेट करें — Reset'}
             </button>
           )}
