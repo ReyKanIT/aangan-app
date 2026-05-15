@@ -135,6 +135,111 @@ export default function PanchangPage() {
           स्थान: नई दिल्ली (28.61°N, 77.21°E) &middot; Location: New Delhi
         </p>
 
+        {/* Active warnings — only show when applicable */}
+        {(panchang.isBhadra || panchang.isPanchak) && (
+          <div className="mt-6 bg-red-50 border border-red-200 rounded-2xl p-5">
+            <h2 className="font-heading text-lg text-red-800 mb-2">
+              {'⚠ अभी सक्रिय / Active now'}
+            </h2>
+            <ul className="space-y-1 text-base text-red-900">
+              {panchang.isBhadra && (
+                <li>{'• भद्रा (विष्टि करण) — शुभ कार्य से बचें · Bhadra is active — avoid auspicious work'}</li>
+              )}
+              {panchang.isPanchak && (
+                <li>{'• पञ्चक — यात्रा/निर्माण से बचें · Panchak is active — avoid travel/construction'}</li>
+              )}
+            </ul>
+          </div>
+        )}
+
+        {/* Auspicious periods */}
+        <section className="mt-6 bg-white rounded-2xl border border-mehndi-green/20 overflow-hidden shadow-sm">
+          <h2 className="font-heading text-lg text-mehndi-green px-6 py-3 bg-mehndi-green/5 border-b border-mehndi-green/10">
+            {'शुभ समय / Auspicious'}
+          </h2>
+          <div className="divide-y divide-cream-dark">
+            <div className="flex justify-between items-center px-6 py-3">
+              <span className="text-brown-light text-base">{'अभिजित मुहूर्त / Abhijit Muhurta'}</span>
+              <span className="font-heading text-brown font-semibold text-base">
+                {panchang.abhijitMuhurta.start}–{panchang.abhijitMuhurta.end}
+              </span>
+            </div>
+            {panchang.specialYogas.length > 0 && (
+              <div className="flex justify-between items-center px-6 py-3">
+                <span className="text-brown-light text-base">{'विशेष योग / Special Yogas'}</span>
+                <span className="font-heading text-brown font-semibold text-base text-right">
+                  {panchang.specialYogas.join(' · ')}
+                </span>
+              </div>
+            )}
+          </div>
+        </section>
+
+        {/* Inauspicious periods */}
+        <section className="mt-6 bg-white rounded-2xl border border-haldi-gold/20 overflow-hidden shadow-sm">
+          <h2 className="font-heading text-lg text-haldi-gold-dark px-6 py-3 bg-haldi-gold/5 border-b border-haldi-gold/10">
+            {'अशुभ समय / Inauspicious'}
+          </h2>
+          <div className="divide-y divide-cream-dark">
+            <div className="flex justify-between items-center px-6 py-3">
+              <span className="text-brown-light text-base">{'राहु काल / Rahu Kalam'}</span>
+              <span className="font-heading text-brown font-semibold text-base">
+                {panchang.rahuKalam.start}–{panchang.rahuKalam.end}
+              </span>
+            </div>
+            <div className="flex justify-between items-center px-6 py-3">
+              <span className="text-brown-light text-base">{'यमगण्ड / Yamaganda'}</span>
+              <span className="font-heading text-brown font-semibold text-base">
+                {panchang.yamaganda.start}–{panchang.yamaganda.end}
+              </span>
+            </div>
+            <div className="flex justify-between items-center px-6 py-3">
+              <span className="text-brown-light text-base">{'गुलिक काल / Gulika Kalam'}</span>
+              <span className="font-heading text-brown font-semibold text-base">
+                {panchang.gulikaKalam.start}–{panchang.gulikaKalam.end}
+              </span>
+            </div>
+          </div>
+        </section>
+
+        {/* Choghadiya */}
+        <section className="mt-6 bg-white rounded-2xl border border-haldi-gold/20 overflow-hidden shadow-sm">
+          <h2 className="font-heading text-lg text-haldi-gold-dark px-6 py-3 bg-haldi-gold/5 border-b border-haldi-gold/10">
+            {'चोघड़िया / Choghadiya'}
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 divide-y sm:divide-y-0 sm:divide-x divide-cream-dark">
+            <div className="p-3">
+              <p className="text-sm text-brown-light px-3 mb-2">{'दिन / Day'}</p>
+              <div className="space-y-1">
+                {panchang.choghadiyaDay.map((c, i) => (
+                  <div key={`d${i}`} className="flex justify-between items-center px-3 py-1.5 rounded-lg text-sm">
+                    <span className={c.quality === 'शुभ' ? 'text-mehndi-green font-semibold' : 'text-haldi-gold-dark'}>
+                      {c.name}
+                    </span>
+                    <span className="text-brown-light tabular-nums">{c.start}–{c.end}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="p-3">
+              <p className="text-sm text-brown-light px-3 mb-2">{'रात / Night'}</p>
+              <div className="space-y-1">
+                {panchang.choghadiyaNight.map((c, i) => (
+                  <div key={`n${i}`} className="flex justify-between items-center px-3 py-1.5 rounded-lg text-sm">
+                    <span className={c.quality === 'शुभ' ? 'text-mehndi-green font-semibold' : 'text-haldi-gold-dark'}>
+                      {c.name}
+                    </span>
+                    <span className="text-brown-light tabular-nums">{c.start}–{c.end}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+          <p className="text-xs text-brown-light/60 px-6 py-3 border-t border-cream-dark">
+            {'हरा = शुभ · सुनहरा = अशुभ  ·  Green = auspicious · Gold = inauspicious'}
+          </p>
+        </section>
+
         {/* About section for SEO */}
         <section className="mt-12 bg-white rounded-2xl border border-haldi-gold/10 p-6 md:p-8">
           <h2 className="font-heading text-2xl text-haldi-gold mb-4">

@@ -18,7 +18,7 @@ function formatEnglishDate(date: Date): string {
 
 export default function PanchangWidget() {
   const [panchang, setPanchang] = useState<PanchangData | null>(null);
-  const [expanded, setExpanded] = useState(true);
+  const [expanded, setExpanded] = useState(false);
   const [today, setToday] = useState<Date | null>(null);
   const [todayEvents, setTodayEvents] = useState<TithiEvent[]>([]);
 
@@ -57,67 +57,120 @@ export default function PanchangWidget() {
 
   return (
     <div className="bg-white rounded-2xl shadow-sm mb-4 overflow-hidden border border-haldi-gold/20">
-      {/* Header with English date + Hindi date */}
+      {/* Compact header: English date + Tithi only */}
       <button
         onClick={() => setExpanded(!expanded)}
-        className="w-full px-5 py-4 hover:bg-cream/50 transition-colors"
+        className="w-full px-5 py-4 hover:bg-cream/50 transition-colors flex items-center justify-between gap-3"
+        aria-expanded={expanded}
+        aria-label={expanded ? 'पंचांग छुपाएँ' : 'पंचांग देखें'}
       >
-        {/* English Date - prominent */}
-        <div className="flex items-center justify-between mb-2">
-          <div className="flex items-center gap-3">
-            <span className="text-3xl">{moonPhaseEmoji(panchang.moonPhasePercent)}</span>
-            <div className="text-left">
-              <p className="text-lg font-semibold text-brown">
-                {formatEnglishDate(today)}
-              </p>
-              <p className="text-sm text-haldi-gold font-heading">
-                विक्रम संवत {panchang.vikramSamvat} &middot; {panchang.maas} &middot; {panchang.paksha}
-              </p>
-            </div>
-          </div>
-          <span className="text-brown-light text-base">{expanded ? '▲' : '▼'}</span>
-        </div>
-
-        {/* Tithi + Nakshatra summary — two clean rows, no wrapping */}
-        <div className="grid grid-cols-2 gap-1.5 bg-cream rounded-xl px-4 py-2.5 mt-1">
-          <div>
-            <span className="text-xs text-brown-light/70 font-heading block">तिथि / Tithi</span>
-            <span className="text-base font-semibold text-haldi-gold font-heading leading-tight">{panchang.tithi}</span>
-            <span className="text-xs text-brown-light/60 block">{panchang.tithiEndTime} तक</span>
-          </div>
-          <div>
-            <span className="text-xs text-brown-light/70 font-heading block">नक्षत्र / Nakshatra</span>
-            <span className="text-base font-semibold text-haldi-gold font-heading leading-tight">{panchang.nakshatra}</span>
-            <span className="text-xs text-brown-light/60 block">{panchang.nakshatraEndTime} तक</span>
+        <div className="flex items-center gap-3 flex-1 min-w-0 text-left">
+          <span className="text-3xl shrink-0">{moonPhaseEmoji(panchang.moonPhasePercent)}</span>
+          <div className="min-w-0 flex-1">
+            <p className="text-base font-semibold text-brown truncate">
+              {formatEnglishDate(today)}
+            </p>
+            <p className="text-base text-haldi-gold font-heading truncate">
+              {panchang.paksha} {panchang.tithi}
+              <span className="text-sm text-brown-light/70 ms-2">{panchang.tithiEndTime} तक</span>
+            </p>
           </div>
         </div>
+        <span
+          className={`text-haldi-gold text-base shrink-0 transition-transform duration-200 ${expanded ? 'rotate-180' : ''}`}
+          aria-hidden="true"
+        >
+          ▼
+        </span>
       </button>
 
-      {/* Expandable details grid */}
+      {/* Expandable details */}
       <div
-        className={`transition-all duration-300 ease-in-out ${
-          expanded ? 'max-h-[32rem] opacity-100' : 'max-h-0 opacity-0'
-        } overflow-hidden`}
+        className={`grid transition-[grid-template-rows,opacity] duration-300 ease-in-out ${
+          expanded ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'
+        }`}
       >
+        <div className="overflow-hidden">
         <div className="px-5 pb-5 pt-1 border-t border-haldi-gold/10">
-          <p className="text-base text-brown-light mb-3 font-heading">आज का पंचांग &middot; Today&apos;s Panchang</p>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+          <p className="text-sm text-haldi-gold font-heading mb-3">
+            {'विक्रम संवत'} {panchang.vikramSamvat} &middot; {panchang.maas} &middot; {panchang.paksha}
+          </p>
+
+          {/* Active warnings — only shown when relevant */}
+          {(panchang.isBhadra || panchang.isPanchak) && (
+            <div className="mb-4 bg-red-50 border border-red-200 rounded-xl px-4 py-3">
+              <p className="text-sm font-semibold text-red-800 mb-1">{'⚠ अभी सक्रिय / Active'}</p>
+              <ul className="text-sm text-red-900 space-y-0.5">
+                {panchang.isBhadra && <li>{'• भद्रा (विष्टि) — शुभ कार्य से बचें'}</li>}
+                {panchang.isPanchak && <li>{'• पञ्चक — यात्रा/निर्माण से बचें'}</li>}
+              </ul>
+            </div>
+          )}
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
             <PanchangRow label={'तिथि / Tithi'} value={panchang.tithi} subvalue={`${panchang.tithiEndTime} तक`} />
-            <PanchangRow label={'पक्ष / Paksha'} value={panchang.paksha} />
             <PanchangRow label={'नक्षत्र / Nakshatra'} value={panchang.nakshatra} subvalue={`${panchang.nakshatraEndTime} तक`} />
             <PanchangRow label={'करण / Karana'} value={panchang.karana} subvalue={`${panchang.karanaEndTime} तक`} />
             <PanchangRow label={'वार / Day'} value={`${panchang.vara} (${WEEKDAYS_EN[today.getDay()]})`} />
             <PanchangRow label={'सूर्योदय / Sunrise'} value={`🌅 ${panchang.sunrise}`} />
             <PanchangRow label={'सूर्यास्त / Sunset'} value={`🌇 ${panchang.sunset}`} />
           </div>
-          <div className="mt-4 pt-3 border-t border-haldi-gold/10 flex items-center justify-between">
+
+          <div className="mt-3 pt-3 border-t border-haldi-gold/10 flex items-center justify-between">
             <div className="flex flex-col">
-              <span className="text-base text-brown-light font-heading">योग / Yoga</span>
+              <span className="text-base text-brown-light font-heading">{'योग / Yoga'}</span>
               <span className="text-xs text-brown-light/70">{panchang.yogaEndTime} तक</span>
             </div>
             <span className={`text-base font-semibold ${yogaColor}`}>
               {panchang.yoga} ({yogaDesc})
             </span>
+          </div>
+
+          {/* Auspicious */}
+          <div className="mt-4 grid grid-cols-2 gap-3">
+            <PanchangRow
+              label={'अभिजित मुहूर्त / Abhijit'}
+              value={`${panchang.abhijitMuhurta.start}–${panchang.abhijitMuhurta.end}`}
+            />
+            {panchang.specialYogas.length > 0 && (
+              <PanchangRow label={'विशेष योग'} value={panchang.specialYogas.join(' · ')} />
+            )}
+          </div>
+
+          {/* Inauspicious */}
+          <div className="mt-3 grid grid-cols-3 gap-2">
+            <PanchangRow label={'राहु काल / Rahu'} value={`${panchang.rahuKalam.start}–${panchang.rahuKalam.end}`} />
+            <PanchangRow label={'यमगण्ड / Yama'} value={`${panchang.yamaganda.start}–${panchang.yamaganda.end}`} />
+            <PanchangRow label={'गुलिक / Gulika'} value={`${panchang.gulikaKalam.start}–${panchang.gulikaKalam.end}`} />
+          </div>
+
+          {/* Choghadiya */}
+          <div className="mt-4 pt-3 border-t border-haldi-gold/10">
+            <p className="text-sm font-heading text-brown-light mb-2">{'चोघड़िया / Choghadiya'}</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1">
+              <div>
+                <p className="text-xs text-brown-light/70 mb-1">{'दिन / Day'}</p>
+                {panchang.choghadiyaDay.map((c, i) => (
+                  <div key={`d${i}`} className="flex justify-between text-sm py-0.5">
+                    <span className={c.quality === 'शुभ' ? 'text-mehndi-green font-semibold' : 'text-haldi-gold-dark'}>
+                      {c.name}
+                    </span>
+                    <span className="text-brown-light tabular-nums">{c.start}–{c.end}</span>
+                  </div>
+                ))}
+              </div>
+              <div>
+                <p className="text-xs text-brown-light/70 mb-1">{'रात / Night'}</p>
+                {panchang.choghadiyaNight.map((c, i) => (
+                  <div key={`n${i}`} className="flex justify-between text-sm py-0.5">
+                    <span className={c.quality === 'शुभ' ? 'text-mehndi-green font-semibold' : 'text-haldi-gold-dark'}>
+                      {c.name}
+                    </span>
+                    <span className="text-brown-light tabular-nums">{c.start}–{c.end}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
           {/* Tithi event reminders for today */}
           {todayEvents.length > 0 && (
@@ -152,6 +205,7 @@ export default function PanchangWidget() {
               तिथि अनुस्मारक →
             </Link>
           </div>
+        </div>
         </div>
       </div>
     </div>
