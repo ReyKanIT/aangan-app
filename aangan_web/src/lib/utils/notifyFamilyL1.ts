@@ -9,12 +9,19 @@ interface NotifyFamilyPayload {
   bodyHi: string;
   bodyEn: string;
   data?: Record<string, unknown>;
+  // v0.15.5: when provided, skip the L1 family lookup and fan out only to the
+  // given user IDs. Used by `audience_type='custom'` posts so a 1-recipient
+  // post does not push-notify the entire L1 family (privacy leak: the bell
+  // would appear even though RLS blocks the read, exposing post existence
+  // + author).
+  recipientUserIds?: string[];
 }
 
 /**
- * notifyFamilyL1 — fan out a notification to every Level-1 family member of
- * the actor. Two-channel delivery: writes a `notifications` row (in-app bell
- * badge, always works) and invokes the `send-push` edge function (mobile push,
+ * notifyFamilyL1 — fan out a notification to Level-1 family members of the
+ * actor, OR to an explicit recipient list when `recipientUserIds` is set.
+ * Two-channel delivery: writes a `notifications` row (in-app bell badge,
+ * always works) and invokes the `send-push` edge function (mobile push,
  * works only for users with a registered push_token).
  *
  * Both channels fail silently per-recipient — a missing push token or a single
@@ -26,16 +33,28 @@ interface NotifyFamilyPayload {
  */
 export async function notifyFamilyL1(payload: NotifyFamilyPayload): Promise<void> {
   try {
-    const { data: l1, error: famErr } = await supabase
-      .from('family_members')
-      .select('family_member_id')
-      .eq('user_id', payload.actorId)
-      .eq('connection_level', 1)
-      .limit(50);
+    let recipientIds: string[];
 
-    if (famErr || !l1?.length) return;
+    if (payload.recipientUserIds !== undefined) {
+      // Explicit recipient list — used for custom-audience posts. Drop the
+      // actor themselves if present (no point notifying the author of their
+      // own post) and de-dupe.
+      recipientIds = Array.from(
+        new Set(payload.recipientUserIds.filter((id) => id && id !== payload.actorId))
+      );
+      if (recipientIds.length === 0) return;
+    } else {
+      const { data: l1, error: famErr } = await supabase
+        .from('family_members')
+        .select('family_member_id')
+        .eq('user_id', payload.actorId)
+        .eq('connection_level', 1)
+        .limit(50);
 
-    const recipientIds = l1.map((m: { family_member_id: string }) => m.family_member_id);
+      if (famErr || !l1?.length) return;
+
+      recipientIds = l1.map((m: { family_member_id: string }) => m.family_member_id);
+    }
 
     // In-app rows — single batched insert
     const rows = recipientIds.map((uid) => ({

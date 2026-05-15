@@ -10,6 +10,7 @@ import {
   GENDER_OPTIONS,
   getRelationshipLevel,
 } from '@/lib/constants';
+import { getReverse } from '@/lib/relationshipReverse';
 import type { User } from '@/types/database';
 import { supabase } from '@/lib/supabase/client';
 import { friendlyError } from '@/lib/errorMessages';
@@ -17,22 +18,6 @@ import { useAuthStore } from '@/stores/authStore';
 import { buildWhatsAppShareUrl } from '@/lib/inviteMessage';
 import { composeRelationship } from '@/lib/familyKinship';
 import type { FamilyMember } from '@/types/database';
-
-const REVERSE_MAP: Record<string, string> = {
-  father: 'son', mother: 'son', son: 'father', daughter: 'father',
-  brother: 'brother', sister: 'brother', husband: 'wife', wife: 'husband',
-  grandfather_paternal: 'grandson', grandmother_paternal: 'grandson',
-  grandfather_maternal: 'grandson', grandmother_maternal: 'grandson',
-  uncle_paternal: 'nephew', aunt_paternal: 'nephew',
-  uncle_maternal: 'nephew', aunt_maternal: 'nephew',
-  nephew: 'uncle_paternal', niece: 'uncle_paternal',
-  cousin: 'cousin',
-  son_in_law: 'father_in_law', daughter_in_law: 'mother_in_law',
-  father_in_law: 'son_in_law', mother_in_law: 'daughter_in_law',
-  brother_in_law: 'brother_in_law', sister_in_law: 'sister_in_law',
-  grandson: 'grandfather_paternal', granddaughter: 'grandmother_paternal',
-  other: 'other',
-};
 
 const GROUP_LABELS: Record<string, string> = {
   immediate:    'सीधा परिवार — Immediate Family (L1)',
@@ -173,7 +158,7 @@ export default function AddMemberDrawer({ onClose, prefillVia }: Props) {
     setIsAdding(true);
     setError('');
     const relHindi = RELATIONSHIP_MAP[relType] ?? relType;
-    const reverseType = REVERSE_MAP[relType] ?? 'other';
+    const reverseType = getReverse(relType);
     const ok = await addMember(selected.id, relType, relHindi, level, reverseType);
     setIsAdding(false);
     if (ok) onClose();
@@ -271,7 +256,7 @@ export default function AddMemberDrawer({ onClose, prefillVia }: Props) {
       // report add-success since the offline row WAS created.
       let inviteNote = '';
       if (sendInvite && !isDeceased && relType !== 'other') {
-        const reverseType = (REVERSE_MAP[relType] ?? 'other');
+        const reverseType = getReverse(relType);
         const reverseHindi = RELATIONSHIP_MAP[reverseType] ?? null;
         const { data: code, error: inviteErr } = await supabase.rpc(
           'create_family_invite',

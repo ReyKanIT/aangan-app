@@ -123,9 +123,10 @@ export const usePostStore = create<PostState>((set, get) => ({
       if (error) { set({ error: friendlyError(error.message) }); return false; }
 
       // For 'custom' audience, batch-insert into post_audience so RLS will
-      // let the selected users (and only them) see this post. maybeSingle()
-      // is forgiving: if the SELECT-after-INSERT is RLS-blocked we skip the
-      // audience write rather than failing the whole post.
+      // let the selected users (and only them) see this post. If this insert
+      // fails the post would exist with zero audience rows — invisible to
+      // everyone per can_view_post — so we roll back the post and surface
+      // a real error rather than a silent success.
       if (isCustom && created?.id && selectedUserIds.length > 0) {
         const audienceRows = selectedUserIds.map((uid) => ({
           post_id: created.id,
@@ -134,40 +135,58 @@ export const usePostStore = create<PostState>((set, get) => ({
         }));
         const { error: audErr } = await supabase.from('post_audience').insert(audienceRows);
         if (audErr) {
-          // Non-fatal: post exists, audience just won't see it. Log for triage.
-          console.warn('[postStore] post_audience insert failed:', audErr.message);
+          await supabase.from('posts').delete().eq('id', created.id);
+          throw new Error(audErr.message || 'Failed to set post audience');
         }
       }
 
-      // Fan out notifications to Level-1 family — fire-and-forget so a slow
-      // edge function doesn't block the modal-close + feed-refresh sequence.
+      // Fan out notifications — fire-and-forget so a slow edge function
+      // doesn't block the modal-close + feed-refresh sequence.
+      //
+      // Audience gating (v0.15.5, privacy fix):
+      //   - 'all'    → notify L1 family (default behaviour).
+      //   - 'custom' → notify ONLY the selected recipients. Without this gate,
+      //                a 1-recipient post pushed "नई पोस्ट" to every L1 member,
+      //                leaking post existence + author even though RLS blocked
+      //                the read.
+      //   - 'level'  → notify L1 for now (separate P0 follow-up to gate by
+      //                target level once that flow ships).
+      //
       // No postId in the payload: chaining `.select('id').single()` to the
       // insert above caused v0.13.19 to fail silently for posts whose RLS
       // SELECT policy didn't return the just-inserted row, leaving the modal
       // stuck on submit. Recipients can find the post in /feed via actorId.
-      void (async () => {
-        const { data: me } = await supabase
-          .from('users')
-          .select('display_name, display_name_hindi')
-          .eq('id', user.id)
-          .single();
-        const senderName = me?.display_name_hindi || me?.display_name || 'किसी ने';
-        const senderNameEn = me?.display_name || 'Someone';
-        const isWisdom = postType === 'wisdom';
-        notifyFamilyL1({
-          actorId: user.id,
-          type: 'new_post',
-          titleHi: isWisdom ? 'नया ज्ञान 📿' : 'नई पोस्ट 📸',
-          titleEn: isWisdom ? 'New wisdom 📿' : 'New post 📸',
-          bodyHi: isWisdom
-            ? `${senderName} ने एक ज्ञान साझा किया`
-            : `${senderName} ने नई पोस्ट डाली`,
-          bodyEn: isWisdom
-            ? `${senderNameEn} shared a wisdom note`
-            : `${senderNameEn} shared a new post`,
-          data: { type: 'new_post', actorId: user.id, postType: postType ?? 'text' },
-        });
-      })();
+      //
+      // For 'custom' with an empty recipient list (shouldn't happen via the
+      // UI but defensive), we skip the fan-out entirely — better silent than
+      // leaky.
+      const shouldNotify = !isCustom || selectedUserIds.length > 0;
+      if (shouldNotify) {
+        void (async () => {
+          const { data: me } = await supabase
+            .from('users')
+            .select('display_name, display_name_hindi')
+            .eq('id', user.id)
+            .single();
+          const senderName = me?.display_name_hindi || me?.display_name || 'किसी ने';
+          const senderNameEn = me?.display_name || 'Someone';
+          const isWisdom = postType === 'wisdom';
+          notifyFamilyL1({
+            actorId: user.id,
+            type: 'new_post',
+            titleHi: isWisdom ? 'नया ज्ञान 📿' : 'नई पोस्ट 📸',
+            titleEn: isWisdom ? 'New wisdom 📿' : 'New post 📸',
+            bodyHi: isWisdom
+              ? `${senderName} ने एक ज्ञान साझा किया`
+              : `${senderName} ने नई पोस्ट डाली`,
+            bodyEn: isWisdom
+              ? `${senderNameEn} shared a wisdom note`
+              : `${senderNameEn} shared a new post`,
+            data: { type: 'new_post', actorId: user.id, postType: postType ?? 'text' },
+            ...(isCustom ? { recipientUserIds: selectedUserIds } : {}),
+          });
+        })();
+      }
 
       await get().fetchPosts(true);
       return true;

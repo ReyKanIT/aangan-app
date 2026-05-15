@@ -7,6 +7,7 @@ import GoldButton from '@/components/ui/GoldButton';
 import AvatarCircle from '@/components/ui/AvatarCircle';
 import VoiceButton from '@/components/ui/VoiceButton';
 import { AUDIENCE_OPTIONS, VALIDATION } from '@/lib/constants';
+import { toastError, toastSuccess } from '@/lib/toast';
 
 interface PostComposerProps {
   onClose: () => void;
@@ -99,7 +100,12 @@ export default function PostComposer({ onClose }: PostComposerProps) {
       audience === 'custom' ? Array.from(selectedUserIds) : [],
     );
     setIsPosting(false);
-    if (ok) onClose();
+    if (ok) {
+      toastSuccess('पोस्ट हो गई', 'Posted');
+      onClose();
+    } else {
+      toastError('पोस्ट नहीं हो सकी — फिर कोशिश करें', 'Could not post — please try again');
+    }
   };
 
   return (

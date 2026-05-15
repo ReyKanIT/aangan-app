@@ -15,8 +15,9 @@
 //   relationship of members as earlier very smalllist was there."
 //
 //   This modal lets the user re-pick from the full list. The reverse
-//   key for the other side is auto-derived from the same REVERSE_MAP
-//   used by AddMemberDrawer.
+//   key for the other side is auto-derived via getReverse() from
+//   lib/relationshipReverse.ts — the single source of truth shared
+//   with AddMemberDrawer.
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { useMemo, useState } from 'react';
@@ -26,32 +27,11 @@ import {
   RELATIONSHIP_OPTIONS,
   getRelationshipLevel,
 } from '@/lib/constants';
+import { getReverse } from '@/lib/relationshipReverse';
 import { friendlyError } from '@/lib/errorMessages';
 import GoldButton from '@/components/ui/GoldButton';
 import { isFeatureEnabled } from '@/lib/features';
 import type { SecondaryRelationship } from '@/types/database';
-
-// Same reverse map used by AddMemberDrawer (the one source of truth for
-// "if I added X as my Y, what does X see ME as?"). Hard-coded here to
-// avoid a circular import — duplicated intentionally because changing
-// either copy without the other would break new vs existing flows.
-// TODO(consolidate): move to lib/relationshipReverse.ts and import from
-//                    both AddMemberDrawer + EditRelationshipModal.
-const REVERSE_MAP: Record<string, string> = {
-  father: 'son', mother: 'son', son: 'father', daughter: 'father',
-  brother: 'brother', sister: 'brother', husband: 'wife', wife: 'husband',
-  grandfather_paternal: 'grandson', grandmother_paternal: 'grandson',
-  grandfather_maternal: 'grandson', grandmother_maternal: 'grandson',
-  uncle_paternal: 'nephew', aunt_paternal: 'nephew',
-  uncle_maternal: 'nephew', aunt_maternal: 'nephew',
-  nephew: 'uncle_paternal', niece: 'uncle_paternal',
-  cousin: 'cousin',
-  son_in_law: 'father_in_law', daughter_in_law: 'mother_in_law',
-  father_in_law: 'son_in_law', mother_in_law: 'daughter_in_law',
-  brother_in_law: 'brother_in_law', sister_in_law: 'sister_in_law',
-  grandson: 'grandfather_paternal', granddaughter: 'grandmother_paternal',
-  other: 'other',
-};
 
 const GROUP_LABELS: Record<string, string> = {
   immediate:    'सीधा परिवार — Immediate Family (L1)',
@@ -191,7 +171,7 @@ export default function EditRelationshipModal({
       const relHindi = relType === 'other'
         ? customLabel.trim()
         : (RELATIONSHIP_MAP[relType] ?? relType);
-      const reverseType = REVERSE_MAP[relType] ?? 'other';
+      const reverseType = getReverse(relType);
       const reverseHindi = RELATIONSHIP_MAP[reverseType] ?? null;
 
       const { error: rpcErr } = await supabase.rpc(
