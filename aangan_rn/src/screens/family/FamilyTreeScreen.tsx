@@ -28,6 +28,7 @@ import LifeEventsList from '../../components/family/LifeEventsList';
 import InviteWithCodeModal from '../../components/family/InviteWithCodeModal';
 import { useAuthStore } from '../../stores/authStore';
 import type { FamilyMember, User } from '../../types/database';
+import { getPresenceRingColor } from '../../utils/presence';
 import VoiceMicButton from '../../components/voice/VoiceMicButton';
 
 type Props = NativeStackScreenProps<any, 'FamilyTree'>;
@@ -106,27 +107,25 @@ function openWhatsApp(message: string) {
 function MemberCard({ member }: { member: FamilyMember }) {
   const displayName = member.member?.display_name_hindi || member.member?.display_name || 'Unknown';
   const initial = displayName[0] || '?';
-  // TODO(v0.13.6 RN): wire src/lib/familyKinship.ts (already ported)
-  // for offline_family_members rows where added_by != viewer.id, so
-  // Krishna's wife shows as Kumar's "भाभी (via Krishna)" — matches
-  // web v0.13.1 behavior. Today the FamilyTreeScreen only displays
-  // family_members (which the viewer always added themselves), so the
-  // raw label is correct. The bug surfaces ONLY when we add an
-  // offline-member fetch path here. See web FamilyTreeDiagram.tsx
-  // for the pattern: build viewerToAdderRel + adderName maps from
-  // members[], call deriveRowLabel() per offline row, render viaName
-  // as a chip.
   const relationship = member.relationship_label_hindi || member.relationship_type || '';
+
+  // v0.15.7 presence ring around avatar.
+  // Online members → color from last_seen_at; offline rows preserved via the
+  // adapter in allMembers and `is_deceased` is read via the type-cast below.
+  const ringColor = getPresenceRingColor({
+    lastSeenAt: member.member?.last_seen_at ?? null,
+    isDeceased: ((member.member as unknown as { is_deceased?: boolean })?.is_deceased) === true,
+  });
 
   return (
     <View style={memberStyles.card}>
       <View style={memberStyles.photoContainer}>
         {member.member?.profile_photo_url ? (
-          <View style={memberStyles.photo}>
+          <View style={[memberStyles.photo, ringColor && { borderColor: ringColor, borderWidth: 3 }]}>
             <Text style={memberStyles.photoText}>{initial}</Text>
           </View>
         ) : (
-          <View style={memberStyles.photo}>
+          <View style={[memberStyles.photo, ringColor && { borderColor: ringColor, borderWidth: 3 }]}>
             <Text style={memberStyles.photoText}>{initial}</Text>
           </View>
         )}
@@ -470,6 +469,17 @@ function FamilyTreeVisualization({ members, isHindi }: { members: FamilyMember[]
     return truncateName(m.relationship_label_hindi || m.relationship_type || '', 7);
   }
 
+  // v0.15.7: presence ring color for an avatar node. Falls back to the
+  // haldi-gold node border when no presence signal exists (offline-alive
+  // or seen >7d) — matches the rest of the tree's visual tone.
+  function memberStroke(m: FamilyMember): string {
+    const c = getPresenceRingColor({
+      lastSeenAt: m.member?.last_seen_at ?? null,
+      isDeceased: ((m.member as unknown as { is_deceased?: boolean })?.is_deceased) === true,
+    });
+    return c ?? TREE_COLORS.haldiGold;
+  }
+
   return (
     <View style={treeStyles.container}>
       <ScrollView horizontal showsHorizontalScrollIndicator={false}>
@@ -559,7 +569,7 @@ function FamilyTreeVisualization({ members, isHindi }: { members: FamilyMember[]
                     cy={pos.y}
                     r={NODE_RADIUS}
                     fill={TREE_COLORS.white}
-                    stroke={TREE_COLORS.haldiGold}
+                    stroke={memberStroke(member)}
                     strokeWidth={3}
                   />
                   <SvgText
@@ -604,7 +614,7 @@ function FamilyTreeVisualization({ members, isHindi }: { members: FamilyMember[]
                     cy={pos.y}
                     r={NODE_RADIUS}
                     fill={TREE_COLORS.white}
-                    stroke={TREE_COLORS.haldiGold}
+                    stroke={memberStroke(member)}
                     strokeWidth={3}
                   />
                   <SvgText
@@ -649,7 +659,7 @@ function FamilyTreeVisualization({ members, isHindi }: { members: FamilyMember[]
                     cy={pos.y}
                     r={NODE_RADIUS}
                     fill={TREE_COLORS.white}
-                    stroke={TREE_COLORS.haldiGold}
+                    stroke={memberStroke(member)}
                     strokeWidth={3}
                   />
                   <SvgText
@@ -717,7 +727,16 @@ function FamilyTreeVisualization({ members, isHindi }: { members: FamilyMember[]
 
 export default function FamilyTreeScreen({ navigation }: Props) {
   const insets = useSafeAreaInsets();
-  const { members, isLoading, error, fetchMembers, addMember, searchMembers } = useFamilyStore();
+  const {
+    members,
+    offlineMembers,
+    isLoading,
+    error,
+    fetchMembers,
+    fetchOfflineMembers,
+    addMember,
+    searchMembers,
+  } = useFamilyStore();
   const { isHindi } = useLanguageStore();
 
   const [activeTab, setActiveTab] = useState<TabKey>('all');
@@ -729,10 +748,52 @@ export default function FamilyTreeScreen({ navigation }: Props) {
 
   useEffect(() => {
     fetchMembers();
+    fetchOfflineMembers();
   }, []);
 
+  // Merge offline_family_members into the same list the renderer already
+  // consumes. v0.15.0-v0.15.4 only fetched family_members on RN, leaving
+  // 5+ ancestors invisible vs the web app. We adapt each offline row into
+  // a FamilyMember-shaped object so the existing MemberCard +
+  // FamilyTreeVisualization render paths stay unchanged. Synthetic id
+  // is prefixed `offline-` to avoid collision with real family_members rows.
+  //
+  // The synthetic `member.is_deceased` field is non-standard on the User
+  // type — MemberCard reads it via a typed cast so the deceased grey ring
+  // (v0.15.7 presence rule) renders correctly.
+  const allMembers = useMemo<FamilyMember[]>(() => {
+    if (!currentUser) return members;
+    const adapted: FamilyMember[] = offlineMembers.map((o) => ({
+      id: `offline-${o.id}`,
+      user_id: currentUser.id,
+      family_member_id: o.id,
+      relationship_type: o.relationship_type,
+      relationship_label_hindi: o.relationship_label_hindi,
+      connection_level: o.connection_level,
+      is_verified: false,
+      created_at: '',
+      updated_at: '',
+      member: {
+        id: o.id,
+        phone_number: '',
+        display_name: o.display_name,
+        display_name_hindi: o.display_name_hindi,
+        profile_photo_url: o.avatar_url ?? null,
+        village: o.village_city ?? null,
+        state: null,
+        family_level: o.connection_level,
+        last_seen_at: null,
+        // Carried through for the presence ring (`deceased` → grey).
+        // Read in MemberCard via a typed cast since User doesn't formally
+        // declare is_deceased.
+        is_deceased: o.is_deceased,
+      } as unknown as User,
+    }));
+    return [...members, ...adapted];
+  }, [members, offlineMembers, currentUser]);
+
   const filteredMembers = useMemo(() => {
-    let filtered = members;
+    let filtered = allMembers;
 
     // Filter by level
     if (activeTab === 'L1') {
@@ -755,11 +816,11 @@ export default function FamilyTreeScreen({ navigation }: Props) {
     }
 
     return filtered;
-  }, [members, activeTab, searchQuery]);
+  }, [allMembers, activeTab, searchQuery]);
 
   const handleRefresh = useCallback(async () => {
-    await fetchMembers();
-  }, [fetchMembers]);
+    await Promise.all([fetchMembers(), fetchOfflineMembers()]);
+  }, [fetchMembers, fetchOfflineMembers]);
 
   const handleAddMember = useCallback(async (
     phone: string,
@@ -890,7 +951,7 @@ export default function FamilyTreeScreen({ navigation }: Props) {
           onEditEvent={(eventId) => navigation.navigate('AddLifeEvent', { eventId })}
         />
       ) : activeTab === 'tree' ? (
-        <FamilyTreeVisualization members={members} isHindi={isHindi} />
+        <FamilyTreeVisualization members={allMembers} isHindi={isHindi} />
       ) : (
         <FlatList
           data={filteredMembers}

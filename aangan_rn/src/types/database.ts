@@ -55,6 +55,27 @@ export interface FamilyMember {
   member?: User;
 }
 
+/** Offline family member — relative without an Aangan account. Returned by the
+ *  `get_visible_offline_family_members` RPC. Mirrors aangan_web's type but
+ *  with only the fields RN's FamilyTreeScreen actually renders. PII fields
+ *  (mobile/email/dob/address) are present in DB but redacted by the RPC for
+ *  rows the caller doesn't own (added_by != auth.uid()).
+ */
+export interface OfflineFamilyMember {
+  id: string;
+  added_by: string;
+  display_name: string;
+  display_name_hindi: string | null;
+  relationship_type: string;
+  relationship_label_hindi: string | null;
+  connection_level: number;
+  is_deceased: boolean;
+  village_city: string | null;
+  avatar_url: string | null;
+  birth_year: number | null;
+  death_year: number | null;
+}
+
 export interface AudienceGroup {
   id: string;
   creator_id: string;

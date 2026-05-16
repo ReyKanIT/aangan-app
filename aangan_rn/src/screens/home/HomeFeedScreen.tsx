@@ -499,6 +499,13 @@ export default function HomeFeedScreen({ navigation }: Props) {
     navigation.navigate('Dashboard');
   }, [navigation]);
 
+  // v0.15.7: Messages were reachable only via Member Profile → Chat. Add a
+  // header-icon shortcut so users can jump to the inbox (MessageList) from
+  // anywhere on the home feed. Sits between dashboard + bell.
+  const handleNavigateMessages = useCallback(() => {
+    navigation.navigate('MessageList');
+  }, [navigation]);
+
   const handleNavigateComposer = useCallback(() => {
     navigation.navigate('PostComposer');
   }, [navigation]);
@@ -551,6 +558,15 @@ export default function HomeFeedScreen({ navigation }: Props) {
               hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
             >
               <Text style={styles.dashboardIcon}>{'\uD83D\uDCCA'}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.notificationButton}
+              onPress={handleNavigateMessages}
+              accessibilityRole="button"
+              accessibilityLabel="Messages"
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            >
+              <Text style={styles.bellIcon}>{'💬'}</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.notificationButton}

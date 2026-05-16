@@ -3,7 +3,7 @@ import { create } from 'zustand';
 import { supabase } from '../config/supabase';
 import { RELATIONSHIP_MAP, RELATIONSHIP_HINDI_LABEL } from '../config/constants';
 import { sendPushToUser } from '../services/pushNotifications';
-import type { FamilyMember, User } from '../types/database';
+import type { FamilyMember, OfflineFamilyMember, User } from '../types/database';
 
 // Relationship types that map to parent/sibling for onboarding tracking
 const PARENT_TYPES = new Set(['पिता', 'माता']);
@@ -16,10 +16,19 @@ function sanitizeSearchQuery(q: string): string {
 
 interface FamilyState {
   members: FamilyMember[];
+  /** Offline family members — relatives without Aangan accounts. Fetched via
+   *  `get_visible_offline_family_members` RPC; same data the web app shows.
+   *  Added 2026-05-16 to fix Kumar's "ancestors gone on iPhone" bug — the
+   *  RN screen previously only rendered family_members (online) rows. */
+  offlineMembers: OfflineFamilyMember[];
   isLoading: boolean;
   error: string | null;
 
   fetchMembers: () => Promise<void>;
+  /** Fetch offline_family_members via SECURITY DEFINER RPC. Mirrors the web
+   *  page's behavior. Non-fatal — failures are warned to console; the screen
+   *  still renders the online-members list. */
+  fetchOfflineMembers: () => Promise<void>;
   addMember: (
     familyMemberId: string,
     relationshipType: string,
@@ -35,6 +44,7 @@ interface FamilyState {
 
 export const useFamilyStore = create<FamilyState>((set, get) => ({
   members: [],
+  offlineMembers: [],
   isLoading: false,
   error: null,
 
@@ -49,7 +59,7 @@ export const useFamilyStore = create<FamilyState>((set, get) => ({
 
       const { data, error } = await supabase
         .from('family_members')
-        .select('*, member:users!family_members_family_member_id_fkey(id, display_name, display_name_hindi, profile_photo_url, village, state, family_level)')
+        .select('*, member:users!family_members_family_member_id_fkey(id, display_name, display_name_hindi, profile_photo_url, village, state, family_level, last_seen_at)')
         .eq('user_id', session.user.id)
         .order('connection_level', { ascending: true })
         .limit(200);
@@ -62,6 +72,25 @@ export const useFamilyStore = create<FamilyState>((set, get) => ({
       set({ members: data ?? [], isLoading: false });
     } catch (error: any) {
       set({ error: safeError(error, 'Failed to fetch family members'), isLoading: false });
+    }
+  },
+
+  fetchOfflineMembers: async () => {
+    // Web page uses get_visible_offline_family_members RPC (SECURITY DEFINER,
+    // applies the family-of-family visibility predicate + redacts PII on rows
+    // the caller doesn't own). RN now uses the same RPC so iOS and web show
+    // the same tree. Non-fatal: failures keep the screen functional with
+    // only family_members visible.
+    try {
+      const { data, error } = await supabase.rpc('get_visible_offline_family_members');
+      if (error) {
+        console.warn('[familyStore] get_visible_offline_family_members error:', error.message, error.code);
+        return;
+      }
+      if (data) set({ offlineMembers: data as OfflineFamilyMember[] });
+    } catch (e: any) {
+      // RPC may not exist on a stale Supabase project — silently degrade.
+      console.warn('[familyStore] get_visible_offline_family_members threw:', e?.message ?? e);
     }
   },
 
