@@ -28,7 +28,7 @@ Exact semantic equivalent of "Sentry" — a soldier at the gate of your applicat
 
 | Domain | Status (NS record / WHOIS) |
 |---|---|
-| **praharee.com** | NS: NONE · WHOIS: "No match" → **available** |
+| **praharee.com** | ✅ **SECURED by Kumar 2026-05-16, 3:30pm IST** — primary brand domain |
 | **praharee.in** | NS: NONE · WHOIS: active TLD, no registration found → **likely available** |
 | **praharee.io** | NS: NONE · WHOIS: "Domain not found" → **available** |
 | **praharee.dev** | NS: NONE · WHOIS: no registration → **likely available** |
@@ -239,8 +239,8 @@ This is the cheapest possible path to validate the Praharee idea: build the mini
 
 When the project formally restarts:
 
-- [ ] Re-verify domain availability on `instantdomainsearch.com` (data may be stale)
-- [ ] Acquire `praharee.com`, `praharee.in`, `praharee.dev`, `praharee.ai`, `praharee.app` — budget ₹20-25K first year
+- [x] **`praharee.com` acquired** [3:30pm - 16May26]
+- [ ] Acquire defensive TLDs: `praharee.in`, `praharee.dev`, `praharee.ai`, `praharee.app` — budget ₹15-20K first year (.com already locked)
 - [ ] File Class 42 trademark for "Praharee" + "प्रहरी" in India (~₹9K + govt fee)
 - [ ] Co-founder conversations: technical co-founder essential (you can't be CEO of Aangan + CTO of Praharee)
 - [ ] Incorporate as Pvt Ltd (separate from ReyKan IT — keeps cap tables clean for Praharee's investors)
