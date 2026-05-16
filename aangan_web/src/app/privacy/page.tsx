@@ -121,6 +121,49 @@ export default function PrivacyPolicyPage() {
           </p>
         </section>
 
+        {/* Crash Diagnostics & Third-Party Services */}
+        <section>
+          <h2 className="text-2xl font-bold text-[#C8A84B] mb-3">
+            ऐप त्रुटि और डायग्नोस्टिक्स
+          </h2>
+          <p className="text-sm text-gray-500 mb-3">
+            App Errors &amp; Diagnostics (Sentry)
+          </p>
+          <p className="text-gray-800 mb-4 leading-relaxed">
+            जब Aangan ऐप पर कोई त्रुटि या क्रैश होता है, तो हम तकनीकी जानकारी
+            (एरर मैसेज, स्टैक ट्रेस, डिवाइस मॉडल, ऐप वर्शन) Sentry नामक सेवा को
+            भेजते हैं ताकि हम बग जल्दी ठीक कर सकें। यह डेटा यूरोपीय संघ
+            (जर्मनी) के सर्वर पर सुरक्षित रूप से रखा जाता है। हम कभी भी आपका
+            फ़ोन नंबर, ईमेल, पोस्ट का कंटेंट, या परिवार की जानकारी इस डेटा में
+            नहीं भेजते। DPDP अधिनियम के अनुसार, यह संग्रह वैध हित (Legitimate
+            Interest) के तहत किया जाता है।
+          </p>
+          <p className="text-gray-600 leading-relaxed">
+            When Aangan crashes or hits an error, we send technical diagnostics
+            (error message, stack trace, device model, app version, breadcrumb
+            trail of which screens you navigated) to{' '}
+            <a
+              href="https://sentry.io/privacy/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[#C8A84B] underline"
+            >
+              Sentry
+            </a>{' '}
+            so we can fix bugs quickly. This data is stored in the European
+            Union (Germany region, <code className="text-xs">.ingest.de.sentry.io</code>) —
+            GDPR-protected and not in the US. We never send your phone number,
+            email, post content, family relationships, or any photo to Sentry.
+            Under DPDP Act (India), this collection is performed under the
+            Legitimate Interest ground. You can request deletion of any
+            diagnostic data tied to your account by emailing{' '}
+            <a href="mailto:support@aangan.app" className="text-[#C8A84B] underline">
+              support@aangan.app
+            </a>
+            .
+          </p>
+        </section>
+
         {/* Data Retention */}
         <section>
           <h2 className="text-2xl font-bold text-[#C8A84B] mb-3">
