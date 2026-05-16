@@ -75,3 +75,7 @@ supabase/config.toml
 # Draft migrations not yet applied
 supabase/migrations/create_app_settings.sql
 .aangan-prod-secrets.txt
+
+# App Store screenshot binaries — regeneratable via app_store_screenshots/README.md
+# (commit only the README; PNGs are large and reproducible)
+app_store_screenshots/*.png
