@@ -79,3 +79,6 @@ supabase/migrations/create_app_settings.sql
 # App Store screenshot binaries — regeneratable via app_store_screenshots/README.md
 # (commit only the README; PNGs are large and reproducible)
 app_store_screenshots/*.png
+
+# Invoice PDFs are PII / sensitive — never commit
+costs/invoices/
