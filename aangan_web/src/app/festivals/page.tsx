@@ -1,6 +1,8 @@
 import type { Metadata } from 'next';
+import Link from 'next/link';
 import PublicShareCTA from '@/components/ui/PublicShareCTA';
 import { RELEASES } from '@/data/versions';
+import { FESTIVALS_2026 } from '@/data/festivals2026';
 
 export const metadata: Metadata = {
   title: 'भारतीय त्योहार 2026 — Indian Festivals Calendar',
@@ -33,50 +35,8 @@ export const metadata: Metadata = {
   },
 };
 
-interface Festival {
-  date: string;
-  name: string;
-  nameHindi: string;
-  month: string;
-  type: 'major' | 'vrat' | 'regional';
-  desc: string;
-}
-
-const FESTIVALS_2026: Festival[] = [
-  // April 2026
-  { date: '2 अप्रैल', name: 'Ram Navami', nameHindi: 'राम नवमी', month: 'April', type: 'major', desc: 'भगवान राम का जन्मदिवस। चैत्र शुक्ल नवमी।' },
-  { date: '6 अप्रैल', name: 'Mahavir Jayanti', nameHindi: 'महावीर जयंती', month: 'April', type: 'major', desc: 'भगवान महावीर का जन्मदिवस।' },
-  { date: '13 अप्रैल', name: 'Baisakhi', nameHindi: 'बैसाखी', month: 'April', type: 'major', desc: 'पंजाबी नव वर्ष और फसल का त्योहार।' },
-  { date: '14 अप्रैल', name: 'Ambedkar Jayanti', nameHindi: 'अम्बेडकर जयंती', month: 'April', type: 'major', desc: 'डॉ. भीमराव अम्बेडकर का जन्मदिवस।' },
-  // May 2026
-  { date: '1 मई', name: 'Akshaya Tritiya', nameHindi: 'अक्षय तृतीया', month: 'May', type: 'major', desc: 'अत्यंत शुभ दिन। सोना खरीदने और नए कार्य शुरू करने का दिन।' },
-  { date: '12 मई', name: 'Buddha Purnima', nameHindi: 'बुद्ध पूर्णिमा', month: 'May', type: 'major', desc: 'भगवान बुद्ध का जन्म, ज्ञान प्राप्ति और महापरिनिर्वाण।' },
-  // June 2026
-  { date: '15 जून', name: 'Nirjala Ekadashi', nameHindi: 'निर्जला एकादशी', month: 'June', type: 'vrat', desc: 'बिना जल के व्रत। सबसे कठिन एकादशी।' },
-  { date: '24 जून', name: 'Jagannath Rath Yatra', nameHindi: 'जगन्नाथ रथ यात्रा', month: 'June', type: 'major', desc: 'पुरी में भगवान जगन्नाथ की भव्य रथ यात्रा।' },
-  // July 2026
-  { date: '7 जुलाई', name: 'Guru Purnima', nameHindi: 'गुरु पूर्णिमा', month: 'July', type: 'major', desc: 'गुरुओं को समर्पित पूर्णिमा का दिन।' },
-  // August 2026
-  { date: '8 अगस्त', name: 'Hariyali Teej', nameHindi: 'हरियाली तीज', month: 'August', type: 'regional', desc: 'सावन की तीज। विवाहित महिलाओं का त्योहार।' },
-  { date: '12 अगस्त', name: 'Nag Panchami', nameHindi: 'नाग पंचमी', month: 'August', type: 'vrat', desc: 'नाग देवता की पूजा।' },
-  { date: '15 अगस्त', name: 'Independence Day', nameHindi: 'स्वतंत्रता दिवस', month: 'August', type: 'major', desc: 'भारत का स्वतंत्रता दिवस।' },
-  { date: '19 अगस्त', name: 'Raksha Bandhan', nameHindi: 'रक्षा बंधन', month: 'August', type: 'major', desc: 'भाई-बहन के प्रेम का त्योहार।' },
-  { date: '27 अगस्त', name: 'Janmashtami', nameHindi: 'जन्माष्टमी', month: 'August', type: 'major', desc: 'भगवान कृष्ण का जन्मदिवस।' },
-  // September 2026
-  { date: '6 सितंबर', name: 'Ganesh Chaturthi', nameHindi: 'गणेश चतुर्थी', month: 'September', type: 'major', desc: 'भगवान गणेश का जन्मोत्सव। 10 दिन तक उत्सव।' },
-  // October 2026
-  { date: '2 अक्टूबर', name: 'Gandhi Jayanti', nameHindi: 'गांधी जयंती', month: 'October', type: 'major', desc: 'महात्मा गांधी का जन्मदिवस।' },
-  { date: '7-15 अक्टूबर', name: 'Navratri', nameHindi: 'नवरात्रि', month: 'October', type: 'major', desc: 'माँ दुर्गा की 9 दिन की पूजा। गरबा और डांडिया।' },
-  { date: '15 अक्टूबर', name: 'Dussehra', nameHindi: 'दशहरा / विजयादशमी', month: 'October', type: 'major', desc: 'बुराई पर अच्छाई की जीत। रावण दहन।' },
-  { date: '20 अक्टूबर', name: 'Karwa Chauth', nameHindi: 'करवा चौथ', month: 'October', type: 'vrat', desc: 'पति की लंबी उम्र के लिए निर्जला व्रत।' },
-  // November 2026
-  { date: '4 नवंबर', name: 'Diwali', nameHindi: 'दीपावली', month: 'November', type: 'major', desc: 'रोशनी का त्योहार। लक्ष्मी पूजा, पटाखे, मिठाई।' },
-  { date: '6 नवंबर', name: 'Govardhan Puja', nameHindi: 'गोवर्धन पूजा', month: 'November', type: 'major', desc: 'दीपावली के अगले दिन। भगवान कृष्ण की पूजा।' },
-  { date: '7 नवंबर', name: 'Bhai Dooj', nameHindi: 'भाई दूज', month: 'November', type: 'major', desc: 'भाई-बहन का त्योहार। रक्षा बंधन जैसा।' },
-  { date: '14 नवंबर', name: 'Chhath Puja', nameHindi: 'छठ पूजा', month: 'November', type: 'major', desc: 'सूर्य देव की पूजा। बिहार और पूर्वी भारत का प्रमुख त्योहार।' },
-  // December 2026
-  { date: '25 दिसंबर', name: 'Christmas', nameHindi: 'क्रिसमस', month: 'December', type: 'major', desc: 'ईसा मसीह का जन्मदिवस।' },
-];
+// Festival data moved to `@/data/festivals2026` (single source of truth shared
+// with the per-festival /festivals/[slug] pages and the sitemap).
 
 const TYPE_LABELS: Record<string, { label: string; color: string }> = {
   major: { label: 'प्रमुख त्योहार', color: 'bg-amber-100 text-amber-800' },
@@ -131,10 +91,14 @@ export default function FestivalsPage() {
                 {month} 2026
               </h2>
               <div className="space-y-3">
-                {monthFestivals.map((f, i) => {
+                {monthFestivals.map((f) => {
                   const typeInfo = TYPE_LABELS[f.type];
                   return (
-                    <div key={i} className="bg-white rounded-xl border border-haldi-gold/10 p-4 hover:shadow-sm transition-shadow">
+                    <Link
+                      key={f.slug}
+                      href={`/festivals/${f.slug}`}
+                      className="block bg-white rounded-xl border border-haldi-gold/10 p-4 hover:border-haldi-gold/40 hover:shadow-md transition-all"
+                    >
                       <div className="flex items-start justify-between gap-3">
                         <div className="flex-1">
                           <div className="flex flex-wrap items-center gap-2 mb-1">
@@ -146,7 +110,7 @@ export default function FestivalsPage() {
                         </div>
                         <span className="font-heading text-base text-haldi-gold whitespace-nowrap">{f.date}</span>
                       </div>
-                    </div>
+                    </Link>
                   );
                 })}
               </div>
