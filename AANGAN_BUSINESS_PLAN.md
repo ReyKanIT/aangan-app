@@ -1,6 +1,6 @@
 # Aangan (आँगन) — Business Plan
 
-> **Living document.** Last updated: 2026-04-11 | Version 0.6
+> **Living document.** Last updated: 2026-05-16 | Version 0.8
 
 ---
 
@@ -18,6 +18,7 @@
 | v0.5    | 2026-04-04 | Added Voice-Enabled Operations — full Hindi voice control for posts, search, and navigation |
 | v0.6    | 2026-04-11 | **Strategic pivot:** Growth-first free model, WhatsApp viral loops, offline-first architecture, family-as-unit metrics, v1.0 roadmap |
 | v0.7    | 2026-04-11 | **Monetization pivot:** Removed Aangan Gold subscription (₹99/mo). App is 100% FREE — revenue via premium add-ons at scale (Phase 2: 10K+ families) |
+| **v0.8** | **2026-05-16** | **Funding model pivot: Bootstrap to self-sufficiency.** Kumar self-funds to 10K families. Beyond 10K, the business must fund itself from revenue. No external seed round. Revenue activation accelerated — moves from Phase 2 optional to Phase 1 mandatory. Aangan operates as a profitable, founder-owned company by Phase 2. VC funding becomes optional, not required, and is only entertained if a strategic moment demands it (e.g., competitive threat from Meta). |
 
 ---
 
@@ -35,9 +36,11 @@ Aangan is a mobile-first platform that gives Indian families a private, structur
 
 **Key metric:** Families connected (not individual users). The family is the unit.
 
-**Current status (v0.8.0):** 5 CEO Mode rounds completed, 35+ issues fixed, all screens Dadi Test compliant, submitted to Google Play closed testing, live on Indus App Store.
+**Current status (v0.15.6):** Panchang upgrade with Drik-accurate sunrise/sunset and Purnimanta Masa, in-app account-delete flow, demo-account flow for Apple Review, Sentry crash reporting wired (EU/Germany region), TestFlight v0.15.0 live, Indus App Store live, Google Play closed testing in progress.
 
-**Funding ask:** Rs.2 Cr seed round to reach 50,000 active families in 18 months. Revenue begins at scale via premium add-ons (not subscription).
+**Funding model: Bootstrap to self-sufficiency.** Kumar (ReyKan IT) self-funds Aangan to 10,000 connected families. **Beyond 10K families, the business is required to fund itself from revenue.** No external seed round is planned. Revenue activation is the critical Phase 1 milestone — the app moves from "100% free" to "free core + active revenue lines" *before* the 10K threshold, so that monetization is proven and the operating P&L is positive at the moment self-funding ends. VC capital is optional, not required, and is only entertained later if a strategic moment demands it (e.g., Meta launches an Indian family product and Aangan needs to accelerate defensively).
+
+This positions Aangan as a founder-owned, profitable, India-specific consumer app — closer in spirit to Mailchimp, Basecamp, or Indie Indian SaaS (Postman, FreshWorks pre-Series-A) than to the VC-burn-to-grow model of Sharechat or Hike. The bootstrap path is slower (10M MAU in ~7-10 years vs ~3-4 years on VC), but Kumar keeps 100% equity and decision rights.
 
 ---
 
@@ -187,34 +190,77 @@ Aangan's primary competitor is not another social network — it is the WhatsApp
 
 ---
 
-## 5. Business Model
+## 5. Business Model — Bootstrap to Self-Sufficiency
 
-### 5.1 Monetization Strategy: Free Now, Premium Add-Ons at Scale
+### 5.1 Monetization Strategy: Free Core, Active Revenue Lines from 10K Families
 
-**Core philosophy:** WhatsApp doesn't charge. Instagram doesn't charge. Aangan shouldn't charge — not until it has momentum, proven retention, and a family base large enough to monetize tastefully.
+**Core philosophy:** The app stays free at its core — WhatsApp doesn't charge, Instagram doesn't charge, Aangan doesn't charge for the family social network itself. But **monetization is not deferred to a later, vaguer phase**. Revenue lines must be *built and activated* before Aangan reaches 10,000 families, so that the business is self-funding the moment Kumar's bridge-funding ends.
 
-**The app is 100% FREE.** No subscription. No paywall. No feature gating. Every family gets everything.
+**The core app is 100% FREE.** No subscription. No paywall on family features. Every family gets the social network, family tree, events, panchang, festivals — all of it, forever, at zero cost.
 
-#### Phased Revenue Model
+**Revenue comes from optional, value-additive products** alongside the core network:
+- **Pandit / Purohit Marketplace** (10-15% commission on bookings)
+- **Family Tree & Photo Book Prints** (physical artifacts, ₹500 margin per order)
+- **Wedding Event Bundles** (high-value, one-time, festival/wedding-tied)
+- **Aangan Premium** (verified badge, expanded family-tree, ad-free, ₹199-499/yr)
+- **Festival Brand Partnerships** (sponsored seasonal content, brand-safe)
+- **Targeted Family-Category Ads** (insurance, education, family travel — at 1M+ MAU only)
 
-**Phase 1 — Growth (Now → 10,000 families): Completely FREE**
-- All features unlocked for all users
-- Focus entirely on family acquisition, activation, and retention
-- Zero monetization — pure land grab
+None of these touch the core "family social network" experience. They are **alongside** Aangan, not gating it.
 
-**Phase 2 — Test Willingness to Pay (10,000+ families): Optional Premium Add-Ons**
-- **Premium stickers & themes** for family posts (Rangoli, Mughal, Temple themes)
-- **Professional family tree prints** — physical poster or PDF export of family tree
-- **Event planning premium features** — guest management for large events (100+ guests), seating charts, vendor coordination
-- All add-ons are optional enhancements. The core app remains 100% free.
+#### Phased Revenue Model — Self-Sufficiency Track
 
-**Phase 3 — Brand Partnerships (100,000+ families): Sponsored Content**
-- **Sponsored festival greetings** from family-appropriate brands (Cadbury, Haldiram's, Tanishq)
-- **Sponsored puja kits** — brands sponsor puja content with tasteful product placement
-- **Local temple/vendor partnerships** — puja bookings, prasad delivery
-- All sponsored content must be family-appropriate and culturally respectful
+**Phase 0 — Build Revenue Infrastructure (Now → 5,000 families) · Kumar-funded**
 
-**NO subscription model** until there is proven demand and strong retention metrics.
+Before Aangan reaches 10K families, the revenue rails must be live. This phase is about *infrastructure*, not revenue volume — proof that the pipes work.
+
+Pre-10K activation checklist:
+- [ ] Razorpay integration shipped (test mode → production)
+- [ ] First priced SKU live (Family Tree PDF at ₹299, or print at ₹999)
+- [ ] Pandit marketplace MVP — at least 10 pandits onboarded, booking + escrow flow live
+- [ ] Aangan Premium tier shipped (initial offering: ad-free + verified badge, ₹199/yr)
+- [ ] Optional: AdMob banner ads in non-core surfaces (festival pages, public panchang)
+
+**Target:** ₹10-25K/month revenue by 5K families. Proves the rails work; not yet covering full costs.
+
+**Phase 1 — Self-Sufficiency Threshold (5K → 10K families) · Kumar-funded**
+
+Bridge to break-even. By the time Aangan hits 10K families, **monthly revenue must equal or exceed monthly operating costs**.
+
+Revenue mix at 10K families (target ₹50-100K/month = ₹6-12L/year):
+| Line | Volume | Revenue/month |
+|---|---|---|
+| Pandit marketplace (10% commission on ₹2K avg booking) | 50 bookings/mo | ₹10K |
+| Family Tree / Photo Book Prints | 30 orders/mo × ₹400 margin | ₹12K |
+| Aangan Premium (₹199/yr × 3% conversion) | 300 subscribers | ₹5K |
+| Festival event bundles (Diwali/Karwa Chauth/Raksha Bandhan tie-ins) | 20/mo × ₹500 avg margin | ₹10K |
+| AdMob banner ads on public surfaces | 10K MAU × ₹3-5 CPM | ₹3-5K |
+| **Total at 10K MAU** | | **₹40-50K/month** |
+
+Monthly cost at 10K MAU: **₹15-30K/month** (Supabase Pro + MSG91 + Vercel free tier + EAS).
+
+**Margin: ₹15-35K/month positive** — small surplus that funds growth investment going forward.
+
+**Phase 2 — Revenue-Funded Growth (10K → 100K families) · Self-funded**
+
+Beyond 10K, every rupee of growth investment must come from revenue. Kumar stops adding capital. The business proves it can grow itself.
+
+Operating principles:
+- **30-50% of monthly surplus reinvested in growth** (content, ads, partnerships)
+- **No hiring until revenue justifies it** — solo founder + freelancers/contractors first
+- **No unnecessary tooling upgrades** — stay on free/cheap tiers until forced off
+- **Optimize ARPU before MAU** — high-value users (NRIs, wedding-season buyers, premium subscribers) come first
+
+Target at 100K families: ₹5-15L/month revenue. Net 30-50% margin = ₹1.5-7L/month reinvested in growth.
+
+**Phase 3 — Brand Partnerships & Ad Revenue Scale (100K → 1M+ families) · Self-funded or optional VC**
+
+At this scale, targeted ads + brand sponsorships become viable:
+- **Targeted family-category ads** — insurance, kids products, festival decor, wedding services. Indian ARPU benchmark: ₹30-80/MAU/yr → ₹3-8 Cr/yr at 100K MAU, ₹30-80 Cr at 1M
+- **Brand partnerships at scale** — Bajaj, HDFC, ITC, Asian Paints sponsor festival/family content
+- **Marketplace expansion** — Aangan Shaadi (wedding services), Aangan Capital (financial products), Aangan Travel
+
+This is also the moment to *optionally* consider external capital — but only if a strategic event demands it (Meta launches Indian family product; large acquisition opportunity; international expansion). Aangan is profitable and self-sustaining; raising is a choice, not a need.
 
 ### 5.2 Future Revenue Stream: Event Bundles (One-time, High-Value)
 Tied to life events — natural purchase moment with high willingness to pay. Introduced in Phase 2.
@@ -242,38 +288,108 @@ Each verified referral = +2 GB storage for referrer. Creates organic viral loop 
 | CAC (paid acquisition) | Rs.100-200 | Temple/community partnerships |
 | LTV/CAC (referral) | Infinite | Zero-cost acquisition |
 
-### 5.5 Financial Projections
+### 5.5 Financial Projections — Bootstrap Track
 
-#### Conservative Scenario (Family-Centric Metrics)
-| Milestone | Families Connected | Revenue Phase | Projected Revenue | Notes |
-|-----------|--------------------|---------------|-------------------|-------|
-| v1.0 Launch (Jul 2026) | 1,000 | Phase 1 (Free) | Rs.0 | Founding families |
-| Month 6 (Jan 2027) | 5,000 | Phase 1 (Free) | Rs.0 | Wedding season boost |
-| Month 12 (Jul 2027) | 20,000 | Phase 2 (Add-ons) | Rs.3-5L/month | Premium themes + event bundles |
-| Month 18 (Jan 2028) | 50,000 | Phase 2 (Add-ons) | Rs.10-15L/month | Event bundles + family tree prints |
-| Month 24 (Jul 2028) | 150,000 | Phase 2+3 | Rs.30-50L/month | Add brand partnerships |
-| Month 36 (Jul 2029) | 500,000 | Phase 3 (Scale) | Rs.1-2Cr/month | Full monetization engine |
+This forecast is **slower than the original VC-track projection** because growth is constrained by self-generated revenue, not by a capital infusion. The trade-off is permanent profitability and 100% founder ownership.
 
-**Year 3 ARR (conservative): Rs.12-24 Cr** (from add-ons + event bundles + brand partnerships)
+#### Bootstrap Scenario (Self-Funded Through 10K, Revenue-Funded Thereafter)
 
-#### Why This Is Better Than Subscription
-- **Faster growth:** No paywall friction means faster family acquisition
-- **Higher retention:** Families never feel "locked out" of features
-- **Bigger TAM:** 100% of families use the product, not just paying 12%
-- **More attractive to investors:** Land grab phase with clear monetization path at scale
+| Milestone | Time horizon | Families | Revenue/mo | Costs/mo | Net/mo | Cumulative profit | Funding source |
+|---|---|---|---|---|---|---|---|
+| v1.0 Launch | Month 0 (Jul 2026) | 1,000 | ₹0 | ₹5K | (₹5K) | (₹5K) | Kumar |
+| Revenue rails live | Month 6 | 5,000 | ₹15K | ₹15K | ₹0 | (₹35K) | Kumar |
+| **Self-sufficiency** | **Month 12** | **10,000** | **₹50K** | **₹25K** | **+₹25K** | **(₹50K)** | **Transition** |
+| Revenue-funded growth | Month 18 | 25,000 | ₹1.5L | ₹50K | +₹1L | +₹0 | **Self** |
+| Pandit network mature | Month 24 | 50,000 | ₹4L | ₹1L | +₹3L | +₹15L | Self |
+| Brand partnerships start | Month 30 | 100,000 | ₹10L | ₹2L | +₹8L | +₹60L | Self |
+| Ads at scale | Month 36 | 250,000 | ₹25L | ₹4L | +₹21L | +₹2 Cr | Self |
+| Pre-million inflection | Month 48 | 750,000 | ₹80L | ₹10L | +₹70L | +₹10 Cr | Self |
+| Million-family milestone | Month 60 | 1,500,000 | ₹2 Cr | ₹25L | +₹1.75 Cr | +₹30 Cr | Self |
+| **5-year ARR run-rate** | **Month 60** | **1.5M** | **₹24 Cr** | **₹3 Cr** | **₹21 Cr/yr** | **₹30 Cr cumulative** | **Self** |
 
-### 5.6 Cost Structure
+**Total Kumar bridge-funding required: ~₹50K-1L** (between months 0-12, before revenue covers costs).
 
-| Cost Category | Monthly (Seed Phase) | Notes |
-|---------------|---------------------|-------|
-| Supabase Pro | $25/month | Up to 8 GB DB, 250 GB storage |
-| Supabase Pro Compute | $25/month | For Edge Functions + Realtime |
-| Expo EAS | $29/month | Unlimited builds |
-| Vercel (Web) | $0-20/month | Free tier for hobby |
-| CDN/Bandwidth | $10-50/month | Storage egress |
-| **Total Infrastructure** | **~Rs.12,000/month** | At seed stage |
+After Month 12 (10K families): Aangan generates positive cash flow indefinitely. Growth pace is set by how much profit is reinvested vs distributed to Kumar.
 
-Infrastructure scales to ~Rs.1.5L/month at 100K active families — covered by seed funding initially, then by premium add-on revenue at scale.
+#### Sensitivity — what if revenue activation is slower than planned?
+
+If we miss the Month 12 self-sufficiency threshold:
+- **Slip by 3 months:** Kumar funds an additional ₹50K-1L. Tolerable.
+- **Slip by 6 months:** Kumar funds an additional ₹2-3L. Painful but possible.
+- **Slip by 12 months:** Revenue model is broken; revisit Phase 0 thesis (are pandits not actually willing to use marketplace? Are families not buying prints?). May indicate we need a different revenue mix.
+
+**Hedge:** If by Month 9 (5K families) we don't have at least ₹15K/month run-rate, **pause growth and focus 100% on revenue activation** until rails are working. Better to be at 5K families with healthy unit economics than at 15K with broken ones.
+
+#### Why bootstrap beats VC track for Aangan
+
+| | VC track | Bootstrap track |
+|---|---|---|
+| **Time to 1M MAU** | ~24 months | ~60 months |
+| **Capital required** | ₹15-25 Cr seed | ₹50K-1L from Kumar |
+| **Founder equity at 1M MAU** | ~70% (after seed dilution) | **100%** |
+| **Decision rights** | Board + investors | Kumar alone |
+| **Exit clock** | 7-10 year IRR pressure | None |
+| **Revenue at 1M MAU** | ₹10-15 Cr/yr (similar) | ₹24 Cr/yr (higher — ARPU prioritized) |
+| **Net to Kumar at 1M MAU** | ~₹7-10 Cr cumulative dividend potential | **₹30 Cr cumulative retained earnings** |
+| **Risk profile** | High — VC can replace founder; pivot pressure | Low — Kumar controls outcome |
+| **Strategic agility** | Constrained by VC thesis | Full control |
+
+The bootstrap track delivers more money to Kumar over 5 years (~₹30 Cr cumulative profit retention vs ~₹7-10 Cr after dilution), keeps 100% control, and avoids the entire VC theatre. The cost is 2-3× slower growth — manageable for a family-network app where retention compounds, not for a fintech where speed is existential.
+
+#### When to optionally raise — strategic triggers only
+
+Raise external capital ONLY if one of these fires:
+
+1. **Meta launches an India-specific family product** — defensive acceleration warranted; raise ₹50-100 Cr to outspend on acquisition
+2. **Acquisition offer at ≥₹500 Cr valuation** — entertain, but only as exit (not growth funding)
+3. **International expansion opportunity** — bangladesh/pakistan/nepal diaspora simultaneously, requires geographic scale
+4. **Aadhaar/DigiLocker partnership** — government-scale opportunity requires enterprise capital
+5. **A strategic partnership requires equity dilution** (e.g., Reliance/Tata distribution deal)
+
+Absent any of these, do NOT raise. Bootstrap retains 100% of upside.
+
+### 5.6 Cost Structure — Frugal-Mode Operating
+
+Bootstrap requires aggressive cost discipline. Stay on free tiers until forced off. No tooling upgrades without a revenue justification.
+
+#### Monthly costs by scale (full detail in `notes/vendor-cost-projection-2026-05.md`)
+
+| Cost Category | Today (<1K) | At 5K | At 10K | At 100K | At 1M |
+|---|---|---|---|---|---|
+| Supabase | ₹0 (free tier) | ₹2K (Pro) | ₹2K | ₹15K | ₹2L |
+| Expo EAS | ₹0 (free) | ₹2.5K (Production) | ₹2.5K | ₹2.5K | ₹2.5K |
+| Vercel | ₹0 (Hobby) | ₹0 | ₹0 | ₹3K | ₹50K |
+| MSG91 SMS | ₹500 | ₹2K | ₹3K | ₹20K | ₹2L |
+| B2 + Cloudflare CDN | ₹0 | ₹0 | ₹0 | ₹1K | ₹15K |
+| Sentry | ₹0 (free) | ₹0 | ₹0 | ₹0-2K | ₹10K |
+| Other (Apple Dev, domain) | ₹500 amortized | ₹500 | ₹500 | ₹500 | ₹500 |
+| **Total Infrastructure** | **₹1K** | **₹7K** | **₹8-10K** | **₹40-50K** | **₹4-5L** |
+
+#### Frugality principles
+
+1. **Free tiers first, always.** Don't upgrade until forced (rate-limit hit, feature blocked, real customer-visible degradation).
+2. **No tooling subscriptions until proven need.** No premium Sentry features. No premium Vercel. No premium GitHub.
+3. **No hiring until revenue justifies it.** Kumar + contractors first. Hire only when revenue per role > 3× cost of role.
+4. **Quarterly cost review.** Compare last 90 days bills to forecast. Flag any vendor >20% over forecast. Refer to `notes/vendor-cost-projection-2026-05.md`.
+5. **Track every cost in `costs/YYYY-MM.md`.** Monthly invoice paper trail for accountability.
+
+#### What we deliberately do NOT spend on (in Bootstrap mode)
+
+- ❌ Premium marketing tools (HubSpot, Marketo) — use free Mailchimp + manual
+- ❌ Premium analytics — Vercel Analytics free tier + Supabase queries
+- ❌ Office space, equipment beyond essentials
+- ❌ Paid VC pitch consultants / advisors (we aren't pitching)
+- ❌ Premium design tools beyond what's needed
+- ❌ Co-working memberships beyond bare minimum
+
+#### What we DO spend on (revenue-funded after 10K)
+
+- ✅ Hindi YouTube influencer partnerships (₹2-5L per festival window)
+- ✅ Meta ads for NRI segment (₹50K-2L/mo)
+- ✅ Pandit partnership outreach + onboarding
+- ✅ Content production (Hindi long-form + festival pages)
+- ✅ Compliance (SOC 2, ISO when needed for enterprise customers)
+- ✅ Praharee transition when triggers fire (per `notes/praharee.md`)
 
 ---
 

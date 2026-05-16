@@ -1,12 +1,66 @@
 # Aangan — Growth & Monetization Strategy
 
 **Status:** Strategic plan, alive. Re-review monthly during growth phase.
-**Last updated:** [6:14pm - 16May26]
+**Last updated:** [6:48pm - 16May26]
 **Owner:** Kumar.
 
+> **⚠️ PRIMARY STRATEGY: Bootstrap to self-sufficiency.** Kumar self-funds Aangan
+> to 10K connected families. **Beyond 10K, the business must fund itself from
+> revenue.** This means the VC-funded phases described later in this doc
+> (Phase 2 ₹15-25 Cr seed, Phase 3 ₹50-100 Cr Series A, etc.) are **not the
+> primary plan** — they are an *alternative* path entertained only if a
+> strategic event demands it (Meta launches India family product, etc.).
+>
+> See `AANGAN_BUSINESS_PLAN.md` v0.8 for the canonical bootstrap-track
+> business plan. **Read that first; this doc supplies tactical depth for
+> Phase 0 (the only fully-funded phase) and lists the optional VC-track
+> tactics as a backup library.**
+>
 > **The two questions this doc answers:**
-> 1. How does Aangan reach 10M+ MAU as fast as possible?
-> 2. How does Aangan match Meta/Instagram-style monetization without charging users?
+> 1. How does Aangan reach 10K families on Kumar's bridge funding?
+> 2. How does Aangan generate enough revenue at 10K to self-fund growth beyond?
+
+---
+
+## Bootstrap mode — primary strategy
+
+**Critical milestones (Kumar-funded portion):**
+
+| Time | Families | Revenue/mo target | Spend cap |
+|---|---|---|---|
+| Month 0 (Jul 2026) | 1,000 | ₹0 | ₹5K/mo (just infra) |
+| Month 3 | 2,500 | ₹5K (early revenue) | ₹8K/mo |
+| Month 6 | 5,000 | ₹15K | ₹12K/mo |
+| **Month 12 — self-sufficiency** | **10,000** | **₹50K** | **₹25K/mo · transition off Kumar funding** |
+| Month 18 | 25,000 | ₹1.5L | ₹50K/mo · 30% reinvested |
+| Month 24 | 50,000 | ₹4L | ₹1L/mo · 30-40% reinvested |
+| Month 36 | 250,000 | ₹25L | ₹4L/mo · 30-40% reinvested |
+| Month 60 | 1,500,000 | ₹2 Cr | ₹25L/mo · 30-40% reinvested |
+
+**Total Kumar bridge-fund needed (Month 0-12): ₹50K-1L.** Modest. Within personal-balance-sheet range.
+
+**Revenue activation deadlines (must hit before Month 12):**
+
+| Revenue line | Deadline | Build effort | Revenue at 10K MAU |
+|---|---|---|---|
+| Razorpay integration + first SKU (Family Tree PDF ₹299) | Month 3 | 1 week | ₹3-5K/mo |
+| Pandit marketplace MVP (10 pandits) | Month 6 | 2-3 weeks | ₹10-15K/mo |
+| Aangan Premium (₹199/yr ad-free + verified) | Month 9 | 1 week | ₹5K/mo |
+| Family Tree print partner + checkout | Month 9 | 2 weeks | ₹10-15K/mo |
+| AdMob banner ads on public surfaces | Month 9 | 3 days | ₹3-5K/mo |
+| Festival event bundle SKUs (Diwali/Karwa Chauth) | Month 11 | 1-2 weeks | ₹10K/mo |
+| **Total at 10K** | | | **₹40-50K/mo** |
+
+**Cost structure to hit at 10K** (per `notes/vendor-cost-projection-2026-05.md`):
+- Supabase Pro: ₹2K/mo
+- MSG91 SMS: ₹3K/mo
+- EAS: ₹2.5K/mo
+- Other (Apple, domain): ₹500/mo
+- **Total: ~₹8-10K/mo** (using free tiers wherever possible)
+
+**Net at 10K: +₹30-40K/mo** = ₹3-5L/yr profit. This funds growth investment beyond 10K.
+
+---
 
 ---
 
