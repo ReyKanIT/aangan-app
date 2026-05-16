@@ -11,6 +11,13 @@ import ErrorBoundary from './src/components/common/ErrorBoundary';
 import { registerForPushNotifications, setupNotificationListeners } from './src/services/pushNotifications';
 import { useAuthStore } from './src/stores/authStore';
 import { supabase } from './src/config/supabase';
+import { Analytics } from './src/utils/analytics';
+
+// Initialize Sentry as early as possible — before fonts, before navigator
+// state, before any async work that might throw. If EXPO_PUBLIC_SENTRY_DSN
+// is not set (local dev), this is a no-op. See SENTRY_RN_SETUP.md for the
+// one-time EAS env config and Sentry project setup.
+Analytics.init();
 
 // Prevent auto-hiding splash screen
 SplashScreenExpo.preventAutoHideAsync();

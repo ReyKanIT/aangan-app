@@ -2,7 +2,7 @@
   "expo": {
     "name": "Aangan आँगन",
     "slug": "aangan",
-    "version": "0.15.0",
+    "version": "0.15.5",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -54,6 +54,12 @@
     "plugins": [
       "expo-font",
       "expo-secure-store",
+      [
+        "@sentry/react-native/expo",
+        {
+          "url": "https://sentry.io/"
+        }
+      ],
       [
         "expo-image-picker",
         {
