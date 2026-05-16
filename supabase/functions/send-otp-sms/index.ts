@@ -23,12 +23,27 @@ const MSG91_TEMPLATE_ID =
 const MSG91_SENDER_ID   = Deno.env.get('MSG91_SENDER_ID') ?? 'AANGFM';
 const WEBHOOK_SECRET    = Deno.env.get('SUPABASE_WEBHOOK_SECRET') ?? '';
 
-// No bypass. Real SMS via MSG91 + Vi DLT is the only authentication
-// path — works for every Indian mobile, like any standard app. If you
-// ever need a temp bypass again, repopulate this Set AND mirror the
-// rows in Supabase Dashboard → Auth → Phone → Test phone numbers
-// (Dashboard is authoritative in prod).
-const REVIEWER_PHONES = new Set<string>([]);
+// Reviewer bypass — phones in this set skip the MSG91 call and return 200
+// immediately. The actual OTP that gets accepted is set in Supabase
+// Dashboard → Auth → Phone → Test phone numbers (must mirror this list,
+// Dashboard is authoritative for verification).
+//
+// Driven by env var REVIEWER_PHONES_E164, a comma-separated list of E.164
+// numbers *without* leading "+", e.g. "919999999999,918888888888". Kept as
+// env so Apple/Google review credentials can be rotated without redeploy.
+//
+// To add Apple App Review demo account (see APPLE_REVIEW_DEMO_ACCOUNT.md):
+//   1. Pick a fixed phone like +91 99999 99999, OTP like 123456
+//   2. Supabase Dashboard → Auth → Phone → Test phone numbers → add pair
+//   3. Supabase function secrets → REVIEWER_PHONES_E164 = "919999999999"
+//   4. Apple ASC → App Review → Sign-in info → phone +91 99999 99999, OTP 123456
+//   5. After Apple approval, remove the entry from both Dashboard and env
+const REVIEWER_PHONES = new Set<string>(
+  (Deno.env.get('REVIEWER_PHONES_E164') ?? '')
+    .split(',')
+    .map((s) => s.trim())
+    .filter((s) => s.length > 0),
+);
 
 Deno.serve(async (req: Request) => {
   if (req.method !== 'POST') {
