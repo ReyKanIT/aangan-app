@@ -145,34 +145,34 @@ Strengths:
 | # | Item | Owner | Status | Notes |
 |---|---|---|---|---|
 | 1 | Save CEO review + tracker | Claude | ✅ | This file |
-| 2 | Commit panchang v2 + register as v0.15.5 | Claude | ⏳ | |
-| 3 | Flip `PLAY_STORE_URL` + iOS TestFlight link | Claude | ⏳ | `aangan_web/src/app/page.tsx` |
-| 4 | Demo-account flow (phone `9999999999` → OTP `123456` env-gated) | Claude | ⏳ | |
-| 5 | In-app account-delete flow | Claude | ⏳ | Play requirement |
-| 6 | `@sentry/react-native` on aangan_rn | Claude | ⏳ | |
-| 7 | 6 store screenshots @ 1290×2796 | Claude | ⏳ | iOS sim or web @ device frame |
-| 8 | Execute keystore backup runbook | **Kumar** | ⏳ | 15 min — 1Password |
-| 9 | Audit MSG91 dashboard → `costs/2026-05.md` | **Kumar** | ⏳ | 30 min |
-| 10 | Email WALKOVER re DLT chain `1115177724853137338` | **Kumar** | ⏳ | 5 min |
+| 2 | Commit panchang v2 + register as v0.15.5 | Claude | ✅ | Tag `v0.15.5` — Drik-accurate sunrise/sunset, Purnimanta Masa, Rahu/Choghadiya, Bhadra/Panchak |
+| 3 | Flip `PLAY_STORE_URL` + iOS TestFlight link | Claude | ✅ | Env-driven: `NEXT_PUBLIC_PLAY_STORE_URL`, `NEXT_PUBLIC_APP_STORE_URL`, `NEXT_PUBLIC_TESTFLIGHT_URL`. Flip from Vercel without code edit. |
+| 4 | Demo-account flow (phone `9999999999` → OTP `123456` env-gated) | Claude | ✅ | Wired via `REVIEWER_PHONES_E164` env on `supabase/functions/send-otp-sms`. Runbook: `APPLE_REVIEW_DEMO_ACCOUNT.md`. **Kumar:** set the Supabase Dashboard test-phone pair + the env secret + the ASC sign-in info. |
+| 5 | In-app account-delete flow | Claude | ✅ | "Danger Zone" with typed-DELETE confirmation in `/(app)/settings`, `/api/account/delete` endpoint, critical-features guards added (21 markers / 6 routes pass). |
+| 6 | `@sentry/react-native` on aangan_rn | Claude | ✅ | Package pinned in `aangan_rn/package.json`, expo plugin added, `Analytics.init()` called early in `App.tsx`. Runbook: `SENTRY_RN_SETUP.md`. **Kumar:** `npx expo install @sentry/react-native` + `eas env:create EXPO_PUBLIC_SENTRY_DSN`. |
+| 7 | 6 store screenshots @ 1290×2796 | Claude | ✅ | `app_store_screenshots/` — 6 PNGs at exact Apple 6.7″ size, regen command in folder README. Authenticated screens (feed/family/events) flagged as v2 follow-up post-demo-account wiring. |
+| 8 | Execute keystore backup runbook | **Kumar** | ⏳ | 15 min — 1Password. See `KEYSTORE_BACKUP_RUNBOOK.md`. Removes catastrophic single-point-of-failure. |
+| 9 | Audit MSG91 dashboard → `costs/2026-05.md` | **Kumar** | ⏳ | 30 min. `costs/` scaffold ships next so you have a template. |
+| 10 | Email WALKOVER re DLT chain `1115177724853137338` | **Kumar** | ⏳ | 5 min — 48h re-ping cadence until TM accepts. |
 
 ### 30-Day Bets
 
 | # | Item | Owner | Status |
 |---|---|---|---|
-| 11 | Daily Panchang WhatsApp/Email opt-in | Claude | ⏳ |
-| 12 | Razorpay test integration + ₹299 Family Tree PDF SKU | Claude | ⏳ |
-| 13 | `packages/shared` pnpm workspace (kinship + types + supabase) | Claude | ⏳ |
-| 14 | Forced "Invite 3 family members" onboarding step | Claude | ⏳ |
-| 15 | Per-festival SEO landing pages (50+, programmatic) | Claude | ⏳ |
+| 11 | Daily Panchang WhatsApp/Email opt-in | Claude | ✅ Capture wired (`/api/panchang/subscribe` + `DailyPanchangOptIn` component on `/panchang` + `/festivals/[slug]`). `panchang_subscribers` migration shipped — **Kumar: `supabase db push` to apply.** Delivery (Pass C on `panchang-nudge` cron) is the v2 follow-up once Kumar picks WhatsApp vs email channel. |
+| 12 | Razorpay test integration + ₹299 Family Tree PDF SKU | Claude | ⏳ Not started |
+| 13 | `packages/shared` pnpm workspace (kinship + types + supabase) | Claude | ⏳ Large refactor — held |
+| 14 | Forced "Invite 3 family members" onboarding step | Claude | ⏳ Not started |
+| 15 | Per-festival SEO landing pages (50+, programmatic) | Claude | ✅ 24 routes shipped (`/festivals/[slug]`) — Event + BreadcrumbList JSON-LD, opt-in CTA, sitemap auto-includes, /festivals list now links to detail pages. Adding a festival = appending one entry to `data/festivals2026.ts`. |
 
 ### 90-Day Strategic
 
 | # | Item | Owner | Status |
 |---|---|---|---|
-| 16 | `costs/` directory + monthly invoice template | Claude | ⏳ |
-| 17 | `BUS_FACTOR.md` doc + 1Password "Aangan Ops" vault | Kumar (vault) + Claude (doc) | ⏳ |
-| 18 | `release.mjs` cross-store release-train | Claude | ⏳ |
-| 19 | Status page + synthetic OTP probe (15-min cadence) | Claude | ⏳ |
+| 16 | `costs/` directory + monthly invoice template | Claude | ✅ `costs/README.md`, `TEMPLATE.md`, `2026-05.md` shipped. Pre-filled with CFO Review estimates; Kumar fills actuals from MSG91/Supabase/EAS dashboards. |
+| 17 | `BUS_FACTOR.md` doc + 1Password "Aangan Ops" vault | Claude (doc) + Kumar (vault) | ✅ doc shipped. ⏳ Kumar to create vault + designate successor. |
+| 18 | `release.mjs` cross-store release-train | Claude | ✅ shipped. `node scripts/release.mjs --type patch --commit --build all` bumps web/RN versions + iOS buildNumber + Android versionCode, runs build, tags, triggers EAS. Dry-run verified. |
+| 19 | Status page + synthetic OTP probe (15-min cadence) | Claude | ⏳ Not started (needs external service choice) |
 | 20 | Content engine (1 long-form Hindi piece/week) | Kumar (content) | ⏳ |
 | 21 | Pandit/Purohit affiliate program | Kumar | ⏳ |
 | 22 | NRI WhatsApp drip (Meta ads) | Kumar | ⏳ |
