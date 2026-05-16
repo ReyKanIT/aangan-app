@@ -68,6 +68,27 @@ const MANIFEST = [
       { name: 'useConfirm import', match: "import { useConfirm } from '@/components/ui/ConfirmDialog'" },
       { name: 'Sign-out uses await confirm({...})', match: /handleSignOut[\s\S]{0,400}await confirm\(/ },
       { name: 'NOT browser confirm() for sign-out', mustNotMatch: /handleSignOut[\s\S]{0,200}\bif\s*\(\s*!\s*confirm\(/ },
+      // Account-delete flow (Google Play + Apple App Review requirement).
+      // Without an in-app delete path, both stores block production updates
+      // after 2023-2024 policy enforcement.
+      { name: 'Delete-account handler', match: 'handleDeleteAccount' },
+      { name: 'Delete-account POST to API', match: "fetch('/api/account/delete'" },
+      { name: 'Typed DELETE confirmation gate', match: /DELETE['"][\s\S]{0,200}must-type|deleteConfirmText.*toUpperCase\(\)\s*!==\s*['"]DELETE['"]/ },
+      { name: 'Danger Zone label visible', match: 'Danger Zone' },
+    ],
+  },
+  // /api/account/delete — server side of the in-app deletion path. If this
+  // file is missing or wired wrong, Play and Apple block updates. Treat
+  // removal as a P0 regression.
+  {
+    route: '/api/account/delete',
+    file: 'src/app/api/account/delete/route.ts',
+    markers: [
+      { name: 'POST handler', match: /export\s+async\s+function\s+POST/ },
+      { name: 'Auth check via SSR', match: 'createSupabaseServer' },
+      { name: 'Same-origin guard', match: 'isSameOrigin' },
+      { name: 'Typed-confirmation gate', match: "body.confirm !== 'DELETE'" },
+      { name: 'Service-role admin delete', match: 'admin.deleteUser' },
     ],
   },
   // /(app)/error — route-level error boundary added v0.13.15 to prevent

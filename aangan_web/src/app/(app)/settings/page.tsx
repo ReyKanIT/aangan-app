@@ -33,6 +33,15 @@ export default function SettingsPage() {
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
 
+  // Account deletion state — gated by typed-DELETE confirmation, two clicks.
+  // Required by Google Play (App content → User data deletion) and Apple
+  // App Review post-2023. Without this users can only delete via support
+  // email, which Play flags as a publishing block.
+  const [showDeleteSection, setShowDeleteSection] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState('');
+  const [isDeletingAccount, setIsDeletingAccount] = useState(false);
+  const [deleteError, setDeleteError] = useState('');
+
   // Feedback state
   const [showFeedback, setShowFeedback] = useState(false);
   const [fbCategory, setFbCategory] = useState<string>('general');
@@ -108,6 +117,53 @@ export default function SettingsPage() {
     } catch (e) {
       console.error('[settings] signOut failed:', e);
       setIsSigningOut(false);
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    if (isDeletingAccount) return;
+    setDeleteError('');
+    // First click reveals the confirmation panel; user types DELETE; second
+    // click actually deletes. We also gate behind the Hindi-first dialog
+    // for one last "really?" moment.
+    if (!showDeleteSection) {
+      setShowDeleteSection(true);
+      return;
+    }
+    if (deleteConfirmText.trim().toUpperCase() !== 'DELETE') {
+      setDeleteError('कृपया "DELETE" लिखें — Please type "DELETE" to confirm');
+      return;
+    }
+    const ok = await confirm({
+      title: 'खाता हमेशा के लिए हटाएँ?',
+      subtitle: 'Delete account permanently?',
+      body:
+        'आपकी सारी पोस्ट, फ़ोटो, परिवार-कनेक्शन और इवेंट्स हमेशा के लिए हट जाएँगे। ' +
+        'यह वापस नहीं किया जा सकता। — All your posts, photos, family connections, ' +
+        'and events will be permanently deleted. This cannot be undone.',
+      confirmLabel: 'हाँ, हटाएँ — Yes, delete',
+      cancelLabel: 'नहीं — No',
+    });
+    if (!ok) return;
+    setIsDeletingAccount(true);
+    try {
+      const res = await fetch('/api/account/delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ confirm: 'DELETE' }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setDeleteError(data.message || data.error || `Delete failed (${res.status})`);
+        setIsDeletingAccount(false);
+        return;
+      }
+      // Account is gone from auth.users — sign out locally and bounce to login.
+      try { await signOut(); } catch { /* session already invalid */ }
+      router.replace('/login?deleted=1');
+    } catch (e: unknown) {
+      setDeleteError(e instanceof Error ? e.message : 'Network error');
+      setIsDeletingAccount(false);
     }
   };
 
@@ -384,6 +440,72 @@ export default function SettingsPage() {
       <GoldButton variant="danger" className="w-full" loading={isSigningOut} disabled={isSigningOut} onClick={handleSignOut}>
         साइन आउट — Sign Out
       </GoldButton>
+
+      {/* ─── Danger Zone — Account Deletion ─────────────────────────────
+          Required for Google Play (App content → User data deletion) and
+          Apple App Review. Two clicks + typed "DELETE" + final dialog. */}
+      <div className="mt-10 pt-6 border-t-2 border-red-200">
+        <p className="text-sm font-semibold text-red-700 mb-1">{'⚠️ Danger Zone'}</p>
+        <p className="text-sm text-brown-light mb-3">
+          {'खाता हटाने पर सारा डेटा हमेशा के लिए चला जाएगा। · Account deletion is permanent and irreversible.'}
+        </p>
+
+        {!showDeleteSection ? (
+          <button
+            type="button"
+            onClick={handleDeleteAccount}
+            className="w-full min-h-dadi px-6 py-3 rounded-2xl border-2 border-red-300 bg-white text-red-700 font-semibold text-base hover:bg-red-50 transition-colors"
+          >
+            {'खाता हटाएँ — Delete my account'}
+          </button>
+        ) : (
+          <div className="bg-red-50 border-2 border-red-200 rounded-2xl p-5">
+            <p className="text-base font-semibold text-red-900 mb-2">
+              {'क्या आप वाकई खाता हटाना चाहते हैं?'}
+            </p>
+            <p className="text-sm text-red-800 mb-3">
+              {'Are you sure? This will permanently delete your account, all posts, photos, family connections, and event RSVPs. This cannot be undone.'}
+            </p>
+            <p className="text-sm text-red-800 mb-2">
+              {'पुष्टि करने के लिए नीचे "DELETE" लिखें · Type "DELETE" below to confirm:'}
+            </p>
+            <input
+              type="text"
+              value={deleteConfirmText}
+              onChange={(e) => { setDeleteConfirmText(e.target.value); setDeleteError(''); }}
+              placeholder="DELETE"
+              autoCapitalize="characters"
+              autoCorrect="off"
+              spellCheck={false}
+              className="w-full min-h-dadi px-4 py-3 rounded-xl border-2 border-red-300 bg-white text-brown text-base mb-3 focus:outline-none focus:border-red-500"
+              aria-label="Type DELETE to confirm"
+            />
+            {deleteError && (
+              <p className="text-sm text-red-700 mb-3">{deleteError}</p>
+            )}
+            <div className="flex flex-col sm:flex-row gap-2">
+              <button
+                type="button"
+                onClick={handleDeleteAccount}
+                disabled={isDeletingAccount || deleteConfirmText.trim().toUpperCase() !== 'DELETE'}
+                className="flex-1 min-h-dadi px-6 py-3 rounded-2xl bg-red-600 text-white font-semibold text-base hover:bg-red-700 disabled:bg-red-300 disabled:cursor-not-allowed transition-colors"
+              >
+                {isDeletingAccount
+                  ? 'हटाया जा रहा है… — Deleting…'
+                  : 'हाँ, हमेशा के लिए हटाएँ — Yes, delete permanently'}
+              </button>
+              <button
+                type="button"
+                onClick={() => { setShowDeleteSection(false); setDeleteConfirmText(''); setDeleteError(''); }}
+                disabled={isDeletingAccount}
+                className="flex-1 min-h-dadi px-6 py-3 rounded-2xl bg-white border-2 border-brown-light/30 text-brown font-semibold text-base hover:bg-cream transition-colors"
+              >
+                {'रद्द करें — Cancel'}
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
 
       {/* Version */}
       <p className="font-body text-sm text-brown-light text-center mt-6">Aangan v{RELEASES[0].version}</p>

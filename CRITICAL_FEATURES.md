@@ -1,5 +1,5 @@
 # CRITICAL_FEATURES.md
-*Last updated: [1:25am - 3May26]*
+*Last updated: [11:29pm - 15May26] — added in-app account-delete flow (Play/Apple compliance)*
 
 > **What this is:** an authoritative manifest of UI features that **must always
 > be present** on Aangan. If you (human, AI, or refactor) are about to delete
@@ -69,6 +69,14 @@
 | Sign-out button | `[data-testid="settings-signout"]` | Self-service exit, GDPR-adjacent | `smoke/settings.spec.ts` (TBD) |
 | Sign-out uses **useConfirm()** Hindi-first dialog | NOT browser `confirm()` | Jyotsna ticket — never regress to native confirm | `smoke/settings.spec.ts` (TBD) |
 | Aangan ID card with Copy + WhatsApp share | `[data-testid="settings-aangan-id"]` | Cross-device discovery primitive | `smoke/settings.spec.ts` (TBD) |
+| **Delete-account flow** ("Danger Zone" with typed `DELETE` confirmation) | "Danger Zone" header + `handleDeleteAccount` handler | **Google Play + Apple App Review requirement** — missing in-app delete blocks production updates after 2023-2024 policy enforcement | `smoke/settings.spec.ts` (TBD) + check-critical-features.mjs |
+
+### `/api/account/delete`
+| Feature | Selector | Why critical | Smoke test |
+|---|---|---|---|
+| POST handler with same-origin guard | `export async function POST` + `isSameOrigin` | Server side of in-app deletion — required by Play/Apple. | check-critical-features.mjs |
+| Auth via SSR cookie + service-role admin delete | `createSupabaseServer` + `admin.deleteUser` | Only the signed-in user can delete their own account; service-role is required for `auth.admin` API | check-critical-features.mjs |
+| Typed `DELETE` confirmation enforced server-side | `body.confirm !== 'DELETE'` returns 400 | Defence in depth on top of client-side typed gate — a malicious script can't trigger delete without the payload | check-critical-features.mjs |
 
 ### `/(app)/events`
 | Feature | Selector | Why critical | Smoke test |
