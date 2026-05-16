@@ -39,17 +39,19 @@
 
 **Total Kumar bridge-fund needed (Month 0-12): ₹50K-1L.** Modest. Within personal-balance-sheet range.
 
-**Revenue activation deadlines (must hit before Month 12):**
+**Revenue activation milestones — sequenced by USER MILESTONE, not calendar (Kumar's rule 2026-05-16: no Razorpay until 500 users):**
 
-| Revenue line | Deadline | Build effort | Revenue at 10K MAU |
+| Revenue line | Gated by | Build effort | Revenue at 10K MAU |
 |---|---|---|---|
-| Razorpay integration + first SKU (Family Tree PDF ₹299) | Month 3 | 1 week | ₹3-5K/mo |
-| Pandit marketplace MVP (10 pandits) | Month 6 | 2-3 weeks | ₹10-15K/mo |
-| Aangan Premium (₹199/yr ad-free + verified) | Month 9 | 1 week | ₹5K/mo |
-| Family Tree print partner + checkout | Month 9 | 2 weeks | ₹10-15K/mo |
-| AdMob banner ads on public surfaces | Month 9 | 3 days | ₹3-5K/mo |
-| Festival event bundle SKUs (Diwali/Karwa Chauth) | Month 11 | 1-2 weeks | ₹10K/mo |
+| Razorpay integration + first SKU (Family Tree PDF ₹299) | **500 users reached** | 1 week | ₹3-5K/mo |
+| Pandit marketplace MVP (10 pandits) | **2,000 users** | 2-3 weeks | ₹10-15K/mo |
+| Aangan Premium (₹199/yr ad-free + verified) | **5,000 users** | 1 week | ₹5K/mo |
+| Family Tree print partner + checkout | **5,000 users** | 2 weeks | ₹10-15K/mo |
+| AdMob banner ads on public surfaces | **5,000 users** + UX review | 3 days | ₹3-5K/mo |
+| Festival event bundle SKUs (Diwali/Karwa Chauth) | **8,000 users** | 1-2 weeks | ₹10K/mo |
 | **Total at 10K** | | | **₹40-50K/mo** |
+
+**Why milestone-gated, not calendar-gated:** Premature monetization wastes engineering time. The right rule is "build the next revenue line only when the previous user-milestone validates demand." If we never reach 500 users, we never built Razorpay — and that's the right answer.
 
 **Cost structure to hit at 10K** (per `notes/vendor-cost-projection-2026-05.md`):
 - Supabase Pro: ₹2K/mo

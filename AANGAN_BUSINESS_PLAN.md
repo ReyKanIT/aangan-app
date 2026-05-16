@@ -214,12 +214,14 @@ None of these touch the core "family social network" experience. They are **alon
 
 Before Aangan reaches 10K families, the revenue rails must be live. This phase is about *infrastructure*, not revenue volume — proof that the pipes work.
 
-Pre-10K activation checklist:
-- [ ] Razorpay integration shipped (test mode → production)
-- [ ] First priced SKU live (Family Tree PDF at ₹299, or print at ₹999)
-- [ ] Pandit marketplace MVP — at least 10 pandits onboarded, booking + escrow flow live
-- [ ] Aangan Premium tier shipped (initial offering: ad-free + verified badge, ₹199/yr)
-- [ ] Optional: AdMob banner ads in non-core surfaces (festival pages, public panchang)
+Pre-10K activation checklist (sequenced, NOT all at once):
+- [ ] **First, reach 500 users via organic + viral.** No monetization infrastructure built yet. Validates that demand exists and the family-invite loop works.
+- [ ] At **500 users**: Razorpay integration shipped (test mode → production) + first priced SKU live (Family Tree PDF at ₹299). One small paid product, validate willingness to pay.
+- [ ] At **2,000 users**: Pandit marketplace MVP — at least 10 pandits onboarded, booking + escrow flow live.
+- [ ] At **5,000 users**: Aangan Premium tier shipped (initial offering: ad-free + verified badge, ₹199/yr).
+- [ ] At **5,000 users**: Optional AdMob banner ads in non-core surfaces (festival pages, public panchang) — only if not jarring to UX.
+
+**Why this sequencing matters:** Building monetization before there's demand wastes engineering time. ₹299 SKU at 50 users = ₹300 revenue, not worth 1 week of build. Same SKU at 500 users could be ₹7,500 (validating real demand), at 2,000 users could be ₹30K (real signal).
 
 **Target:** ₹10-25K/month revenue by 5K families. Proves the rails work; not yet covering full costs.
 
