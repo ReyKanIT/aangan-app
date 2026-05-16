@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { getPanchang, moonPhaseEmoji, yogaDescription, DELHI } from '@/services/panchangService';
 import PublicShareCTA from '@/components/ui/PublicShareCTA';
+import DailyPanchangOptIn from '@/components/panchang/DailyPanchangOptIn';
 import { RELEASES } from '@/data/versions';
 
 function formatDateHindi(d: Date): string {
@@ -134,6 +135,12 @@ export default function PanchangPage() {
         <p className="text-center text-sm text-brown-light/60 mt-4">
           स्थान: नई दिल्ली (28.61°N, 77.21°E) &middot; Location: New Delhi
         </p>
+
+        {/* Daily panchang opt-in — CMO growth bet #1.
+            Captures phone/email for non-logged-in visitors so we can
+            deliver daily panchang via WhatsApp/SMS/email. Funnels SEO
+            traffic into a recurring touchpoint. */}
+        <DailyPanchangOptIn source="panchang_page" />
 
         {/* Active warnings — only show when applicable */}
         {(panchang.isBhadra || panchang.isPanchak) && (
