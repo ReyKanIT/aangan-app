@@ -160,6 +160,60 @@ function GuidedFlowBanner({ progress, onDismiss, navigation, isHindi }: GuidedFl
   );
 }
 
+// v0.15.10 — Facebook-style "What's on your mind?" composer card.
+// Sits between PanchangWidget and the first post. Tap → opens PostComposer.
+// Avatar circle on left, prompt text in middle, quick-action chips on right.
+function ComposerPrompt({
+  avatarUrl,
+  onPress,
+  isHindi,
+}: {
+  avatarUrl: string | null;
+  onPress: () => void;
+  isHindi: boolean;
+}) {
+  return (
+    <TouchableOpacity
+      style={composerStyles.card}
+      onPress={onPress}
+      activeOpacity={0.85}
+      accessibilityRole="button"
+      accessibilityLabel={isHindi ? 'पोस्ट लिखें' : 'Compose a post'}
+    >
+      <View style={composerStyles.row}>
+        <View style={composerStyles.avatarRing}>
+          {avatarUrl ? (
+            <Image source={{ uri: avatarUrl }} style={composerStyles.avatar} />
+          ) : (
+            <View style={[composerStyles.avatar, composerStyles.avatarFallback]}>
+              <Text style={composerStyles.avatarFallbackText}>{'+'}</Text>
+            </View>
+          )}
+        </View>
+        <Text style={composerStyles.prompt} numberOfLines={1}>
+          {'अपने मन की बात लिखें…'}
+        </Text>
+      </View>
+      <View style={composerStyles.actionsRow}>
+        <View style={composerStyles.action}>
+          <Text style={composerStyles.actionEmoji}>{'📷'}</Text>
+          <Text style={composerStyles.actionLabel}>{'फ़ोटो'}</Text>
+        </View>
+        <View style={composerStyles.actionDivider} />
+        <View style={composerStyles.action}>
+          <Text style={composerStyles.actionEmoji}>{'🎥'}</Text>
+          <Text style={composerStyles.actionLabel}>{'वीडियो'}</Text>
+        </View>
+        <View style={composerStyles.actionDivider} />
+        <View style={composerStyles.action}>
+          <Text style={composerStyles.actionEmoji}>{'🎤'}</Text>
+          <Text style={composerStyles.actionLabel}>{'आवाज़'}</Text>
+        </View>
+      </View>
+    </TouchableOpacity>
+  );
+}
+
 function PanchangWidget() {
   const [expanded, setExpanded] = useState(false);
   const [panchang, setPanchang] = useState<PanchangData>(() => getPanchang(new Date(), DELHI));
@@ -548,8 +602,14 @@ export default function HomeFeedScreen({ navigation }: Props) {
       )}
       <PanchangWidget />
       <FestivalBanner />
+      {/* v0.15.10 — Facebook-style "What's on your mind?" composer card */}
+      <ComposerPrompt
+        avatarUrl={user?.profile_photo_url ?? null}
+        onPress={handleNavigateComposer}
+        isHindi={isHindi}
+      />
     </View>
-  ), [guidedFlowDismissed, onboardingProgress, handleDismissGuidedFlow, navigation, isHindi]);
+  ), [guidedFlowDismissed, onboardingProgress, handleDismissGuidedFlow, navigation, isHindi, user?.profile_photo_url, handleNavigateComposer]);
 
   const renderItem = useCallback(({ item }: { item: Post }) => (
     <PostCard post={item} onLike={handleLike} />
@@ -852,6 +912,77 @@ const guidedFlowStyles = StyleSheet.create({
     color: Colors.haldiGoldDark,
     marginTop: Spacing.md,
     fontWeight: '600',
+  },
+});
+
+// v0.15.10 — ComposerPrompt styles (Facebook-style "What's on your mind?")
+const composerStyles = StyleSheet.create({
+  card: {
+    marginHorizontal: Spacing.lg,
+    marginBottom: Spacing.md,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    paddingHorizontal: 16,
+    paddingTop: 14,
+    paddingBottom: 6,
+    shadowColor: '#3A2A12',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.07,
+    shadowRadius: 14,
+    elevation: 3,
+    borderWidth: 1,
+    borderColor: '#F2EAD3',
+  },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingBottom: 12,
+  },
+  avatarRing: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    borderWidth: 2,
+    borderColor: '#F3E5B5',
+    justifyContent: 'center',
+    alignItems: 'center',
+    overflow: 'hidden',
+    marginRight: 12,
+  },
+  avatar: { width: 40, height: 40, borderRadius: 20 },
+  avatarFallback: {
+    backgroundColor: '#FAF5E3',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  avatarFallbackText: { fontSize: 18, color: '#9C7E2E', fontWeight: '700' },
+  prompt: {
+    fontSize: 15,
+    color: '#85714A',
+    flex: 1,
+    letterSpacing: 0.2,
+  },
+  actionsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderTopWidth: 1,
+    borderTopColor: '#F5EFDE',
+    paddingTop: 8,
+  },
+  action: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 10,
+    gap: 6,
+  },
+  actionEmoji: { fontSize: 18 },
+  actionLabel: { fontSize: 13, color: '#5C3D1E', fontWeight: '600' },
+  actionDivider: {
+    width: 1,
+    height: 20,
+    backgroundColor: '#F5EFDE',
   },
 });
 

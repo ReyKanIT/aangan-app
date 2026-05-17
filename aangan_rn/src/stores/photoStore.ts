@@ -114,7 +114,12 @@ export const usePhotoStore = create<PhotoState>((set, get) => ({
             photo_url: publicUrl,
             thumbnail_url: null,
             caption,
-            status: 'pending' as PhotoStatus,
+            // v0.15.10 fix: default to 'approved' so uploaded photos are
+            // immediately visible. Previous default 'pending' meant
+            // photos vanished after upload (fetchPhotos filters
+            // status='approved'). Family events are inherently trusted
+            // — moderation can be added back if abuse becomes a problem.
+            status: 'approved' as PhotoStatus,
             privacy_type: privacyType,
             privacy_level_min: privacyLevelMin,
             privacy_level_max: privacyLevelMax,
