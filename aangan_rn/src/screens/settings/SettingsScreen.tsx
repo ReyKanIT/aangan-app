@@ -450,59 +450,14 @@ export default function SettingsScreen({ navigation }: Props) {
           </View>
         </View>
 
-        {/* 6. Storage */}
-        <SectionHeader title={isHindi ? '\u0938\u094D\u091F\u094B\u0930\u0947\u091C (Storage)' : 'Storage'} />
-        <View style={[styles.card, Shadow.sm]}>
-          {storageLoading ? (
-            <View style={styles.loadingContainer}>
-              <ActivityIndicator size="small" color={Colors.haldiGold} />
-            </View>
-          ) : (
-            <>
-              <CircularProgress
-                percent={usage.usedPercent}
-                usedGb={usage.usedGb}
-                totalGb={usage.totalGb}
-              />
-
-              <View style={styles.storageBreakdown}>
-                <View style={styles.storageRow}>
-                  <Text style={styles.storageLabel}>
-                    {isHindi ? '\u092C\u0947\u0938 \u0938\u094D\u091F\u094B\u0930\u0947\u091C' : 'Base Storage'}
-                  </Text>
-                  <Text style={styles.storageValue}>{usage.baseGb}{' GB'}</Text>
-                </View>
-                <View style={styles.storageRow}>
-                  <Text style={styles.storageLabel}>
-                    {isHindi ? '\u0930\u0947\u092B\u0930\u0932 \u092C\u094B\u0928\u0938' : 'Referral Bonus'}
-                  </Text>
-                  <Text style={styles.storageValue}>{usage.referralBonusGb}{' GB'}</Text>
-                </View>
-                <View style={styles.storageRow}>
-                  <Text style={styles.storageLabel}>
-                    {isHindi ? '\u0916\u0930\u0940\u0926\u093E \u0917\u092F\u093E' : 'Purchased'}
-                  </Text>
-                  <Text style={styles.storageValue}>{usage.purchasedGb}{' GB'}</Text>
-                </View>
-              </View>
-
-              <TouchableOpacity
-                style={styles.upgradeButton}
-                activeOpacity={0.7}
-                onPress={() => Alert.alert(
-                  isHindi ? '\u091C\u0932\u094D\u0926 \u0906 \u0930\u0939\u093E \u0939\u0948' : 'Coming Soon',
-                  isHindi ? '\u0938\u094D\u091F\u094B\u0930\u0947\u091C \u0905\u092A\u0917\u094D\u0930\u0947\u0921 \u091C\u0932\u094D\u0926 \u0909\u092A\u0932\u092C\u094D\u0927 \u0939\u094B\u0917\u093E' : 'Storage upgrade coming soon',
-                )}
-                accessibilityRole="button"
-                accessibilityLabel="Upgrade storage"
-              >
-                <Text style={styles.upgradeButtonText}>
-                  {isHindi ? '\u0905\u092A\u0917\u094D\u0930\u0947\u0921 \u0915\u0930\u0947\u0902 (Upgrade)' : 'Upgrade Storage'}
-                </Text>
-              </TouchableOpacity>
-            </>
-          )}
-        </View>
+        {/* v0.15.8: Storage section removed.
+            Per Kumar's bootstrap-pivot decision (2026-05-17): Aangan will
+            support Facebook/Instagram-style unlimited media uploads, not
+            sell fixed storage plans. Surfacing "X / Y GB used" + upgrade
+            buttons sets wrong expectations and creates a fake paywall.
+            The storageStore + CircularProgress component remain in code
+            so internal tooling / future per-family quotas can use them,
+            but no user-facing UI references them anywhere. */}
 
         {/* 6. Referral */}
         <View style={[styles.card, Shadow.sm]}>
@@ -519,7 +474,7 @@ export default function SettingsScreen({ navigation }: Props) {
                 {isHindi ? '\u0926\u094B\u0938\u094D\u0924\u094B\u0902 \u0915\u094B \u091C\u094B\u0921\u093C\u0947\u0902' : 'Refer Friends'}
               </Text>
               <Text style={styles.referralSubtitle}>
-                {isHindi ? 'Invite friends & earn storage' : '\u0926\u094B\u0938\u094D\u0924\u094B\u0902 \u0915\u094B \u092C\u0941\u0932\u093E\u090F\u0902 \u0914\u0930 \u0938\u094D\u091F\u094B\u0930\u0947\u091C \u092A\u093E\u090F\u0902'}
+                {isHindi ? '\u0905\u092A\u0928\u0947 \u092A\u0930\u093F\u0935\u093E\u0930 \u0915\u094B \u091C\u094B\u0921\u093C\u0947\u0902 / Invite your family' : '\u0905\u092A\u0928\u0947 \u092A\u0930\u093F\u0935\u093E\u0930 \u0915\u094B \u091C\u094B\u0921\u093C\u0947\u0902 / Invite your family'}
               </Text>
             </View>
             <Text style={styles.referralChevron}>{'>'}</Text>

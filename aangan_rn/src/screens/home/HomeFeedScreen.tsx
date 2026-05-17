@@ -194,6 +194,23 @@ function PanchangWidget() {
   const yogaDesc = yogaDescription(panchang.yoga);
   const yogaColor = yogaDesc === 'शुभ' ? Colors.mehndiGreen : yogaDesc === 'अशुभ' ? Colors.error : Colors.brownLight;
 
+  // v0.15.8 — show English date + tithi together in collapsed header
+  // (Kumar's feedback: home page lacked date+tithi pairing).
+  // Format: "17 May 2026, Sunday"
+  const today = new Date();
+  const englishDate = today.toLocaleDateString('en-IN', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  });
+  const englishWeekday = today.toLocaleDateString('en-IN', { weekday: 'long' });
+  // Heuristic for "special today" — पूर्णिमा / अमावस्या / एकादशी are the
+  // tithis most users care about. Festival catalogue port is post-v0.15.8.
+  const isSpecialTithi =
+    panchang.tithi.includes('पूर्णिमा') ||
+    panchang.tithi.includes('अमावस्या') ||
+    panchang.tithi.includes('एकादशी');
+
   return (
     <View style={panchangStyles.container}>
       <TouchableOpacity
@@ -206,12 +223,18 @@ function PanchangWidget() {
       >
         <View style={panchangStyles.headerLeft}>
           <Text style={panchangStyles.headerIcon}>{phaseEmoji}</Text>
-          <View>
-            <Text style={panchangStyles.headerTitle}>
-              {'आज का पंचांग'}
+          <View style={{ flex: 1 }}>
+            {/* Top line: English date + tithi (the big visible info) */}
+            <Text style={[
+              panchangStyles.headerTitle,
+              isSpecialTithi && { color: Colors.haldiGold },
+            ]}>
+              {englishDate}{' • '}{panchang.tithi}
+              {isSpecialTithi ? ' ✨' : ''}
             </Text>
+            {/* Subtitle: weekday + Vikram Samvat */}
             <Text style={panchangStyles.headerSubtitle}>
-              {'विक्रम संवत '}{panchang.vikramSamvat}{' | '}{panchang.maas}
+              {englishWeekday}{' | '}{'विक्रम संवत '}{panchang.vikramSamvat}{' '}{panchang.maas}
             </Text>
           </View>
         </View>

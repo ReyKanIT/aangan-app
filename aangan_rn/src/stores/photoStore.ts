@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { supabase } from '../config/supabase';
+import { uploadFileToStorage, contentTypeFromFilename } from '../utils/uploadFile';
 import type { EventPhoto, PhotoStatus, PrivacyType } from '../types/database';
 
 interface PhotoState {
@@ -90,29 +91,27 @@ export const usePhotoStore = create<PhotoState>((set, get) => ({
         const fileExt = file.name.split('.').pop() || 'jpg';
         const filePath = `${eventId}/${session.user.id}/${Date.now()}-${Math.random().toString(36).slice(2)}.${fileExt}`;
 
-        const { error: uploadError } = await supabase.storage
-          .from('event-photos')
-          .upload(filePath, {
-            uri: file.uri,
-            type: file.type,
-            name: file.name,
-          } as any);
+        // v0.15.8 fix: ArrayBuffer pattern via shared helper.
+        // Pre-fix: silently uploaded empty files on iOS/Android.
+        // See utils/uploadFile.ts for details.
+        const { ok, publicUrl, error: uploadErr } = await uploadFileToStorage({
+          uri: file.uri,
+          bucket: 'event-photos',
+          path: filePath,
+          contentType: file.type || contentTypeFromFilename(file.name),
+        });
 
-        if (uploadError) {
-          set({ error: `Upload failed: ${uploadError.message}` });
+        if (!ok || !publicUrl) {
+          set({ error: `Upload failed: ${uploadErr ?? 'unknown'}` });
           return false;
         }
-
-        const { data: urlData } = supabase.storage
-          .from('event-photos')
-          .getPublicUrl(filePath);
 
         const { data: photo, error: insertError } = await supabase
           .from('event_photos')
           .insert({
             event_id: eventId,
             uploader_id: session.user.id,
-            photo_url: urlData.publicUrl,
+            photo_url: publicUrl,
             thumbnail_url: null,
             caption,
             status: 'pending' as PhotoStatus,

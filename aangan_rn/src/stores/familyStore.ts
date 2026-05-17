@@ -35,6 +35,22 @@ interface FamilyState {
     relationshipLabelHindi: string | null,
     connectionLevel: number,
   ) => Promise<boolean>;
+  /** Add a family member who does NOT have an Aangan account (ancestors,
+   *  deceased relatives, people without smartphones). Inserts directly into
+   *  offline_family_members. v0.15.8 added to fix Kumar's "no name option"
+   *  bug — RN previously only supported phone-based add (online users only),
+   *  forcing offline relatives to be added via the web app. */
+  addOfflineMember: (input: {
+    displayName: string;
+    displayNameHindi?: string | null;
+    relationshipType: string;
+    relationshipLabelHindi?: string | null;
+    connectionLevel: number;
+    isDeceased?: boolean;
+    villageCity?: string | null;
+    birthYear?: number | null;
+    deathYear?: number | null;
+  }) => Promise<boolean>;
   removeMember: (memberId: string) => Promise<boolean>;
   updateMemberLevel: (memberId: string, level: number) => Promise<boolean>;
   searchMembers: (query: string) => Promise<Partial<User>[]>;
@@ -168,6 +184,41 @@ export const useFamilyStore = create<FamilyState>((set, get) => ({
       return true;
     } catch (error: any) {
       set({ error: safeError(error, 'Failed to add family member') });
+      return false;
+    }
+  },
+
+  addOfflineMember: async (input) => {
+    set({ error: null });
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user) {
+        set({ error: 'Not authenticated' });
+        return false;
+      }
+
+      const { error } = await supabase.from('offline_family_members').insert({
+        added_by: session.user.id,
+        display_name: input.displayName.trim(),
+        display_name_hindi: input.displayNameHindi?.trim() || null,
+        relationship_type: input.relationshipType,
+        relationship_label_hindi: input.relationshipLabelHindi ?? null,
+        connection_level: input.connectionLevel,
+        is_deceased: input.isDeceased ?? false,
+        village_city: input.villageCity ?? null,
+        birth_year: input.birthYear ?? null,
+        death_year: input.deathYear ?? null,
+      });
+
+      if (error) {
+        set({ error: safeError(error, 'कुछ गलत हो गया।') });
+        return false;
+      }
+
+      await get().fetchOfflineMembers();
+      return true;
+    } catch (error: any) {
+      set({ error: safeError(error, 'Failed to add offline family member') });
       return false;
     }
   },

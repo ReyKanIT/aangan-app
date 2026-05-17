@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { supabase } from '../config/supabase';
 import { safeError } from '../utils/security';
+import { uploadFileToStorage } from '../utils/uploadFile';
 import type { Story } from '../types/database';
 
 interface StoryState {
@@ -64,17 +65,23 @@ export const useStoryStore = create<StoryState>((set, get) => ({
       const fileExt = mediaType === 'video' ? 'mp4' : 'jpg';
       const filePath = `stories/${session.user.id}/${Date.now()}.${fileExt}`;
 
-      const { error: uploadError } = await supabase.storage
-        .from('posts')
-        .upload(filePath, { uri: mediaUri, type: mediaType === 'video' ? 'video/mp4' : 'image/jpeg', name: `story.${fileExt}` } as any);
+      // v0.15.8 fix: ArrayBuffer-based upload via shared helper
+      // (see utils/uploadFile.ts for the RN-specific gotcha).
+      const { ok, publicUrl, error: uploadErr } = await uploadFileToStorage({
+        uri: mediaUri,
+        bucket: 'posts',
+        path: filePath,
+        contentType: mediaType === 'video' ? 'video/mp4' : 'image/jpeg',
+      });
 
-      if (uploadError) { set({ error: safeError(uploadError, 'अपलोड नहीं हुआ') }); return false; }
-
-      const { data: urlData } = supabase.storage.from('posts').getPublicUrl(filePath);
+      if (!ok || !publicUrl) {
+        set({ error: safeError(uploadErr ?? new Error('upload failed'), 'अपलोड नहीं हुआ') });
+        return false;
+      }
 
       const { error } = await supabase.from('stories').insert({
         author_id: session.user.id,
-        media_url: urlData.publicUrl,
+        media_url: publicUrl,
         media_type: mediaType,
         caption: caption || null,
       });

@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { supabase } from '../config/supabase';
 import { secureLog, safeError } from '../utils/security';
 import { sendPushToUser } from '../services/pushNotifications';
+import { uploadFileToStorage, contentTypeFromFilename } from '../utils/uploadFile';
 import type { Post, PostType, AudienceType } from '../types/database';
 
 const PAGE_SIZE = 20;
@@ -98,24 +99,22 @@ export const usePostStore = create<PostState>((set, get) => ({
           const fileExt = file.name.split('.').pop() || 'jpg';
           const filePath = `${session.user.id}/${Date.now()}-${Math.random().toString(36).slice(2)}.${fileExt}`;
 
-          const { error: uploadError } = await supabase.storage
-            .from('posts')
-            .upload(filePath, {
-              uri: file.uri,
-              type: file.type,
-              name: file.name,
-            } as any);
+          // v0.15.8 fix: use ArrayBuffer pattern via shared helper.
+          // Passing the {uri, type, name} object directly silently uploads
+          // an empty file on iOS/Android — see utils/uploadFile.ts.
+          const { ok, publicUrl, error: uploadErr } = await uploadFileToStorage({
+            uri: file.uri,
+            bucket: 'posts',
+            path: filePath,
+            contentType: file.type || contentTypeFromFilename(file.name),
+          });
 
-          if (uploadError) {
-            set({ error: `Upload failed: ${uploadError.message}` });
+          if (!ok || !publicUrl) {
+            set({ error: `Upload failed: ${uploadErr ?? 'unknown'}` });
             return false;
           }
 
-          const { data: urlData } = supabase.storage
-            .from('posts')
-            .getPublicUrl(filePath);
-
-          mediaUrls.push(urlData.publicUrl);
+          mediaUrls.push(publicUrl);
         }
       }
 
