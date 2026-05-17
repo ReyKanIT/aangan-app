@@ -32,6 +32,7 @@ import { getPresenceRingColor } from '../../utils/presence';
 import VoiceMicButton from '../../components/voice/VoiceMicButton';
 import ErrorBoundary from '../../components/common/ErrorBoundary';
 import { secureLog } from '../../utils/security';
+import KulvrikshTreeView from '../../components/family/KulvrikshTreeView';
 
 type Props = NativeStackScreenProps<any, 'FamilyTree'>;
 
@@ -43,7 +44,7 @@ const TABS: { key: TabKey; label: string; labelEn: string }[] = [
   { key: 'L2', label: 'स्तर 2', labelEn: 'Level 2' },
   { key: 'L3', label: 'स्तर 3', labelEn: 'Level 3' },
   { key: 'all', label: 'सभी', labelEn: 'All' },
-  { key: 'tree', label: 'पेड़', labelEn: 'Tree' },
+  { key: 'tree', label: 'कुलवृक्ष', labelEn: 'Kulvriksh' },
   { key: 'events', label: 'जीवन यात्रा', labelEn: 'Life Events' },
 ];
 
@@ -1109,10 +1110,18 @@ export default function FamilyTreeScreen({ navigation }: Props) {
           onEditEvent={(eventId) => navigation.navigate('AddLifeEvent', { eventId })}
         />
       ) : activeTab === 'tree' ? (
-        // v0.15.8: wrap tree in ErrorBoundary so a bad SVG render
-        // doesn't blank the whole screen — Kumar saw this in v0.15.7.
+        // v0.15.9: KulvrikshTreeView — card nodes + curved Bezier lines +
+        // pinch-to-zoom + pan + generation labels. Replaces the v0.15.x
+        // "circle + line" diagram. ErrorBoundary kept so a bad render
+        // never blanks the whole screen.
         <ErrorBoundary>
-          <FamilyTreeVisualization members={allMembers} isHindi={isHindi} />
+          <KulvrikshTreeView
+            members={allMembers}
+            isHindi={isHindi}
+            selfDisplayName={currentUser?.display_name ?? null}
+            selfDisplayNameHindi={currentUser?.display_name_hindi ?? null}
+            selfAvatarUrl={currentUser?.profile_photo_url ?? null}
+          />
         </ErrorBoundary>
       ) : (
         <FlatList

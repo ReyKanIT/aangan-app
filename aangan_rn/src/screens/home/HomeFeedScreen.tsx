@@ -856,19 +856,30 @@ const guidedFlowStyles = StyleSheet.create({
 });
 
 const panchangStyles = StyleSheet.create({
+  // v0.15.9 polish — premium spacing + typography hierarchy.
+  // Reference: Cred / Scapia card design language.
   container: {
-    margin: Spacing.lg,
-    backgroundColor: Colors.white,
-    borderRadius: BorderRadius.lg,
-    ...Shadow.sm,
+    marginHorizontal: Spacing.lg,
+    marginTop: Spacing.lg,
+    marginBottom: Spacing.md,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
     overflow: 'hidden',
+    // Layered shadow — deeper than the old Shadow.sm preset
+    shadowColor: '#3A2A12',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.08,
+    shadowRadius: 18,
+    elevation: 4,
+    borderWidth: 1,
+    borderColor: '#F2EAD3',
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.md,
+    paddingHorizontal: 20,
+    paddingVertical: 18,
     minHeight: DADI_MIN_BUTTON_HEIGHT,
   },
   headerLeft: {
@@ -877,43 +888,56 @@ const panchangStyles = StyleSheet.create({
     flex: 1,
   },
   headerIcon: {
-    fontSize: 24,
-    marginRight: Spacing.md,
+    fontSize: 28,           // bigger moon emoji
+    marginRight: 14,
   },
+  // v0.15.9: primary line — English date + tithi, bigger + tighter
   headerTitle: {
-    ...Typography.label,
-    color: Colors.brown,
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#3A2A12',
+    letterSpacing: 0.1,
   },
+  // v0.15.9: subtitle — weekday + Vikram Samvat
   headerSubtitle: {
-    ...Typography.caption,
-    color: Colors.brownLight,
-    marginTop: 2,
+    fontSize: 12,
+    color: '#85714A',
+    marginTop: 4,
+    letterSpacing: 0.2,
   },
   chevron: {
     fontSize: 14,
-    color: Colors.brownLight,
+    color: '#A89373',
     marginLeft: Spacing.sm,
   },
   body: {
-    paddingHorizontal: Spacing.lg,
+    paddingHorizontal: 20,
+    paddingBottom: 8,
+    borderTopWidth: 1,
+    borderTopColor: '#F5EFDE',
   },
   grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
+    paddingTop: 12,
   },
   row: {
     width: '50%',
-    paddingVertical: Spacing.sm,
+    paddingVertical: 10,
     paddingRight: Spacing.sm,
   },
   rowLabel: {
-    ...Typography.caption,
-    color: Colors.brownMuted,
+    fontSize: 11,
+    color: '#A89373',
+    letterSpacing: 0.4,
+    textTransform: 'uppercase',
+    fontWeight: '600',
   },
   rowValue: {
-    ...Typography.body,
-    color: Colors.brown,
-    marginTop: 2,
+    fontSize: 15,
+    color: '#3A2A12',
+    marginTop: 4,
+    fontWeight: '600',
   },
   yogaBadge: {
     ...Typography.caption,
