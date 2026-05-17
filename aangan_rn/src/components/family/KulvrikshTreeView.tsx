@@ -18,7 +18,7 @@
  * feedback comparing Aangan to Cred / Scapia.
  */
 
-import React, { useMemo } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import {
   Image,
   Pressable,
@@ -71,6 +71,69 @@ const COLOR = {
 };
 
 // ---------------------------------------------------------------------------
+// Relationship → generation offset
+// ---------------------------------------------------------------------------
+// Negative = older generation (above me), 0 = same gen (sides), positive =
+// younger gen (below me). Each user opens their own tree and sits at gen 0;
+// the same labels resolve to the same offsets regardless of viewer.
+//
+// Keys are normalised to lowercase Hindi-or-English strings — we look up by
+// `relationship_type` (usually English, lowercase, e.g. "wife") first, then
+// fall back to `relationship_label_hindi` (e.g. "पत्नी").
+
+const GEN_OFFSET: Record<string, number> = {
+  // ── grandparents (above-above) ──
+  grandfather: -2, grandmother: -2,
+  'दादा': -2, 'दादी': -2, 'नाना': -2, 'नानी': -2,
+  // ── parents and parent's siblings ──
+  father: -1, mother: -1, parent: -1, dad: -1, mom: -1,
+  'पिता': -1, 'माता': -1, 'पापा': -1, 'मम्मी': -1, 'माँ': -1,
+  uncle: -1, aunt: -1,
+  'चाचा': -1, 'चाची': -1, 'मामा': -1, 'मामी': -1, 'बुआ': -1, 'फूफा': -1, 'मौसी': -1, 'मौसा': -1,
+  father_in_law: -1, mother_in_law: -1,
+  'ससुर': -1, 'सास': -1,
+  // ── same generation: spouse, siblings, cousins, in-laws ──
+  husband: 0, wife: 0, spouse: 0, partner: 0,
+  'पति': 0, 'पत्नी': 0,
+  brother: 0, sister: 0, sibling: 0,
+  'भाई': 0, 'बहन': 0,
+  cousin: 0, cousin_brother: 0, cousin_sister: 0,
+  brother_in_law: 0, sister_in_law: 0,
+  'जीजा': 0, 'जीजी': 0, 'देवर': 0, 'देवरानी': 0, 'जेठ': 0, 'जेठानी': 0, 'साला': 0, 'साली': 0,
+  // ── children and their generation ──
+  son: 1, daughter: 1, child: 1,
+  'बेटा': 1, 'बेटी': 1,
+  nephew: 1, niece: 1,
+  'भतीजा': 1, 'भतीजी': 1, 'भांजा': 1, 'भांजी': 1,
+  son_in_law: 1, daughter_in_law: 1,
+  'दामाद': 1, 'बहू': 1,
+  // ── grandchildren (below-below) ──
+  grandson: 2, granddaughter: 2,
+  'पोता': 2, 'पोती': 2, 'नाती': 2, 'नातिन': 2,
+};
+
+export function getGenerationOffset(member: FamilyMember): number {
+  const rt = (member.relationship_type ?? '').toString().toLowerCase().trim();
+  if (rt && rt in GEN_OFFSET) return GEN_OFFSET[rt];
+  const rh = (member.relationship_label_hindi ?? '').toString().trim();
+  if (rh && rh in GEN_OFFSET) return GEN_OFFSET[rh];
+  // Unknown relationship → same generation as You. Better than guessing
+  // up/down. Tree stays valid; the user can correct the relationship later.
+  return 0;
+}
+
+function generationLabel(g: number, isHindi: boolean): string {
+  switch (g) {
+    case -2: return isHindi ? 'दादा-दादी / नाना-नानी' : 'Grandparents';
+    case -1: return isHindi ? 'माता-पिता / चाचा-बुआ' : 'Parents & their siblings';
+    case 0:  return isHindi ? 'आप, जीवनसाथी, भाई-बहन' : 'You, spouse, siblings';
+    case 1:  return isHindi ? 'बच्चे / भतीजे-भांजे' : 'Children & nephews/nieces';
+    case 2:  return isHindi ? 'पोते-पोती / नाती-नातिन' : 'Grandchildren';
+    default: return g < 0 ? (isHindi ? 'पूर्वज' : 'Ancestors') : (isHindi ? 'वंशज' : 'Descendants');
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Public component
 // ---------------------------------------------------------------------------
 
@@ -96,69 +159,99 @@ export default function KulvrikshTreeView({
 }: KulvrikshTreeViewProps) {
   const { width: screenW } = useWindowDimensions();
 
-  // ── partition by generation ───────────────────────────────────────────
-  // L1 = parents/spouse (above You), L2 = siblings (same row, sides),
-  // L3 = children/grandchildren (below You). Number() cast defends
-  // against null/string from PostgREST.
-  const l1 = useMemo(
-    () => members.filter((m) => Number(m.connection_level) === 1),
-    [members]
-  );
-  const l2 = useMemo(
-    () => members.filter((m) => Number(m.connection_level) === 2),
-    [members]
-  );
-  const l3 = useMemo(
-    () => members.filter((m) => Number(m.connection_level) >= 3),
-    [members]
-  );
+  // ── ego-centric generation layout (v0.16.1) ───────────────────────────
+  // Kumar directive (2026-05-17 18:48 IST): "keep [me] as centre of family
+  // and show children below me and elders above me. Likewise view should
+  // be there for every user." Pre-v0.16.1 we partitioned by `connection_level`
+  // (degrees of separation). That bunched brother/sister/wife/child all into
+  // one "L1" row, which is genealogically wrong. We now derive a generation
+  // offset (-2 = grandparent, -1 = parent, 0 = same gen, +1 = child, +2 =
+  // grandchild) from the relationship string. The current user sits at gen
+  // 0; rows above are elders, rows below are descendants.
+  //
+  // Coverage map — kept in this file (not a shared module) because the
+  // mapping is layout-presentation specific. If we ever need it elsewhere,
+  // promote to utils/relationships.ts.
+  const genOffset = useMemo(() => {
+    const partitions = new Map<number, FamilyMember[]>();
+    for (const m of members) {
+      const g = getGenerationOffset(m);
+      const bucket = partitions.get(g) ?? [];
+      bucket.push(m);
+      partitions.set(g, bucket);
+    }
+    return partitions;
+  }, [members]);
+
+  // Sorted list of generation rows that actually have members.
+  // 0 is reserved for the You-row even if empty (so it always renders).
+  const usedGenerations = useMemo(() => {
+    const set = new Set<number>(genOffset.keys());
+    set.add(0); // You always at gen 0
+    return Array.from(set).sort((a, b) => a - b);
+  }, [genOffset]);
 
   // ── compute positions ─────────────────────────────────────────────────
-  // Center column at x=centerX. Each generation row at its own y. Within
-  // a generation, cards are spaced COL_GAP apart and centered horizontally.
-  const totalCols = Math.max(l1.length, l2.length + 1, l3.length, 1);
+  // Each generation row is centered horizontally; rows stack vertically.
+  // The widest row drives the canvas width.
+  const widestRowCount = useMemo(() => {
+    let widest = 1; // You row counts as 1 even when empty
+    for (const [g, list] of genOffset) {
+      const n = g === 0 ? list.length + 1 : list.length; // +1 for You at gen 0
+      if (n > widest) widest = n;
+    }
+    return widest;
+  }, [genOffset]);
+
   const canvasW = Math.max(
-    totalCols * (CARD_W + COL_GAP) + 2 * CANVAS_PAD,
+    widestRowCount * (CARD_W + COL_GAP) + 2 * CANVAS_PAD,
     screenW
   );
-  // Y positions: L1 at top, You in middle, L3 at bottom, L2 alongside You.
-  const yL1 = CANVAS_PAD + CARD_H / 2;
-  const yYou = yL1 + ROW_GAP + (YOU_CARD_H / 2 + CARD_H / 2);
-  const yL3 = yYou + ROW_GAP + (YOU_CARD_H / 2 + CARD_H / 2);
-  const canvasH = yL3 + CARD_H / 2 + CANVAS_PAD + 24; // 24 for label
-
   const centerX = canvasW / 2;
 
+  // Y position for a given generation offset. You-row is at the vertical
+  // midline; each row above/below is ROW_GAP + card-height further from it.
+  const yOfGen = useCallback((g: number): number => {
+    const youRowY = CANVAS_PAD + Math.max(...usedGenerations.map(Math.abs)) * (ROW_GAP + CARD_H) + YOU_CARD_H / 2;
+    if (g === 0) return youRowY;
+    const cardCenterToCardCenter = ROW_GAP + (g > 0 ? CARD_H / 2 + YOU_CARD_H / 2 : YOU_CARD_H / 2 + CARD_H / 2);
+    const step = ROW_GAP + CARD_H;
+    return youRowY + Math.sign(g) * (cardCenterToCardCenter + (Math.abs(g) - 1) * step);
+  }, [usedGenerations]);
+
+  const canvasH = useMemo(() => {
+    const lowestY = yOfGen(Math.max(...usedGenerations));
+    return lowestY + CARD_H / 2 + CANVAS_PAD + 24;
+  }, [usedGenerations, yOfGen]);
+
   // Helper — evenly spread `n` cards centered on centerX
-  function spreadX(n: number, cardW: number): number[] {
+  const spreadX = useCallback((n: number, cardW: number): number[] => {
     if (n === 0) return [];
     const totalW = n * cardW + (n - 1) * COL_GAP;
     const startX = centerX - totalW / 2 + cardW / 2;
     return Array.from({ length: n }, (_, i) => startX + i * (cardW + COL_GAP));
-  }
+  }, [centerX]);
 
-  const xsL1 = spreadX(l1.length, CARD_W);
-  const xsL3 = spreadX(l3.length, CARD_W);
-
-  // L2: spread to left + right of You-card (skip the center slot)
-  const l2Xs = useMemo(() => {
-    if (l2.length === 0) return [];
-    const halfLeft = Math.ceil(l2.length / 2);
+  // Same-gen members (gen 0, excluding You) flank the You-card: half left,
+  // half right, leaving the center slot for You.
+  const gen0Members = genOffset.get(0) ?? [];
+  const gen0Xs = useMemo(() => {
+    const n = gen0Members.length;
+    if (n === 0) return [];
+    const halfLeft = Math.ceil(n / 2);
     const positions: number[] = [];
-    // Left of You-card
     for (let i = 0; i < halfLeft; i++) {
       positions.push(
         centerX - YOU_CARD_W / 2 - COL_GAP - (halfLeft - i) * (CARD_W + COL_GAP) + CARD_W / 2
       );
     }
-    // Right of You-card
-    for (let i = halfLeft; i < l2.length; i++) {
+    for (let i = halfLeft; i < n; i++) {
       positions.push(
         centerX + YOU_CARD_W / 2 + COL_GAP + (i - halfLeft) * (CARD_W + COL_GAP) + CARD_W / 2
       );
     }
     return positions;
-  }, [l2.length, centerX]);
+  }, [gen0Members.length, centerX]);
 
   // ── gestures: pinch + pan ─────────────────────────────────────────────
   const scale = useSharedValue(1);
@@ -224,6 +317,21 @@ export default function KulvrikshTreeView({
     );
   }
 
+  // Pre-compute x positions for each non-You generation row.
+  // Keyed by generation offset; value is an array of x-centers (one per
+  // member in that row, in the same order as genOffset.get(g)).
+  const rowXs = useMemo(() => {
+    const map = new Map<number, number[]>();
+    for (const g of usedGenerations) {
+      if (g === 0) continue; // handled separately via gen0Xs
+      const list = genOffset.get(g) ?? [];
+      map.set(g, spreadX(list.length, CARD_W));
+    }
+    return map;
+  }, [usedGenerations, genOffset, spreadX]);
+
+  const yYou = yOfGen(0);
+
   // ── render ────────────────────────────────────────────────────────────
   return (
     <View style={styles.viewport}>
@@ -235,7 +343,7 @@ export default function KulvrikshTreeView({
             animatedStyle,
           ]}
         >
-          {/* Curved connection lines */}
+          {/* Curved connection lines — drawn behind cards */}
           <Svg
             width={canvasW}
             height={canvasH}
@@ -243,33 +351,57 @@ export default function KulvrikshTreeView({
             pointerEvents="none"
           >
             <Defs>
-              {/* Subtle gradient for line color so they don't look stamped */}
-              <LinearGradient id="lineL1" x1="0" y1="0" x2="0" y2="1">
-                <Stop offset="0" stopColor={COLOR.lineL1} stopOpacity="0.7" />
+              <LinearGradient id="lineUp" x1="0" y1="0" x2="0" y2="1">
+                <Stop offset="0" stopColor={COLOR.lineL1} stopOpacity="0.75" />
                 <Stop offset="1" stopColor={COLOR.lineL1} stopOpacity="0.3" />
               </LinearGradient>
-              <LinearGradient id="lineL3" x1="0" y1="0" x2="0" y2="1">
+              <LinearGradient id="lineDown" x1="0" y1="0" x2="0" y2="1">
                 <Stop offset="0" stopColor={COLOR.lineL3} stopOpacity="0.3" />
-                <Stop offset="1" stopColor={COLOR.lineL3} stopOpacity="0.7" />
+                <Stop offset="1" stopColor={COLOR.lineL3} stopOpacity="0.75" />
               </LinearGradient>
             </Defs>
 
-            {/* L1 → You: curved Bezier from each parent card down to You */}
-            {xsL1.map((x, i) => (
-              <Path
-                key={`l1-curve-${i}`}
-                d={bezierPath(x, yL1 + CARD_H / 2, centerX, yYou - YOU_CARD_H / 2)}
-                stroke="url(#lineL1)"
-                strokeWidth={2}
-                fill="none"
-              />
-            ))}
+            {/* For each non-You generation, draw a line from each card to
+                the trunk point on the next row closer to You. This builds a
+                clean trunk-style tree — grandparents → parents → You →
+                children → grandchildren. */}
+            {usedGenerations.map((g) => {
+              if (g === 0) return null;
+              const xs = rowXs.get(g) ?? [];
+              const isUp = g < 0;
+              // The "downstream" anchor: where this row connects toward You.
+              // For gen=±1 the anchor is the You-card edge.
+              // For gen=±2 the anchor is centerX on the gen=±1 row (or You-row
+              // if no gen=±1 members exist).
+              const stepTowardYou = isUp ? g + 1 : g - 1;
+              const hasIntermediate = stepTowardYou !== 0 && genOffset.has(stepTowardYou);
+              const anchorY = hasIntermediate
+                ? yOfGen(stepTowardYou)
+                : isUp
+                ? yYou - YOU_CARD_H / 2
+                : yYou + YOU_CARD_H / 2;
+              const cardEdgeY = yOfGen(g) + (isUp ? CARD_H / 2 : -CARD_H / 2);
+              return xs.map((x, i) => (
+                <Path
+                  key={`line-${g}-${i}`}
+                  d={bezierPath(x, cardEdgeY, centerX, anchorY)}
+                  stroke={isUp ? 'url(#lineUp)' : 'url(#lineDown)'}
+                  strokeWidth={2}
+                  fill="none"
+                />
+              ));
+            })}
 
-            {/* L2 → You: short horizontal connector with subtle curve */}
-            {l2Xs.map((x, i) => (
+            {/* Same-gen members (spouse, siblings) — short horizontal connector */}
+            {gen0Xs.map((x, i) => (
               <Path
-                key={`l2-curve-${i}`}
-                d={horizBezier(x, yYou, centerX + (x < centerX ? -YOU_CARD_W / 2 : YOU_CARD_W / 2), yYou)}
+                key={`gen0-curve-${i}`}
+                d={horizBezier(
+                  x,
+                  yYou,
+                  centerX + (x < centerX ? -YOU_CARD_W / 2 : YOU_CARD_W / 2),
+                  yYou,
+                )}
                 stroke={COLOR.lineL2}
                 strokeWidth={1.5}
                 strokeDasharray="6 4"
@@ -277,45 +409,49 @@ export default function KulvrikshTreeView({
                 opacity={0.55}
               />
             ))}
-
-            {/* You → L3: curved Bezier down to each child card */}
-            {xsL3.map((x, i) => (
-              <Path
-                key={`l3-curve-${i}`}
-                d={bezierPath(centerX, yYou + YOU_CARD_H / 2, x, yL3 - CARD_H / 2)}
-                stroke="url(#lineL3)"
-                strokeWidth={2}
-                fill="none"
-              />
-            ))}
           </Svg>
 
-          {/* Generation labels */}
-          {l1.length > 0 && (
-            <Text style={[styles.generationLabel, { top: CANVAS_PAD - 18, width: canvasW }]}>
-              {'पीढ़ी 1 · पूर्वज / Previous generation'}
-            </Text>
-          )}
-          {l3.length > 0 && (
-            <Text style={[styles.generationLabel, { top: yL3 + CARD_H / 2 + 4, width: canvasW }]}>
-              {'पीढ़ी −1 · वंशज / Next generation'}
-            </Text>
-          )}
+          {/* Generation labels — one per non-empty row */}
+          {usedGenerations.map((g) => {
+            const list = g === 0 ? gen0Members : genOffset.get(g) ?? [];
+            if (g !== 0 && list.length === 0) return null;
+            const y = yOfGen(g);
+            // Label sits just above the cards for elders, just below for descendants.
+            const labelTop = g < 0
+              ? y - CARD_H / 2 - 22
+              : g > 0
+              ? y + CARD_H / 2 + 6
+              : y + YOU_CARD_H / 2 + 6;
+            return (
+              <Text
+                key={`gen-label-${g}`}
+                style={[styles.generationLabel, { top: labelTop, width: canvasW }]}
+              >
+                {generationLabel(g, isHindi)}
+              </Text>
+            );
+          })}
 
-          {/* L1 cards (parents/spouse) */}
-          {l1.map((m, i) => (
-            <MemberCardNode
-              key={m.id}
-              member={m}
-              x={xsL1[i]}
-              y={yL1}
-              width={CARD_W}
-              height={CARD_H}
-              onPress={onMemberPress}
-            />
-          ))}
+          {/* Cards for every non-You generation */}
+          {usedGenerations.map((g) => {
+            if (g === 0) return null;
+            const list = genOffset.get(g) ?? [];
+            const xs = rowXs.get(g) ?? [];
+            const y = yOfGen(g);
+            return list.map((m, i) => (
+              <MemberCardNode
+                key={m.id}
+                member={m}
+                x={xs[i]}
+                y={y}
+                width={CARD_W}
+                height={CARD_H}
+                onPress={onMemberPress}
+              />
+            ));
+          })}
 
-          {/* You card — bigger + haldi-gold border */}
+          {/* You card — center of the universe, haldi-gold border */}
           <YouCardNode
             x={centerX}
             y={yYou}
@@ -326,26 +462,13 @@ export default function KulvrikshTreeView({
             isHindi={isHindi}
           />
 
-          {/* L2 cards (siblings) */}
-          {l2.map((m, i) => (
+          {/* Same-gen members (gen 0) — flanking the You-card */}
+          {gen0Members.map((m, i) => (
             <MemberCardNode
               key={m.id}
               member={m}
-              x={l2Xs[i]}
+              x={gen0Xs[i]}
               y={yYou}
-              width={CARD_W}
-              height={CARD_H}
-              onPress={onMemberPress}
-            />
-          ))}
-
-          {/* L3 cards (descendants) */}
-          {l3.map((m, i) => (
-            <MemberCardNode
-              key={m.id}
-              member={m}
-              x={xsL3[i]}
-              y={yL3}
               width={CARD_W}
               height={CARD_H}
               onPress={onMemberPress}
@@ -357,7 +480,9 @@ export default function KulvrikshTreeView({
       {/* Subtle hint chip — appears on first render */}
       <View style={styles.hintChip} pointerEvents="none">
         <Text style={styles.hintChipText}>
-          {'चुटकी से zoom · double-tap to reset'}
+          {isHindi
+            ? 'चुटकी से zoom · दो-बार-tap reset'
+            : 'Pinch to zoom · double-tap to reset'}
         </Text>
       </View>
     </View>
