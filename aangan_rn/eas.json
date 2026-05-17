@@ -73,7 +73,10 @@
       "ios": {
         "appleId": "info@reykanit.com",
         "ascAppId": "6766877913",
-        "appleTeamId": "HF79NZ8925"
+        "appleTeamId": "HF79NZ8925",
+        "ascApiKeyPath": "/Users/akc_auto_run/.aangan/asc_api_key.p8",
+        "ascApiKeyId": "86FBFVF2G7",
+        "ascApiKeyIssuerId": "985fdd88-07a9-4cb9-ab1f-948c4d38c6de"
       }
     }
   }
