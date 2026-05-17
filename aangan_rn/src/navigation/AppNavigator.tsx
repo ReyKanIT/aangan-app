@@ -107,26 +107,19 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
 // Tab icon component
-// v0.15.10 polish — Compose (center) tab is now visually elevated like
-// Instagram's "+" button: gold-filled circle, larger icon, drop shadow.
-// Matches the "primary action" pattern Kumar called out (Instagram / FB).
+// v0.15.10 design correction: Kumar pushback — "don't keep the big + symbol
+// as the first thing." Reverted the elevated gold pill back to a plain
+// emoji tab. The actual "primary action" affordance lives on the home feed
+// as the Facebook-style ComposerPrompt card (avatar + "अपने मन की बात
+// लिखें…" + 📷 🎥 🎤 chips). Tab bar stays uniform.
 function TabIcon({ name, focused }: { name: string; focused: boolean }) {
   const icons: Record<string, string> = {
     Home: '🏠',
     Family: '👨‍👩‍👧‍👦',
-    Compose: '＋',
+    Compose: '✏️',
     Notifications: '🔔',
     Settings: '⚙️',
   };
-  if (name === 'Compose') {
-    return (
-      <View style={styles.composeTabContainer}>
-        <View style={styles.composePill}>
-          <Text style={styles.composePillIcon}>{icons.Compose}</Text>
-        </View>
-      </View>
-    );
-  }
   return (
     <View style={styles.tabIconContainer}>
       <Text style={[styles.tabIcon, focused && styles.tabIconActive]}>
@@ -332,32 +325,5 @@ const styles = StyleSheet.create({
   },
   tabIconActive: {
     opacity: 1,
-  },
-  // v0.15.10 — elevated Compose pill (Instagram-style center +)
-  composeTabContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: 48,
-    height: 48,
-    marginTop: -10,                 // lift above the tab bar
-  },
-  composePill: {
-    width: 46,
-    height: 46,
-    borderRadius: 23,
-    backgroundColor: Colors.haldiGold,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#3A2A12',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 8,
-    elevation: 6,
-  },
-  composePillIcon: {
-    fontSize: 28,
-    color: '#FFFFFF',
-    fontWeight: '300',
-    lineHeight: 30,
   },
 });
