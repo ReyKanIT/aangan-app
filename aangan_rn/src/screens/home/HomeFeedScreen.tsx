@@ -259,11 +259,38 @@ function PanchangWidget() {
   });
   const englishWeekday = today.toLocaleDateString('en-IN', { weekday: 'long' });
   // Heuristic for "special today" — पूर्णिमा / अमावस्या / एकादशी are the
-  // tithis most users care about. Festival catalogue port is post-v0.15.8.
+  // tithis most users care about.
   const isSpecialTithi =
     panchang.tithi.includes('पूर्णिमा') ||
     panchang.tithi.includes('अमावस्या') ||
     panchang.tithi.includes('एकादशी');
+
+  // v0.16.1 — "What's special today" surface (Kumar bug 2026-05-17 04:45 UTC:
+  // "Home page... date hat is special about today neither any notifications.")
+  // Combines today's festival from the catalogue with special-tithi info into
+  // one prominent banner ribbon under the date/tithi line. If neither applies,
+  // we drop a soft "आज का सामान्य पंचांग" line so the visual rhythm holds.
+  const specialToday = useMemo(() => {
+    const upcoming = getUpcomingFestivals(0); // 0 = only today
+    const todayKey = today.toISOString().slice(0, 10);
+    const todayFestival = upcoming.find((f) => f.date === todayKey);
+    if (todayFestival) {
+      return {
+        icon: todayFestival.icon,
+        line: `${todayFestival.nameHindi} आज है — शुभकामनाएँ!`,
+        accent: todayFestival.color,
+      };
+    }
+    if (isSpecialTithi) {
+      const which = panchang.tithi.includes('पूर्णिमा')
+        ? 'पूर्णिमा — चंद्र दर्शन का दिन'
+        : panchang.tithi.includes('अमावस्या')
+        ? 'अमावस्या — पूर्वजों को याद करने का दिन'
+        : 'एकादशी — व्रत और संयम का दिन';
+      return { icon: '✨', line: `आज ${which}`, accent: Colors.haldiGold };
+    }
+    return null;
+  }, [panchang.tithi, isSpecialTithi]);
 
   return (
     <View style={panchangStyles.container}>
@@ -296,6 +323,16 @@ function PanchangWidget() {
           {expanded ? '▲' : '▼'}
         </Text>
       </TouchableOpacity>
+
+      {/* "What's special today" ribbon — v0.16.1 */}
+      {specialToday && (
+        <View style={[panchangStyles.specialRibbon, { backgroundColor: specialToday.accent + '18', borderColor: specialToday.accent + '40' }]}>
+          <Text style={panchangStyles.specialIcon}>{specialToday.icon}</Text>
+          <Text style={[panchangStyles.specialText, { color: Colors.brown }]} numberOfLines={2}>
+            {specialToday.line}
+          </Text>
+        </View>
+      )}
 
       <Animated.View style={[panchangStyles.body, { height: expandedHeight, overflow: 'hidden' }]}>
         <View style={panchangStyles.grid}>
@@ -1040,6 +1077,27 @@ const panchangStyles = StyleSheet.create({
     fontSize: 14,
     color: '#A89373',
     marginLeft: Spacing.sm,
+  },
+  // v0.16.1 — "What's special today" ribbon under the date/tithi line
+  specialRibbon: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginHorizontal: 16,
+    marginBottom: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 12,
+    borderWidth: 1,
+  },
+  specialIcon: {
+    fontSize: 22,
+    marginRight: 10,
+  },
+  specialText: {
+    flex: 1,
+    fontSize: 14,
+    fontWeight: '600',
+    lineHeight: 20,
   },
   body: {
     paddingHorizontal: 20,

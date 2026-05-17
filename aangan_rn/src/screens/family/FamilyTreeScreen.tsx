@@ -37,15 +37,25 @@ import KulvrikshTreeView from '../../components/family/KulvrikshTreeView';
 type Props = NativeStackScreenProps<any, 'FamilyTree'>;
 
 // -- Tab options --
-type TabKey = 'L1' | 'L2' | 'L3' | 'all' | 'tree' | 'events';
+// v0.16.1: Kumar reported "Family tree not visible" (2026-05-17 04:42 UTC).
+// Root cause was UX: the default tab was 'all' (member grid), and the tree
+// was tab #5 of 6 cramped into one row. Dadi Test: the tree IS the wow
+// feature — it should be the first thing users see. Collapsed L1/L2/L3/all
+// into a single "सदस्य/Members" tab that exposes those filters as chips.
+type TabKey = 'tree' | 'members' | 'events';
+type LevelFilter = 'all' | 'L1' | 'L2' | 'L3';
 
-const TABS: { key: TabKey; label: string; labelEn: string }[] = [
-  { key: 'L1', label: 'स्तर 1', labelEn: 'Level 1' },
-  { key: 'L2', label: 'स्तर 2', labelEn: 'Level 2' },
-  { key: 'L3', label: 'स्तर 3', labelEn: 'Level 3' },
-  { key: 'all', label: 'सभी', labelEn: 'All' },
-  { key: 'tree', label: 'कुलवृक्ष', labelEn: 'Kulvriksh' },
-  { key: 'events', label: 'जीवन यात्रा', labelEn: 'Life Events' },
+const TABS: { key: TabKey; label: string; labelEn: string; icon: string }[] = [
+  { key: 'tree',    label: 'कुलवृक्ष',     labelEn: 'Tree',    icon: '🌳' },
+  { key: 'members', label: 'सदस्य',        labelEn: 'Members', icon: '👨‍👩‍👧‍👦' },
+  { key: 'events',  label: 'जीवन यात्रा',  labelEn: 'Life',    icon: '📜' },
+];
+
+const LEVEL_CHIPS: { key: LevelFilter; label: string; labelEn: string }[] = [
+  { key: 'all', label: 'सभी',    labelEn: 'All' },
+  { key: 'L1',  label: 'स्तर 1', labelEn: 'L1' },
+  { key: 'L2',  label: 'स्तर 2', labelEn: 'L2' },
+  { key: 'L3',  label: 'स्तर 3', labelEn: 'L3' },
 ];
 
 // -- Relationship options for AddMemberModal --
@@ -190,12 +200,21 @@ function EmptyLevel({ level, searchQuery }: { level: string; searchQuery: string
   );
 }
 
-// v0.15.8 — AddMemberModal supports two modes:
-//   - 'online'  → invite a member who has a mobile (existing flow)
-//   - 'offline' → add ancestor/deceased/no-phone relative with just a name
-//                 (mirrors aangan_web's AddMemberDrawer; fixes the iOS-only
-//                 "no name option" bug Kumar reported on v0.15.7)
-type AddMemberMode = 'online' | 'offline';
+// v0.16.1 — AddMemberModal: single form, name-first.
+// Kumar bug 2026-05-17 04:43 UTC: "Name option not present while adding
+// family members." Previous v0.15.8 design had an online/offline mode toggle
+// where 'online' (default) hid the name field entirely. Kumar (and any new
+// user) opens the modal and never finds the name input. Fixed by collapsing
+// both modes into one form:
+//
+//   Name (required) — always shown
+//   Phone (optional) — if filled, we search Aangan + send invite; if blank,
+//                      we add as an offline member
+//   Deceased toggle — irrelevant for online users (skipped via the
+//                     `phone.length === 0` route)
+//
+// Routing happens at submit time, not at modal-open time. The user picks
+// what to enter; we figure out the right backend call.
 
 interface AddMemberModalProps {
   visible: boolean;
@@ -210,10 +229,10 @@ interface AddMemberModalProps {
     isDeceased: boolean;
   }) => void;
   isSubmitting: boolean;
+  isHindi: boolean;
 }
 
-function AddMemberModal({ visible, onClose, onSubmit, onSubmitOffline, isSubmitting }: AddMemberModalProps) {
-  const [mode, setMode] = useState<AddMemberMode>('online');
+function AddMemberModal({ visible, onClose, onSubmit, onSubmitOffline, isSubmitting, isHindi }: AddMemberModalProps) {
   const [phone, setPhone] = useState('');
   const [displayName, setDisplayName] = useState('');
   const [displayNameHindi, setDisplayNameHindi] = useState('');
@@ -223,7 +242,6 @@ function AddMemberModal({ visible, onClose, onSubmit, onSubmitOffline, isSubmitt
   const [showRelationshipPicker, setShowRelationshipPicker] = useState(false);
 
   const resetForm = useCallback(() => {
-    setMode('online');
     setPhone('');
     setDisplayName('');
     setDisplayNameHindi('');
@@ -239,24 +257,27 @@ function AddMemberModal({ visible, onClose, onSubmit, onSubmitOffline, isSubmitt
   }, [onClose, resetForm]);
 
   const handleSubmit = useCallback(() => {
-    // Common validation
+    // Name is always required.
+    if (!displayName.trim()) {
+      Alert.alert('त्रुटि / Error', 'कृपया सदस्य का नाम दर्ज करें\n(Please enter member name)');
+      return;
+    }
     if (!selectedRelationship) {
-      Alert.alert('त्रुटि', 'कृपया रिश्ता चुनें');
+      Alert.alert('त्रुटि / Error', 'कृपया रिश्ता चुनें (Please pick relationship)');
       return;
     }
     const labelHindi = selectedRelationship; // RELATIONSHIP_OPTIONS uses Hindi label as key here
 
-    if (mode === 'online') {
-      if (!phone || phone.length !== 10) {
-        Alert.alert('त्रुटि', 'कृपया 10 अंकों का फोन नंबर दर्ज करें');
+    // Phone is optional. If provided, route through the existing online flow
+    // (search by phone + invite). If absent, route through the offline flow.
+    const phoneTrim = phone.trim();
+    if (phoneTrim.length > 0) {
+      if (phoneTrim.length !== 10) {
+        Alert.alert('त्रुटि / Error', 'फोन नंबर 10 अंकों का होना चाहिए\n(Phone must be 10 digits, or leave it blank)');
         return;
       }
-      onSubmit(phone, selectedRelationship, labelHindi, level);
+      onSubmit(phoneTrim, selectedRelationship, labelHindi, level);
     } else {
-      if (!displayName.trim()) {
-        Alert.alert('त्रुटि', 'कृपया सदस्य का नाम दर्ज करें (Please enter member name)');
-        return;
-      }
       onSubmitOffline({
         displayName: displayName.trim(),
         displayNameHindi: displayNameHindi.trim() || null,
@@ -267,7 +288,7 @@ function AddMemberModal({ visible, onClose, onSubmit, onSubmitOffline, isSubmitt
       });
     }
     resetForm();
-  }, [mode, phone, displayName, displayNameHindi, isDeceased, selectedRelationship, level, onSubmit, onSubmitOffline, resetForm]);
+  }, [phone, displayName, displayNameHindi, isDeceased, selectedRelationship, level, onSubmit, onSubmitOffline, resetForm]);
 
   const selectedLabel = useMemo(() => {
     const found = RELATIONSHIP_OPTIONS.find((r) => r.key === selectedRelationship);
@@ -296,90 +317,67 @@ function AddMemberModal({ visible, onClose, onSubmit, onSubmitOffline, isSubmitt
         </View>
 
         <ScrollView style={modalStyles.body} keyboardShouldPersistTaps="handled">
-          {/* v0.15.8: mode toggle — online (with mobile) vs offline (by name) */}
-          <View style={modalStyles.modeRow}>
-            <TouchableOpacity
-              style={[modalStyles.modeBtn, mode === 'online' && modalStyles.modeBtnActive]}
-              onPress={() => setMode('online')}
-              accessibilityRole="button"
-              accessibilityState={{ selected: mode === 'online' }}
-            >
-              <Text style={[modalStyles.modeBtnText, mode === 'online' && modalStyles.modeBtnTextActive]}>
-                {'📱 मोबाइल से'}
-              </Text>
-              <Text style={modalStyles.modeBtnSub}>{'with phone'}</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[modalStyles.modeBtn, mode === 'offline' && modalStyles.modeBtnActive]}
-              onPress={() => setMode('offline')}
-              accessibilityRole="button"
-              accessibilityState={{ selected: mode === 'offline' }}
-            >
-              <Text style={[modalStyles.modeBtnText, mode === 'offline' && modalStyles.modeBtnTextActive]}>
-                {'✏️ सिर्फ़ नाम से'}
-              </Text>
-              <Text style={modalStyles.modeBtnSub}>{'name only (no phone)'}</Text>
-            </TouchableOpacity>
+          {/* Name — REQUIRED, always first (v0.16.1: Kumar reported the name
+              field was hidden behind a mode toggle and never discovered) */}
+          <Text style={modalStyles.fieldLabel}>{isHindi ? 'नाम — ज़रूरी' : 'Name — required'}</Text>
+          <TextInput
+            style={modalStyles.nameInput}
+            value={displayName}
+            onChangeText={setDisplayName}
+            placeholder={isHindi ? 'जैसे: राम सिंह / Ram Singh' : 'e.g. Ram Singh / राम सिंह'}
+            placeholderTextColor={Colors.gray400}
+            autoCapitalize="words"
+            accessibilityLabel="Display name"
+          />
+
+          {/* Hindi Name (optional) */}
+          <Text style={modalStyles.fieldLabel}>{isHindi ? 'हिंदी नाम (वैकल्पिक)' : 'Hindi name (optional)'}</Text>
+          <TextInput
+            style={modalStyles.nameInput}
+            value={displayNameHindi}
+            onChangeText={setDisplayNameHindi}
+            placeholder={'जैसे: राम सिंह'}
+            placeholderTextColor={Colors.gray400}
+            accessibilityLabel="Hindi name (optional)"
+          />
+
+          {/* Phone — OPTIONAL. If filled, we search Aangan + invite via SMS/WhatsApp.
+              If blank, we add them as an offline member (ancestors, no smartphone, etc.). */}
+          <Text style={modalStyles.fieldLabel}>{isHindi ? 'फोन नंबर (वैकल्पिक)' : 'Phone (optional)'}</Text>
+          <Text style={modalStyles.fieldHint}>
+            {isHindi
+              ? 'अगर उनके पास स्मार्टफोन है तो भरें — हम invite भेज देंगे'
+              : 'Fill if they have a smartphone — we\'ll send them an invite'}
+          </Text>
+          <View style={modalStyles.phoneRow}>
+            <View style={modalStyles.countryCode}>
+              <Text style={modalStyles.countryCodeText}>{'+91'}</Text>
+            </View>
+            <TextInput
+              style={modalStyles.phoneInput}
+              value={phone}
+              onChangeText={(text) => setPhone(text.replace(/[^0-9]/g, '').slice(0, 10))}
+              placeholder={isHindi ? '10 अंकों का नंबर' : '10 digit number'}
+              placeholderTextColor={Colors.gray400}
+              keyboardType="phone-pad"
+              maxLength={10}
+              accessibilityLabel="Phone number (optional)"
+            />
           </View>
 
-          {mode === 'online' ? (
-            <>
-              {/* Phone Input */}
-              <Text style={modalStyles.fieldLabel}>{'फोन नंबर'}</Text>
-              <View style={modalStyles.phoneRow}>
-                <View style={modalStyles.countryCode}>
-                  <Text style={modalStyles.countryCodeText}>{'+91'}</Text>
-                </View>
-                <TextInput
-                  style={modalStyles.phoneInput}
-                  value={phone}
-                  onChangeText={(text) => setPhone(text.replace(/[^0-9]/g, '').slice(0, 10))}
-                  placeholder="10 digit number"
-                  placeholderTextColor={Colors.gray400}
-                  keyboardType="phone-pad"
-                  maxLength={10}
-                  accessibilityLabel="Phone number"
-                />
-              </View>
-            </>
-          ) : (
-            <>
-              {/* Name Input (English / Roman) */}
-              <Text style={modalStyles.fieldLabel}>{'नाम (Name)'}</Text>
-              <TextInput
-                style={modalStyles.nameInput}
-                value={displayName}
-                onChangeText={setDisplayName}
-                placeholder={'जैसे: Ram Singh / राम सिंह'}
-                placeholderTextColor={Colors.gray400}
-                autoCapitalize="words"
-                accessibilityLabel="Display name"
-              />
-
-              {/* Hindi Name (optional) */}
-              <Text style={modalStyles.fieldLabel}>{'हिंदी नाम (optional)'}</Text>
-              <TextInput
-                style={modalStyles.nameInput}
-                value={displayNameHindi}
-                onChangeText={setDisplayNameHindi}
-                placeholder={'जैसे: राम सिंह'}
-                placeholderTextColor={Colors.gray400}
-                accessibilityLabel="Hindi name (optional)"
-              />
-
-              {/* Deceased toggle */}
-              <TouchableOpacity
-                style={modalStyles.deceasedRow}
-                onPress={() => setIsDeceased((v) => !v)}
-                accessibilityRole="checkbox"
-                accessibilityState={{ checked: isDeceased }}
-              >
-                <Text style={modalStyles.deceasedCheck}>{isDeceased ? '☑' : '☐'}</Text>
-                <Text style={modalStyles.deceasedLabel}>
-                  {'दिवंगत हैं? (Has passed away?)'}
-                </Text>
-              </TouchableOpacity>
-            </>
+          {/* Deceased toggle — only meaningful when phone is blank */}
+          {phone.trim().length === 0 && (
+            <TouchableOpacity
+              style={modalStyles.deceasedRow}
+              onPress={() => setIsDeceased((v) => !v)}
+              accessibilityRole="checkbox"
+              accessibilityState={{ checked: isDeceased }}
+            >
+              <Text style={modalStyles.deceasedCheck}>{isDeceased ? '☑' : '☐'}</Text>
+              <Text style={modalStyles.deceasedLabel}>
+                {isHindi ? 'दिवंगत हैं? (पूर्वज)' : 'Has passed away? (Ancestor)'}
+              </Text>
+            </TouchableOpacity>
           )}
 
           {/* Relationship Dropdown */}
@@ -465,9 +463,9 @@ function AddMemberModal({ visible, onClose, onSubmit, onSubmitOffline, isSubmitt
               <ActivityIndicator color={Colors.white} size="small" />
             ) : (
               <Text style={modalStyles.submitButtonText}>{
-                mode === 'online'
-                  ? 'निमंत्रण भेजें (Send Invite)'
-                  : 'जोड़ें (Add to Family)'
+                phone.trim().length > 0
+                  ? (isHindi ? 'निमंत्रण भेजें (Send Invite)' : 'Send Invite')
+                  : (isHindi ? 'जोड़ें (Add to Family)' : 'Add to Family')
               }</Text>
             )}
           </TouchableOpacity>
@@ -867,7 +865,9 @@ export default function FamilyTreeScreen({ navigation }: Props) {
   } = useFamilyStore();
   const { isHindi } = useLanguageStore();
 
-  const [activeTab, setActiveTab] = useState<TabKey>('all');
+  // v0.16.1: default to 'tree' — the wow visualization, not the grid.
+  const [activeTab, setActiveTab] = useState<TabKey>('tree');
+  const [levelFilter, setLevelFilter] = useState<LevelFilter>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
   const [showInviteModal, setShowInviteModal] = useState(false);
@@ -923,13 +923,13 @@ export default function FamilyTreeScreen({ navigation }: Props) {
   const filteredMembers = useMemo(() => {
     let filtered = allMembers;
 
-    // Filter by level
-    if (activeTab === 'L1') {
-      filtered = filtered.filter((m) => m.connection_level === 1);
-    } else if (activeTab === 'L2') {
-      filtered = filtered.filter((m) => m.connection_level === 2);
-    } else if (activeTab === 'L3') {
-      filtered = filtered.filter((m) => m.connection_level === 3);
+    // Filter by level chip (only meaningful inside the 'members' tab)
+    if (levelFilter === 'L1') {
+      filtered = filtered.filter((m) => Number(m.connection_level) === 1);
+    } else if (levelFilter === 'L2') {
+      filtered = filtered.filter((m) => Number(m.connection_level) === 2);
+    } else if (levelFilter === 'L3') {
+      filtered = filtered.filter((m) => Number(m.connection_level) >= 3);
     }
 
     // Filter by search
@@ -944,7 +944,7 @@ export default function FamilyTreeScreen({ navigation }: Props) {
     }
 
     return filtered;
-  }, [allMembers, activeTab, searchQuery]);
+  }, [allMembers, levelFilter, searchQuery]);
 
   const handleRefresh = useCallback(async () => {
     await Promise.all([fetchMembers(), fetchOfflineMembers()]);
@@ -1032,11 +1032,11 @@ export default function FamilyTreeScreen({ navigation }: Props) {
     <MemberCard member={item} />
   ), []);
 
-  const tabLabel = activeTab === 'all' ? 'all' : `Level ${activeTab.slice(1)}`;
+  const tabLabel = levelFilter === 'all' ? 'all' : `Level ${levelFilter.slice(1)}`;
 
   return (
     <View style={styles.screen}>
-      {/* Tab Bar */}
+      {/* Tab Bar — 3 tabs, large icon + label (Dadi Test) */}
       <View style={[styles.tabBar, { paddingTop: insets.top }]}>
         <View style={styles.tabBarInner}>
           {TABS.map((tab) => (
@@ -1051,6 +1051,7 @@ export default function FamilyTreeScreen({ navigation }: Props) {
               accessibilityState={{ selected: activeTab === tab.key }}
               accessibilityLabel={`${tab.label} ${tab.labelEn}`}
             >
+              <Text style={styles.tabIcon}>{tab.icon}</Text>
               <Text style={[
                 styles.tabText,
                 activeTab === tab.key && styles.tabTextActive,
@@ -1062,8 +1063,33 @@ export default function FamilyTreeScreen({ navigation }: Props) {
         </View>
       </View>
 
-      {/* Search — hidden on tree and events tabs */}
-      {activeTab !== 'tree' && activeTab !== 'events' && (
+      {/* Level filter chips — only inside Members tab */}
+      {activeTab === 'members' && (
+        <View style={styles.chipRow}>
+          {LEVEL_CHIPS.map((chip) => (
+            <TouchableOpacity
+              key={chip.key}
+              style={[
+                styles.chip,
+                levelFilter === chip.key && styles.chipActive,
+              ]}
+              onPress={() => setLevelFilter(chip.key)}
+              accessibilityRole="button"
+              accessibilityState={{ selected: levelFilter === chip.key }}
+            >
+              <Text style={[
+                styles.chipText,
+                levelFilter === chip.key && styles.chipTextActive,
+              ]}>
+                {isHindi ? chip.label : chip.labelEn}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      )}
+
+      {/* Search — only inside Members tab */}
+      {activeTab === 'members' && (
         <View style={styles.searchContainer}>
           <View style={styles.searchInputWrapper}>
             <Text style={styles.searchIcon}>{'🔍'}</Text>
@@ -1184,6 +1210,7 @@ export default function FamilyTreeScreen({ navigation }: Props) {
         onSubmit={handleAddMember}
         onSubmitOffline={handleAddOfflineMember}
         isSubmitting={isSubmitting}
+        isHindi={isHindi}
       />
 
       {/* WhatsApp coded-invite modal (v0.13.0) */}
@@ -1216,7 +1243,7 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     paddingVertical: Spacing.md,
-    minHeight: DADI_MIN_TAP_TARGET,
+    minHeight: DADI_MIN_BUTTON_HEIGHT, // 52px+ tap target (Dadi Test)
     justifyContent: 'center',
     borderBottomWidth: 3,
     borderBottomColor: 'transparent',
@@ -1224,12 +1251,47 @@ const styles = StyleSheet.create({
   tabActive: {
     borderBottomColor: Colors.haldiGold,
   },
+  tabIcon: {
+    fontSize: 22,
+    marginBottom: 2,
+  },
   tabText: {
     ...Typography.label,
     color: Colors.gray500,
+    fontSize: 14,
   },
   tabTextActive: {
     color: Colors.haldiGold,
+    fontWeight: '700',
+  },
+  // Level filter chips inside Members tab
+  chipRow: {
+    flexDirection: 'row',
+    paddingHorizontal: Spacing.lg,
+    paddingTop: Spacing.md,
+    gap: Spacing.sm,
+  },
+  chip: {
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.sm,
+    borderRadius: BorderRadius.round,
+    backgroundColor: Colors.white,
+    borderWidth: 1,
+    borderColor: Colors.gray300,
+    minHeight: 36,
+    justifyContent: 'center',
+  },
+  chipActive: {
+    backgroundColor: Colors.haldiGold,
+    borderColor: Colors.haldiGold,
+  },
+  chipText: {
+    ...Typography.bodySmall,
+    color: Colors.brown,
+    fontWeight: '600',
+  },
+  chipTextActive: {
+    color: Colors.white,
   },
   searchContainer: {
     paddingHorizontal: Spacing.lg,
@@ -1531,6 +1593,14 @@ const modalStyles = StyleSheet.create({
     color: Colors.brown,
     marginBottom: Spacing.sm,
     marginTop: Spacing.lg,
+    marginHorizontal: Spacing.lg,
+  },
+  fieldHint: {
+    ...Typography.caption,
+    color: Colors.brownLight,
+    marginHorizontal: Spacing.lg,
+    marginBottom: Spacing.sm,
+    fontSize: 12,
   },
   phoneRow: {
     flexDirection: 'row',

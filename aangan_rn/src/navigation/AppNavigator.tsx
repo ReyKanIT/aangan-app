@@ -37,9 +37,11 @@ import EventInvitationScreen from '../screens/events/EventInvitationScreen';
 import RsvpTrackerScreen from '../screens/events/RsvpTrackerScreen';
 import EventPhotosScreen from '../screens/events/EventPhotosScreen';
 
-// Storage Screens
-import StorageScreen from '../screens/storage/StorageScreen';
-import ReferralScreen from '../screens/storage/ReferralScreen';
+// v0.16.1 — Storage/Referral screens unrouted per Kumar's bootstrap-pivot
+// decision (2026-05-17): Aangan offers unlimited Facebook/Instagram-style
+// uploads, not fixed storage plans. The screen files remain on disk for
+// reference, but no navigator entry can reach them so a stale deep-link
+// or `storage_upgrade` notification can't expose them.
 
 // Settings Screens
 import KuldeviScreen from '../screens/settings/KuldeviScreen';
@@ -78,8 +80,7 @@ export type RootStackParamList = {
   EventInvitation: { eventId: string };
   RsvpTracker: { eventId: string };
   EventPhotos: { eventId: string };
-  Storage: undefined;
-  Referral: undefined;
+  // Storage / Referral routes removed in v0.16.1 (unlimited-storage pivot)
   Kuldevi: undefined;
   AddLifeEvent: { eventId?: string } | undefined;
   ImportantDates: undefined;
@@ -257,9 +258,7 @@ export default function AppNavigator() {
         <Stack.Screen name="RsvpTracker" component={RsvpTrackerScreen} />
         <Stack.Screen name="EventPhotos" component={EventPhotosScreen} />
 
-        {/* Storage */}
-        <Stack.Screen name="Storage" component={StorageScreen} />
-        <Stack.Screen name="Referral" component={ReferralScreen} />
+        {/* Storage screens removed in v0.16.1 — see import comment block */}
 
         {/* Settings sub-screens */}
         <Stack.Screen name="Kuldevi" component={KuldeviScreen} />
