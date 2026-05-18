@@ -22,6 +22,7 @@ import { useAuthStore } from '../../stores/authStore';
 import { useLanguageStore } from '../../stores/languageStore';
 import { useStorageStore } from '../../stores/storageStore';
 import { useThemeStore, ThemeMode } from '../../stores/themeStore';
+import { useConfirm } from '../../components/common/useConfirm';
 
 type Props = NativeStackScreenProps<any, 'Settings'>;
 
@@ -107,6 +108,12 @@ export default function SettingsScreen({ navigation }: Props) {
   const { language, isHindi, toggleLanguage, loadLanguage } = useLanguageStore();
   const { userStorage, isLoading: storageLoading, fetchStorage, getUsageBreakdown } = useStorageStore();
   const { theme, setTheme, loadTheme } = useThemeStore();
+  // Hindi-first confirm dialog — replaces native Alert.alert per Design
+  // Lead audit 2026-05-17 / CRITICAL_FEATURES.md "Jyotsna ticket — never
+  // regress to native confirm". `dialog` is rendered at the bottom of the
+  // ScrollView (it's a positioned <Modal> so location in tree doesn't
+  // matter, but keeping it inside the screen root makes ownership clear).
+  const { confirm, dialog: confirmDialog } = useConfirm();
 
   // Local notification preferences state
   const [notifPrefs, setNotifPrefs] = useState<Record<string, boolean>>({
@@ -132,23 +139,24 @@ export default function SettingsScreen({ navigation }: Props) {
     setNotifPrefs((prev) => ({ ...prev, [key]: !prev[key] }));
   }, []);
 
-  const handleLogout = useCallback(() => {
-    Alert.alert(
-      isHindi ? 'लॉगआउट' : 'Logout',
-      isHindi ? 'क्या आप लॉगआउट करना चाहते हैं?' : 'Are you sure you want to logout?',
-      [
-        { text: isHindi ? 'रद्द करें' : 'Cancel', style: 'cancel' },
-        {
-          text: isHindi ? 'लॉगआउट करें' : 'Logout',
-          style: 'destructive',
-          onPress: async () => {
-            await signOut();
-            navigation.reset({ index: 0, routes: [{ name: 'Splash' }] });
-          },
-        },
-      ],
-    );
-  }, [isHindi, signOut, navigation]);
+  const handleLogout = useCallback(async () => {
+    // Hindi-first useConfirm replaces native Alert.alert. The destructive
+    // flag paints the confirm button red (Colors.error). If the user
+    // cancels (tap outside / hardware back / cancel button), confirm
+    // resolves to false and we bail without touching auth state.
+    const ok = await confirm({
+      title: isHindi ? 'लॉगआउट करें?' : 'Sign out?',
+      body: isHindi
+        ? 'आप फिर से लॉगिन कर सकते हैं।'
+        : 'You can sign in again anytime.',
+      confirmText: isHindi ? 'हाँ, लॉगआउट' : 'Sign out',
+      cancelText: isHindi ? 'रद्द करें' : 'Cancel',
+      destructive: true,
+    });
+    if (!ok) return;
+    await signOut();
+    navigation.reset({ index: 0, routes: [{ name: 'Splash' }] });
+  }, [confirm, isHindi, signOut, navigation]);
 
   const handleReferral = useCallback(async () => {
     const referralCode = userStorage?.referral_code || 'AANGAN';
@@ -578,6 +586,10 @@ export default function SettingsScreen({ navigation }: Props) {
           <Text style={styles.versionSubtext}>{'Made with \u2764\uFE0F in India'}</Text>
         </View>
       </ScrollView>
+      {/* Hindi-first sign-out confirm dialog \u2014 mounted as a Modal sibling
+          so it overlays the ScrollView. Must live inside this screen's
+          tree for the useConfirm() hook above to drive it. */}
+      {confirmDialog}
     </View>
   );
 }

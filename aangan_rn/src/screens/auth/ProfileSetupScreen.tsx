@@ -170,7 +170,12 @@ export default function ProfileSetupScreen({ navigation }: Props) {
 
       const success = await updateProfile(profileData);
       if (success) {
-        navigation.replace('Main');
+        // v0.16.1 growth bet: instead of going directly to Main, force the
+        // user through the "Invite 3 family members" gate. The forced-invite
+        // screen owns the actual `replace('Main')` call after it's shown
+        // (and after the user taps Continue or Skip). Top CEO + CMO
+        // priority — see notes/10k-milestone.md, notes/growth-loops-30d.md.
+        navigation.replace('InviteThreeFamily');
       } else {
         Alert.alert(
           '\u0924\u094D\u0930\u0941\u091F\u093F',

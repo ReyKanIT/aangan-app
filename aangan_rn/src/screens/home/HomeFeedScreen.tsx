@@ -22,10 +22,10 @@ import { usePostStore } from '../../stores/postStore';
 import { useNotificationStore } from '../../stores/notificationStore';
 import { useAuthStore } from '../../stores/authStore';
 import { useLanguageStore } from '../../stores/languageStore';
-import { getUpcomingFestivals, formatFestivalDate, Festival } from '../../assets/data/festivals';
+import { getUpcomingFestivals, formatFestivalDate, FESTIVALS_2026, Festival } from '../../assets/data/festivals';
 import StoriesRow from '../../components/common/StoriesRow';
 import * as Location from 'expo-location';
-import { getPanchang, moonPhaseEmoji, yogaDescription, DELHI, type PanchangData, type PanchangLocation } from '../../services/panchangService';
+import { getPanchang, moonPhaseEmoji, yogaDescription, computeSpecialToday, DELHI, type PanchangData, type PanchangLocation } from '../../services/panchangService';
 import type { Post } from '../../types/database';
 
 type Props = NativeStackScreenProps<any, 'HomeFeed'>;
@@ -270,27 +270,14 @@ function PanchangWidget() {
   // Combines today's festival from the catalogue with special-tithi info into
   // one prominent banner ribbon under the date/tithi line. If neither applies,
   // we drop a soft "आज का सामान्य पंचांग" line so the visual rhythm holds.
-  const specialToday = useMemo(() => {
-    const upcoming = getUpcomingFestivals(0); // 0 = only today
-    const todayKey = today.toISOString().slice(0, 10);
-    const todayFestival = upcoming.find((f) => f.date === todayKey);
-    if (todayFestival) {
-      return {
-        icon: todayFestival.icon,
-        line: `${todayFestival.nameHindi} आज है — शुभकामनाएँ!`,
-        accent: todayFestival.color,
-      };
-    }
-    if (isSpecialTithi) {
-      const which = panchang.tithi.includes('पूर्णिमा')
-        ? 'पूर्णिमा — चंद्र दर्शन का दिन'
-        : panchang.tithi.includes('अमावस्या')
-        ? 'अमावस्या — पूर्वजों को याद करने का दिन'
-        : 'एकादशी — व्रत और संयम का दिन';
-      return { icon: '✨', line: `आज ${which}`, accent: Colors.haldiGold };
-    }
-    return null;
-  }, [panchang.tithi, isSpecialTithi]);
+  //
+  // 2026-05-17 (Phase-2 testing) — logic moved into pure helper
+  // `computeSpecialToday` in services/panchangService so it can be unit-tested
+  // without rendering this widget. Behaviour identical (festival > tithi).
+  const specialToday = useMemo(
+    () => computeSpecialToday(today, panchang, FESTIVALS_2026),
+    [today, panchang],
+  );
 
   return (
     <View style={panchangStyles.container}>

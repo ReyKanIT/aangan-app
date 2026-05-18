@@ -346,3 +346,79 @@ export function yogaDescription(yoga: string): string {
   if (inauspicious.has(yoga)) return 'अशुभ';
   return 'सामान्य';
 }
+
+// ─── "What's special today" helper ────────────────────────────────────────────
+//
+// Extracted from HomeFeedScreen's PanchangWidget useMemo on 2026-05-17 so it
+// can be unit-tested in isolation (Phase 2 of REGRESSION_SUITE). The logic is
+// IDENTICAL to the in-component version — relocation only, no behaviour
+// change. Caller passes today's date, the computed Panchang for that date,
+// and a festival catalogue (typically the array exported from festivals.ts).
+//
+// Priority order:
+//   1. Festival catalogue match for today's ISO date  (festival > tithi)
+//   2. Special tithi heuristic (पूर्णिमा / अमावस्या / एकादशी)
+//   3. null  — caller hides the ribbon entirely
+
+export interface SpecialFestivalInput {
+  /** Hindi name shown to user, e.g. "बुद्ध पूर्णिमा" */
+  nameHindi: string;
+  /** ISO date string YYYY-MM-DD */
+  date: string;
+  /** emoji icon */
+  icon: string;
+  /** hex color used as ribbon accent */
+  color: string;
+}
+
+export interface SpecialToday {
+  icon: string;
+  line: string;
+  /** hex colour used by the UI as ribbon accent */
+  accent: string;
+}
+
+/** Haldi-gold default accent — matches Colors.haldiGold. Hard-coded so this
+ *  service stays UI-independent. The colour value MUST stay in sync with
+ *  theme/colors.ts haldiGold; the structural lockdown test pins this. */
+const HALDI_GOLD = '#C8A84B';
+
+/**
+ * Compute the "what's special today" surface for the PanchangWidget ribbon.
+ *
+ * @param date — the date to evaluate (typically `new Date()`)
+ * @param panchang — already-computed PanchangData for that date
+ * @param festivals — festival catalogue to look up (typically FESTIVALS_2026)
+ * @returns SpecialToday object or null when nothing special applies
+ */
+export function computeSpecialToday(
+  date: Date,
+  panchang: PanchangData,
+  festivals: ReadonlyArray<SpecialFestivalInput>,
+): SpecialToday | null {
+  const todayKey = date.toISOString().slice(0, 10);
+  const todayFestival = festivals.find((f) => f.date === todayKey);
+  if (todayFestival) {
+    return {
+      icon: todayFestival.icon,
+      line: `${todayFestival.nameHindi} आज है — शुभकामनाएँ!`,
+      accent: todayFestival.color,
+    };
+  }
+
+  const isSpecialTithi =
+    panchang.tithi.includes('पूर्णिमा') ||
+    panchang.tithi.includes('अमावस्या') ||
+    panchang.tithi.includes('एकादशी');
+
+  if (isSpecialTithi) {
+    const which = panchang.tithi.includes('पूर्णिमा')
+      ? 'पूर्णिमा — चंद्र दर्शन का दिन'
+      : panchang.tithi.includes('अमावस्या')
+      ? 'अमावस्या — पूर्वजों को याद करने का दिन'
+      : 'एकादशी — व्रत और संयम का दिन';
+    return { icon: '✨', line: `आज ${which}`, accent: HALDI_GOLD };
+  }
+
+  return null;
+}

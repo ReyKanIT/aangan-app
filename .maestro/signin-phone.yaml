@@ -1,0 +1,95 @@
+# signin-phone.yaml — T3 reviewer-bypass phone-OTP flow
+# ------------------------------------------------------------------
+# The first Maestro flow. Every other Maestro flow assumes the app is
+# signed in, so this is the prerequisite leaf in the smoke graph.
+#
+# Test account (CLAUDE.md hard rule, present in TASKS.md C9):
+#   phone: 9876543210
+#   otp:   123456
+# These are wired in the Supabase Auth dashboard as a "test phone" so
+# no real SMS is sent — bypass works in dev + prod builds.
+#
+# Pre-state assumption: the app launches to its splash screen. If a
+# previous session is cached and signed in, the flow performs Settings
+# → Logout to land back at the Login screen, then exercises the real
+# OTP path. This is intentional — testing the SIGN-OUT-then-SIGN-IN
+# path is what gives us coverage of the actual OTP screen.
+#
+# Authored [10:42pm - 17May26] — Testing Lead per CTO M5 anchor.
+appId: app.aangan.family
+name: Signin via phone OTP (reviewer-bypass 9876543210/123456)
+tags:
+  - smoke
+  - auth
+---
+# --- Step 1: arrive at the Login screen (handle both fresh & cached state) -----
+- launchApp:
+    appId: app.aangan.family
+    clearState: false   # we want the realistic cached-session path
+    stopApp: true
+
+# The app may show: (a) Splash → Login (signed-out path), or
+# (b) Splash → Main tabs (cached-session path). We detect which one
+# we're in by waiting for a stable element and branching.
+- runFlow:
+    when:
+      visible: 'सेटिंग्स'   # Settings tab label — only present in Main tabs
+    commands:
+      # Cached session — sign out so we can exercise the real OTP path
+      - tapOn: 'सेटिंग्स'
+      - tapOn:
+          text: 'Logout|लॉगआउट करें'
+          retryTapIfNoChange: true
+      # The Alert.alert "Logout?" confirmation appears — confirm the
+      # destructive action. The button text differs by language; tap
+      # the destructive option by either label.
+      - tapOn:
+          text: 'Logout|लॉगआउट करें'
+          retryTapIfNoChange: true
+
+# We should now be on the Login screen regardless of starting state.
+# Wait for the Aangan logo + phone prompt to confirm.
+- assertVisible: 'AANGAN'
+- assertVisible: 'फ़ोन नंबर'
+
+# --- Step 2: enter the reviewer-bypass phone number ---------------------------
+- tapOn:
+    # The phone TextInput sits to the right of the +91 prefix box. Its
+    # placeholder is "9876543210" which doubles as a robust Maestro
+    # locator — placeholder text is exposed via accessibility on iOS.
+    id: 'phone-input'
+    optional: true
+- tapOn: '9876543210'   # placeholder doubles as accessibility text
+- inputText: '9876543210'
+- hideKeyboard
+
+- tapOn:
+    text: 'OTP भेजें — Send OTP'
+
+# --- Step 3: land on the OTP screen ------------------------------------------
+# The OTP screen has title "OTP डालें" and 6 sequential TextInput boxes.
+# The first box is auto-focused. Typing 6 digits cascades through them
+# and the screen auto-verifies on the 6th digit.
+- assertVisible: 'OTP'
+- assertVisible:
+    text: '.*9876.*'   # masked phone shown in subtitle as "98****10"
+
+# --- Step 4: enter the bypass OTP --------------------------------------------
+# Maestro's inputText drives the system keyboard. The 6 TextInputs each
+# accept maxLength=1; the screen advances focus on each char. So a single
+# inputText("123456") fills all 6 boxes and auto-verifies.
+- inputText: '123456'
+
+# --- Step 5: assert we landed on the Main tab nav ----------------------------
+# The Hindi tab labels are emoji + Hindi: 'घर' (Home), 'परिवार' (Family),
+# 'कार्यक्रम' (Events), 'सूचना' (Notifications), 'सेटिंग्स' (Settings).
+# 'घर' is the most distinctive — only appears on signed-in Main tabs.
+- extendedWaitUntil:
+    visible: 'घर'
+    timeout: 15000
+
+- assertVisible: 'घर'
+- assertVisible: 'परिवार'
+- assertVisible: 'सेटिंग्स'
+
+# Smoke pass: we are signed in.

@@ -14,6 +14,10 @@ import LoginScreen from '../screens/auth/LoginScreen';
 import OtpScreen from '../screens/auth/OtpScreen';
 import ProfileSetupScreen from '../screens/auth/ProfileSetupScreen';
 import OnboardingScreen from '../screens/auth/OnboardingScreen';
+// v0.16.1 — forced "Invite 3 family members" step fires right after first
+// profile setup. Top growth bet per CEO + CMO scorecards (k-factor 0.25→0.55).
+// See notes/10k-milestone.md, notes/growth-loops-30d.md Loop 2.
+import InviteThreeFamilyScreen from '../screens/auth/InviteThreeFamilyScreen';
 
 // Main Screens
 import HomeFeedScreen from '../screens/home/HomeFeedScreen';
@@ -33,6 +37,9 @@ import ChatScreen from '../screens/messages/ChatScreen';
 
 // Event Screens
 import EventCreatorScreen from '../screens/events/EventCreatorScreen';
+// EventsListScreen added in v0.16.1 — bottom-tab entry for EventCreator
+// (Kumar 2026-05-17 14:02 IST: "where is event creation feature?").
+import EventsListScreen from '../screens/events/EventsListScreen';
 import EventInvitationScreen from '../screens/events/EventInvitationScreen';
 import RsvpTrackerScreen from '../screens/events/RsvpTrackerScreen';
 import EventPhotosScreen from '../screens/events/EventPhotosScreen';
@@ -70,6 +77,7 @@ export type RootStackParamList = {
   OTP: { phone?: string; email?: string };
   ProfileSetup: { editMode?: boolean };
   Onboarding: undefined;
+  InviteThreeFamily: undefined;
   Main: undefined;
   PostComposer: { editPostId?: string };
   PostDetail: { postId: string; postAuthorId: string };
@@ -100,6 +108,7 @@ export type MainTabParamList = {
   Home: undefined;
   Family: undefined;
   Compose: undefined;
+  Events: undefined;
   Notifications: undefined;
   Settings: undefined;
 };
@@ -118,6 +127,7 @@ function TabIcon({ name, focused }: { name: string; focused: boolean }) {
     Home: '🏠',
     Family: '👨‍👩‍👧‍👦',
     Compose: '✏️',
+    Events: '📅',
     Notifications: '🔔',
     Settings: '⚙️',
   };
@@ -178,6 +188,11 @@ function MainTabs() {
         })}
       />
       <Tab.Screen
+        name="Events"
+        component={EventsListScreen as React.ComponentType<any>}
+        options={{ tabBarLabel: 'कार्यक्रम' }}
+      />
+      <Tab.Screen
         name="Notifications"
         component={NotificationsScreen}
         options={{ tabBarLabel: 'सूचना' }}
@@ -229,6 +244,8 @@ export default function AppNavigator() {
         <Stack.Screen name="OTP" component={OtpScreen} />
         <Stack.Screen name="ProfileSetup" component={ProfileSetupScreen} />
         <Stack.Screen name="Onboarding" component={OnboardingScreen} />
+        {/* v0.16.1 — forced "Invite 3" onboarding step (post-profile-setup) */}
+        <Stack.Screen name="InviteThreeFamily" component={InviteThreeFamilyScreen} />
 
         {/* Main App */}
         <Stack.Screen name="Main" component={MainTabs} />

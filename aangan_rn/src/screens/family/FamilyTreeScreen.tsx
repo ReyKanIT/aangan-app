@@ -1147,6 +1147,20 @@ export default function FamilyTreeScreen({ navigation }: Props) {
             selfDisplayName={currentUser?.display_name ?? null}
             selfDisplayNameHindi={currentUser?.display_name_hindi ?? null}
             selfAvatarUrl={currentUser?.profile_photo_url ?? null}
+            // v0.16.1 Design Lead fix (2026-05-17): tapping a tree card was
+            // silent. Wire to MemberProfile, but only for online members —
+            // offline adapter rows have synthetic IDs ('offline-*') that
+            // don't resolve in the users table, so suppress the tap there
+            // and let Kumar / the member's relative complete the profile via
+            // the offline-edit flow first.
+            onMemberPress={(m) => {
+              if (m.id.startsWith('offline-')) return;
+              navigation.navigate('MemberProfile', {
+                memberId: m.family_member_id,
+                relationshipLabel: m.relationship_label_hindi || m.relationship_type || undefined,
+                connectionLevel: m.connection_level,
+              });
+            }}
           />
         </ErrorBoundary>
       ) : (

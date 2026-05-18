@@ -1,4 +1,7 @@
 {
+  "scripts": {
+    "check:critical-rn": "node scripts/check-critical-rn.mjs"
+  },
   "dependencies": {
     "expo-image-manipulator": "^55.0.11"
   }

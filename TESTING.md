@@ -1,0 +1,309 @@
+# Testing Aangan
+
+> **TL;DR**
+> ```bash
+> # T1 Jest tests (seconds)
+> cd aangan_rn && npm test
+>
+> # T2 critical-features check (web)
+> cd aangan_web && npm run check:critical
+>
+> # T3 Maestro E2E (minutes) — Phase 3, not yet wired
+> # T4 manual smoke on simulator — see REGRESSION_SUITE.md
+> ```
+
+This file documents how to run the regression suite. The strategy is in
+[REGRESSION_SUITE.md](REGRESSION_SUITE.md).
+
+---
+
+## T0 — TypeScript
+
+```bash
+cd aangan_rn
+npx tsc --noEmit
+```
+
+Run before every commit. Pre-existing `expo-file-system` API-drift errors in
+`utils/uploadFile.ts` are filtered — every OTHER error is a new break.
+
+---
+
+## T1 — Jest (component + unit)
+
+```bash
+cd aangan_rn
+npm test               # full suite
+npm run test:watch     # watch mode while writing tests
+npm run test:coverage  # coverage report
+npm run test:gen-tree  # quick subset: KulvrikshTreeView + getGenerationOffset
+```
+
+**What's covered today (Phase 1 + Phase 2, 2026-05-17):**
+
+- `src/__tests__/components/KulvrikshTreeView.test.tsx` — 4 render-no-throw
+  tests against representative fixtures, including Kumar's 8-member graph.
+- `src/__tests__/components/KulvrikshTreeView.test.tsx` (same file) —
+  26 unit tests for `getGenerationOffset` covering siblings/spouse,
+  parents+gen, grandparents, children, grandchildren, unknown fallback,
+  and case sensitivity. Both English `relationship_type` and Hindi
+  `relationship_label_hindi` keys.
+- `src/__tests__/structural/v0_16_1_lockdown.test.ts` — source-string
+  invariants for the v0.16.1 bug fixes (default tab, name-first form,
+  specialToday ribbon, removed Storage/Referral routes) + login critical
+  features (Google + phone OTP).
+- `src/__tests__/components/PanchangWidget.test.tsx` *(landed [3:42pm - 17May26])* —
+  9 unit tests for `computeSpecialToday(date, panchang, festivals)`. Logic
+  was extracted from HomeFeedScreen's PanchangWidget into a pure helper in
+  `services/panchangService.ts` so it can be tested without rendering. Cases:
+  Pratipada-only day returns null; ordinary tithis return null; Purnima /
+  Amavasya / Ekadashi each return a haldiGold ribbon; festival catalogue
+  match uses `nameHindi + शुभकामनाएँ` with the catalogue color (Buddha Purnima,
+  Diwali); **festival takes priority over special tithi** when both apply on
+  the same day (Buddha Purnima + पूर्णिमा); empty catalogue still works.
+- `src/__tests__/fixtures/kumar-family.ts` — deterministic fixture for any
+  test that needs a non-trivial family graph.
+
+**Total: 4 test files. ~70+ assertions, sub-second run.**
+
+Update the tally any time tests are added — see `notes/test-backlog.md` for
+debt. Run `npx jest --listTests` for the live test-file count.
+
+**What Jest does NOT catch:**
+
+- Runtime exceptions in react-native-svg's native renderer (we stub it).
+- Reanimated worklet runtime issues (we stub the JS surface).
+- Real Supabase + RLS behavior (mocked).
+- Gesture handler real touch events (mocked).
+- Anything that requires a running device.
+
+These belong to T3 (Maestro) and T4 (manual smoke). See REGRESSION_SUITE.md
+for the layered model.
+
+**Adding a new T1 test:**
+
+```bash
+# Component test
+touch aangan_rn/src/__tests__/components/MyComponent.test.tsx
+
+# Unit test for a utility
+touch aangan_rn/src/__tests__/utils/myHelper.test.ts
+```
+
+Pattern: assert "render does not throw" for representative data shapes,
+then assert specific business logic via the rendered tree or store state.
+Avoid pixel/style assertions — that's T3/T4.
+
+---
+
+## T2 — Critical features manifest (web)
+
+```bash
+cd aangan_web
+npm run check:critical    # runs as part of prebuild too
+```
+
+Reads `CRITICAL_FEATURES.md` at the repo root and asserts every listed UI
+feature still exists in source (by `data-testid` or function name). Hooks
+into `next build` automatically.
+
+### T2b — Critical features manifest (RN)  *(landed [5:37pm - 17May26])*
+
+```bash
+# From repo root
+npm run check:critical-rn
+# or directly:
+node scripts/check-critical-rn.mjs
+```
+
+Reads `CRITICAL_FEATURES.md` (presence-check) and asserts the RN counterparts
+of the listed features — Google sign-in handler, phone OTP path, language
+toggle, sign-out confirm with `destructive` option, `delete_account` i18n
+keys (Play/Apple compliance prep), WhatsApp invite, family-tree Add-Member
+button, home FAB → PostComposer, notification bell, PanchangWidget date +
+tithi pairing. Runs in <1s with zero deps. Complements the structural
+lockdown tests in `aangan_rn/src/__tests__/structural/v0_16_1_lockdown.test.ts`
+(default tab, name-first form, special-today ribbon, no Storage/Referral
+routes) — together they cover the cross-cutting UI invariants.
+
+**Phase 2e — pre-commit hook wired** *(landed [3:42pm - 17May26])*:
+
+The husky 9.x pre-commit hook at `aangan_rn/.husky/pre-commit` runs
+`tsc → jest → check:critical-rn` in sequence. Each gate is hard. The bulk of
+the logic lives in `aangan_rn/scripts/pre-commit.sh` (version-controlled);
+the husky file is a one-liner wrapper auto-generated by
+`aangan_rn/scripts/install-precommit.js` whenever `npm install` runs the
+`prepare` script.
+
+To install on a fresh clone:
+
+```bash
+cd aangan_rn
+npm install            # triggers `prepare` → husky + install-precommit.js
+git config core.hooksPath aangan_rn/.husky   # only if not auto-set
+```
+
+Verify it fires:
+
+```bash
+git commit --allow-empty -m 'test pre-commit'
+# Expect: ▸ T0 tsc → ▸ T1 jest → ▸ T2 check:critical-rn → ✓ passed
+```
+
+`--no-verify` is forbidden by `feedback_release_workflow.md`. A red gate
+means revert or fix, not bypass.
+
+---
+
+## T3 — Maestro E2E flows  *(Phase 3 — post-build harness landed [10:42pm - 17May26])*
+
+### Install Maestro (one-time)
+
+```bash
+# Prereq: JDK 11+ already on PATH. `which java` must return a path.
+# (If missing, ask Kumar before installing a JDK — env-wide change.)
+
+# Homebrew preferred:
+brew tap mobile-dev-inc/tap && brew install maestro
+# OR curl (no sudo, writes to $HOME/.maestro):
+curl -Ls "https://get.maestro.mobile.dev" | bash
+export PATH="$PATH:$HOME/.maestro/bin"        # add to ~/.zshrc to persist
+
+maestro --version                              # confirm
+```
+
+### Single-shot — run the smoke pack against a built .app
+
+The post-build smoke harness is `aangan_rn/scripts/post-build-smoke.sh`.
+This is the contract that release.mjs will call in Phase 4 to gate
+`eas submit` on real-device behaviour.
+
+```bash
+# From repo root:
+bash aangan_rn/scripts/post-build-smoke.sh /path/to/Aangan.app
+# or, when the +x bit is set:
+aangan_rn/scripts/post-build-smoke.sh /path/to/Aangan.app
+
+# Env overrides:
+UDID=2B795901-B185-4FDE-B0EE-63D2DD9B1501 \
+RESULTS_DIR=/tmp/aangan-maestro \
+BUNDLE_ID=app.aangan.family \
+  bash aangan_rn/scripts/post-build-smoke.sh /path/to/Aangan.app
+```
+
+What it does:
+
+1. Boots the iPhone 17 Pro simulator (UDID env default) if not booted.
+2. `xcrun simctl install <UDID> <APP_PATH>`.
+3. `xcrun simctl terminate` + `launch` for a clean cold-start state.
+4. Runs each flow in the FLOWS array via `maestro --device <UDID> test`.
+5. Writes JUnit XML to `$RESULTS_DIR/<flow>.xml` for CI ingest.
+6. Exits 0 only if every flow passes; non-zero otherwise.
+
+Extra flows can be appended as positional args:
+
+```bash
+bash aangan_rn/scripts/post-build-smoke.sh /path/to/Aangan.app \
+  .maestro/family-tree-renders.yaml
+```
+
+### Run a single flow directly (debugging)
+
+```bash
+xcrun simctl boot 2B795901-B185-4FDE-B0EE-63D2DD9B1501 || true
+open -a Simulator
+xcrun simctl install 2B795901-B185-4FDE-B0EE-63D2DD9B1501 /path/to/Aangan.app
+
+maestro --device 2B795901-B185-4FDE-B0EE-63D2DD9B1501 test \
+  .maestro/signin-phone.yaml
+```
+
+Or run the entire pack against whatever is installed:
+
+```bash
+maestro test .maestro/
+```
+
+Test account (per CLAUDE.md): phone `9876543210`, OTP `123456` — wired
+in Supabase Auth as a reviewer-bypass number so no real SMS is sent.
+
+See `.maestro/README.md` for prerequisites, locator conventions, and the
+adding-a-flow recipe.
+
+### Flows wired today
+
+- **`signin-phone.yaml`** *(landed [10:42pm - 17May26])* — reviewer-bypass
+  phone OTP. Handles both fresh-launch and cached-session starting states:
+  if Settings tab is visible, it taps सेटिंग्स → Logout → confirms the
+  destructive dialog before driving the real OTP screen. Then enters
+  `9876543210` → Send OTP → `123456` → asserts the Main tab nav (`घर`,
+  `परिवार`, `सेटिंग्स`). Every other flow assumes signed-in state, so
+  this is the prerequisite leaf in the smoke graph and the default flow
+  the post-build harness runs.
+- **`family-tree-renders.yaml`** — canonical reproducer for the gen-tree
+  regression class. Jest cannot catch runtime SVG/Reanimated /
+  Rules-of-Hooks bugs because tests never re-render — Maestro drives a real
+  simulator, which is the layer that surfaced the v0.16.1 ErrorBoundary on
+  Kumar's TestFlight.
+
+### Flows queued
+
+- `home-loads.yaml` — header, posts list, FAB present after sign-in
+- `add-member-name-only.yaml`, `add-member-with-phone.yaml`
+- `compose-photo.yaml` — pick photo → post → verify in feed (real Supabase)
+- `panchang-special-day.yaml` — fake a special-tithi date and verify ribbon
+- `create-event.yaml` — Events tab → EventCreator → save → appears in list
+
+---
+
+## T4 — Manual smoke on a built artifact
+
+After every EAS build, install the artifact on the simulator (iOS) or
+emulator (Android, when adb is set up). Walk through the smoke checklist
+in REGRESSION_SUITE.md before any store upload. Save before/after
+screenshots to `/tmp/aangan_*_test_*.png` for the release log.
+
+---
+
+## The release-cycle gate
+
+Per the rule in `feedback_release_workflow.md`:
+
+```
+code edit
+  → tsc (T0)
+  → npm test (T1)
+  → check:critical (T2)
+  → eas build
+  → install on sim (post-build hook, Phase 4)
+  → maestro test (T3, Phase 3)
+  → manual walk-through (T4)
+  → eas submit
+```
+
+Every gate is a hard stop. A red gate means revert or fix, not bypass.
+
+---
+
+## Adding tests when fixing a regression
+
+1. Reproduce the bug in a test FIRST (it should fail).
+2. Write the fix.
+3. The same test now passes.
+4. Commit the fix + test together. PR title prefix `regression-test:` so
+   the test is permanent.
+
+Example (today's gen-tree bug):
+- Reproducer:
+  `src/__tests__/components/KulvrikshTreeView.test.tsx`
+  case "renders for Kumar's real family graph".
+- Fix: TBD (the bug is in the runtime layer that Jest stubs, so we'll need
+  a Maestro flow OR a deeper Jest harness that uses the real svg renderer).
+
+---
+
+## When CI runs the suite  *(Phase 4, not yet wired)*
+
+- Every push: T0 + T1 + T2
+- Every PR open / update: T0 + T1 + T2 + T3 (Maestro)
+- Every `git tag v*`: post-build smoke pack + manual approval gate

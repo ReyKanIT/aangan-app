@@ -306,14 +306,14 @@ export default function LoginScreen({ navigation }: Props) {
             disabled={isGoogleLoading}
             activeOpacity={0.8}
             accessibilityRole="button"
-            accessibilityLabel="Google से जारी रखें"
+            accessibilityLabel={'Google से जारी रखें'}
           >
             {isGoogleLoading ? (
               <ActivityIndicator size="small" color={Colors.brown} />
             ) : (
               <>
-                <Text style={styles.googleIcon}>🅖</Text>
-                <Text style={styles.googleButtonText}>Google से जारी रखें</Text>
+                <Text style={styles.googleIcon}>{'🅖'}</Text>
+                <Text style={styles.googleButtonText}>{'Google से जारी रखें'}</Text>
               </>
             )}
           </TouchableOpacity>
@@ -321,13 +321,13 @@ export default function LoginScreen({ navigation }: Props) {
           {/* Divider */}
           <View style={styles.dividerRow}>
             <View style={styles.dividerLine} />
-            <Text style={styles.dividerText}>या / or</Text>
+            <Text style={styles.dividerText}>{'या / or'}</Text>
             <View style={styles.dividerLine} />
           </View>
 
           {/* ===== 2. PHONE OTP — India's default (like WhatsApp/PhonePe) ===== */}
           <View style={styles.section}>
-            <Text style={styles.sectionLabel}>फ़ोन नंबर</Text>
+            <Text style={styles.sectionLabel}>{'फ़ोन नंबर'}</Text>
             <Text style={styles.sectionHint}>Phone Number</Text>
             <View style={[styles.phoneRow, phoneError ? styles.inputError : null]}>
               <View style={styles.prefixBox}>
@@ -355,7 +355,7 @@ export default function LoginScreen({ navigation }: Props) {
               {isSending && !showEmailSection ? (
                 <ActivityIndicator size="small" color={Colors.white} />
               ) : (
-                <Text style={styles.goldButtonText}>OTP भेजें — Send OTP</Text>
+                <Text style={styles.goldButtonText}>{'OTP भेजें — Send OTP'}</Text>
               )}
             </TouchableOpacity>
           </View>
@@ -363,7 +363,7 @@ export default function LoginScreen({ navigation }: Props) {
           {/* Divider */}
           <View style={styles.dividerRow}>
             <View style={styles.dividerLine} />
-            <Text style={styles.dividerText}>या / or</Text>
+            <Text style={styles.dividerText}>{'या / or'}</Text>
             <View style={styles.dividerLine} />
           </View>
 
@@ -375,12 +375,12 @@ export default function LoginScreen({ navigation }: Props) {
               activeOpacity={0.8}
             >
               <Text style={styles.emailExpandIcon}>📧</Text>
-              <Text style={styles.emailExpandText}>ईमेल से जारी रखें</Text>
+              <Text style={styles.emailExpandText}>{'ईमेल से जारी रखें'}</Text>
               <Text style={styles.emailExpandHint}>Continue with Email</Text>
             </TouchableOpacity>
           ) : (
             <View style={styles.section}>
-              <Text style={styles.sectionLabel}>ईमेल</Text>
+              <Text style={styles.sectionLabel}>{'ईमेल'}</Text>
               <Text style={styles.sectionHint}>Email</Text>
               <TextInput
                 style={styles.textInput}
@@ -406,7 +406,7 @@ export default function LoginScreen({ navigation }: Props) {
                     {isSending ? (
                       <ActivityIndicator size="small" color={Colors.white} />
                     ) : (
-                      <Text style={styles.goldButtonText}>OTP भेजें — Send OTP</Text>
+                      <Text style={styles.goldButtonText}>{'OTP भेजें — Send OTP'}</Text>
                     )}
                   </TouchableOpacity>
 

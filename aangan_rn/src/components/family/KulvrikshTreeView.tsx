@@ -52,6 +52,12 @@ const COL_GAP = 28;          // horizontal gap between sibling cards
 const ROW_GAP = 60;          // vertical gap between generations
 const AVATAR_R = 28;          // radius of avatar circle inside card
 const CANVAS_PAD = 32;        // padding around content inside canvas
+const COUPLE_GAP = 10;        // intra-couple gap between paired cards
+const COUPLE_PAD = 8;         // padding around the haldi-tinted couple wrapper
+// Width of a couple unit when both halves are standard cards (gen ≠ 0).
+const COUPLE_W = CARD_W * 2 + COUPLE_GAP;
+// Width of a You+spouse couple unit (You-card is larger).
+const YOU_COUPLE_W = YOU_CARD_W + CARD_W + COUPLE_GAP;
 
 // Cred-ish neutral palette (warm + premium, matches Aangan's haldi/mehndi)
 const COLOR = {
@@ -122,6 +128,155 @@ export function getGenerationOffset(member: FamilyMember): number {
   return 0;
 }
 
+// ---------------------------------------------------------------------------
+// Couple detection (v0.16.2 — Kumar directive 2026-05-18 01:32 IST)
+// "any husband-wife pair should be shown as a pair in GUI & children should be
+//  shown as combined children." We detect couples from the ego-centric member
+//  list and render them as a single visual unit per generation, with children
+//  attaching to the couple midpoint instead of the individual cards.
+// ---------------------------------------------------------------------------
+
+export type CoupleId =
+  | 'you+spouse'
+  | 'father+mother'
+  | 'father_in_law+mother_in_law'
+  | 'paternal-grandparents'
+  | 'maternal-grandparents';
+
+export interface CoupleSlot {
+  id: CoupleId;
+  /** 'you' for the You+spouse case, otherwise a FamilyMember. */
+  primary: FamilyMember | 'you';
+  spouse: FamilyMember;
+  gen: number;
+}
+
+// Helper — normalised relationship key (English first, Hindi fallback).
+function relKey(m: FamilyMember): string {
+  const rt = (m.relationship_type ?? '').toString().toLowerCase().trim();
+  if (rt) return rt;
+  return (m.relationship_label_hindi ?? '').toString().trim();
+}
+
+function findOne(members: FamilyMember[], keys: string[]): FamilyMember | undefined {
+  // Returns the FIRST member whose normalised key matches any of `keys`.
+  // If multiple match (data error upstream), the rest are ignored; the
+  // caller can choose to warn.
+  return members.find((m) => keys.includes(relKey(m)));
+}
+
+function findAllByKeys(members: FamilyMember[], keys: string[]): FamilyMember[] {
+  return members.filter((m) => keys.includes(relKey(m)));
+}
+
+/**
+ * Detect couple slots from a flat ego-centric member list.
+ *
+ * Phase 1 (shipped 2026-05-18):
+ *   - You + spouse   (gen 0)   — wife/husband/spouse/पति/पत्नी
+ *   - father+mother  (gen -1)
+ *   - father_in_law+mother_in_law (gen -1)
+ *   - paternal grandparents दादा+दादी (gen -2)
+ *   - maternal grandparents नाना+नानी (gen -2)
+ *
+ * Phase 2 (deferred — see notes/design-backlog.md):
+ *   - चाचा+चाची, मामा+मामी, मौसा+मौसी, बुआ+फूफा (gen -1 uncle/aunt pairs)
+ *
+ * The function is pure & side-effect free; couple-pair render relies on it.
+ */
+export function detectCouples(
+  members: FamilyMember[],
+  includeYou: boolean = true,
+): CoupleSlot[] {
+  if (!members || members.length === 0) return [];
+  const slots: CoupleSlot[] = [];
+
+  // ── gen 0: You + spouse ────────────────────────────────────────────────
+  if (includeYou) {
+    const spouses = findAllByKeys(members, [
+      'wife', 'husband', 'spouse', 'partner', 'पति', 'पत्नी',
+    ]);
+    if (spouses.length >= 1) {
+      if (spouses.length > 1 && typeof console !== 'undefined' && console.warn) {
+        console.warn(
+          '[KulvrikshTreeView] detectCouples: multiple spouses found, using first only',
+          spouses.map((s) => s.id),
+        );
+      }
+      slots.push({
+        id: 'you+spouse',
+        primary: 'you',
+        spouse: spouses[0],
+        gen: 0,
+      });
+    }
+  }
+
+  // ── gen -1: parents ────────────────────────────────────────────────────
+  const father = findOne(members, ['father', 'dad', 'पिता', 'पापा']);
+  const mother = findOne(members, ['mother', 'mom', 'माता', 'मम्मी', 'माँ']);
+  if (father && mother) {
+    slots.push({ id: 'father+mother', primary: father, spouse: mother, gen: -1 });
+  }
+
+  // ── gen -1: parents-in-law ─────────────────────────────────────────────
+  const fil = findOne(members, ['father_in_law', 'ससुर']);
+  const mil = findOne(members, ['mother_in_law', 'सास']);
+  if (fil && mil) {
+    slots.push({
+      id: 'father_in_law+mother_in_law',
+      primary: fil,
+      spouse: mil,
+      gen: -1,
+    });
+  }
+
+  // ── gen -2: paternal grandparents ──────────────────────────────────────
+  // Pair दादा+दादी explicitly (paternal). For English-only `grandfather`/
+  // `grandmother` we treat the first pair as paternal-side.
+  const dada = findOne(members, ['दादा']);
+  const dadi = findOne(members, ['दादी']);
+  if (dada && dadi) {
+    slots.push({ id: 'paternal-grandparents', primary: dada, spouse: dadi, gen: -2 });
+  } else {
+    // English-only fallback: a single grandfather + grandmother pair counts
+    // as paternal in the absence of more info.
+    const gf = findOne(members, ['grandfather']);
+    const gm = findOne(members, ['grandmother']);
+    if (gf && gm) {
+      slots.push({
+        id: 'paternal-grandparents',
+        primary: gf,
+        spouse: gm,
+        gen: -2,
+      });
+    }
+  }
+
+  // ── gen -2: maternal grandparents ──────────────────────────────────────
+  const nana = findOne(members, ['नाना']);
+  const nani = findOne(members, ['नानी']);
+  if (nana && nani) {
+    slots.push({ id: 'maternal-grandparents', primary: nana, spouse: nani, gen: -2 });
+  }
+
+  return slots;
+}
+
+/**
+ * Returns the set of member-ids that have been "consumed" into couple slots.
+ * Layout math uses this set to skip those members in the per-generation
+ * single-card partition (they render as part of the couple unit instead).
+ */
+function coupleMemberIds(couples: CoupleSlot[]): Set<string> {
+  const ids = new Set<string>();
+  for (const c of couples) {
+    if (c.primary !== 'you') ids.add(c.primary.id);
+    ids.add(c.spouse.id);
+  }
+  return ids;
+}
+
 function generationLabel(g: number, isHindi: boolean): string {
   switch (g) {
     case -2: return isHindi ? 'दादा-दादी / नाना-नानी' : 'Grandparents';
@@ -172,36 +327,80 @@ export default function KulvrikshTreeView({
   // Coverage map — kept in this file (not a shared module) because the
   // mapping is layout-presentation specific. If we ever need it elsewhere,
   // promote to utils/relationships.ts.
+  // Detect husband-wife pairs from the flat member list. Couples render as
+  // a paired card unit; children attach to the couple midpoint instead of
+  // the individual cards. (v0.16.2 — Kumar directive 2026-05-18.)
+  const couples = useMemo(() => detectCouples(members, true), [members]);
+
+  // Set of member-ids that are already accounted for inside a couple slot —
+  // these are excluded from the per-generation single-card partition so we
+  // don't render them twice.
+  const consumedIds = useMemo(() => coupleMemberIds(couples), [couples]);
+
   const genOffset = useMemo(() => {
     const partitions = new Map<number, FamilyMember[]>();
     for (const m of members) {
+      if (consumedIds.has(m.id)) continue;
       const g = getGenerationOffset(m);
       const bucket = partitions.get(g) ?? [];
       bucket.push(m);
       partitions.set(g, bucket);
     }
     return partitions;
-  }, [members]);
+  }, [members, consumedIds]);
+
+  // Couples partitioned by generation (parallel to genOffset).
+  const couplesByGen = useMemo(() => {
+    const map = new Map<number, CoupleSlot[]>();
+    for (const c of couples) {
+      const list = map.get(c.gen) ?? [];
+      list.push(c);
+      map.set(c.gen, list);
+    }
+    return map;
+  }, [couples]);
+
+  // Convenience: the "You + spouse" couple, if present. Used in many places
+  // (gen 0 layout, child-anchor midpoint, etc.).
+  const youCouple = useMemo(
+    () => couples.find((c) => c.id === 'you+spouse') ?? null,
+    [couples],
+  );
 
   // Sorted list of generation rows that actually have members.
   // 0 is reserved for the You-row even if empty (so it always renders).
   const usedGenerations = useMemo(() => {
     const set = new Set<number>(genOffset.keys());
+    for (const g of couplesByGen.keys()) set.add(g);
     set.add(0); // You always at gen 0
     return Array.from(set).sort((a, b) => a - b);
-  }, [genOffset]);
+  }, [genOffset, couplesByGen]);
 
   // ── compute positions ─────────────────────────────────────────────────
   // Each generation row is centered horizontally; rows stack vertically.
   // The widest row drives the canvas width.
+  //
+  // Slot accounting: a couple takes ~2 card widths + 10px gap as one
+  // "wide slot". A single member takes 1 card width. Gen 0 always reserves
+  // 1 slot for the You-card. The You+spouse couple replaces (You) + (spouse-
+  // single) with a single wide slot; we account for it via gen0Slots below.
   const widestRowCount = useMemo(() => {
-    let widest = 1; // You row counts as 1 even when empty
-    for (const [g, list] of genOffset) {
-      const n = g === 0 ? list.length + 1 : list.length; // +1 for You at gen 0
+    let widest = 1; // You row counts as ≥1 even when empty
+    for (const g of usedGenerations) {
+      const singles = (genOffset.get(g) ?? []).length;
+      const cpls = (couplesByGen.get(g) ?? []).length;
+      // Couple counts as ~2 cards' worth horizontally — bias the canvas math
+      // so couples never get clipped.
+      let n = singles + cpls * 2;
+      if (g === 0) {
+        // gen 0: if no You+spouse couple, You adds 1 slot; if there IS a
+        // You+spouse couple, that couple already counts for You + spouse.
+        n += youCouple ? 0 : 1;
+      }
       if (n > widest) widest = n;
     }
     return widest;
-  }, [genOffset]);
+  }, [usedGenerations, genOffset, couplesByGen, youCouple]);
 
   const canvasW = Math.max(
     widestRowCount * (CARD_W + COL_GAP) + 2 * CANVAS_PAD,
@@ -232,8 +431,30 @@ export default function KulvrikshTreeView({
     return Array.from({ length: n }, (_, i) => startX + i * (cardW + COL_GAP));
   }, [centerX]);
 
-  // Same-gen members (gen 0, excluding You) flank the You-card: half left,
-  // half right, leaving the center slot for You.
+  // You-card position. When You has a spouse (couple), the pair is centered
+  // on centerX: You sits left of center, spouse sits right of center, the
+  // couple's midpoint is exactly centerX. Without a spouse, You sits at
+  // centerX as before.
+  const youX = useMemo(() => {
+    if (!youCouple) return centerX;
+    // couple width = YOU_CARD_W + COUPLE_GAP + CARD_W
+    return centerX - (YOU_CARD_W + COUPLE_GAP + CARD_W) / 2 + YOU_CARD_W / 2;
+  }, [centerX, youCouple]);
+
+  // Spouse-card position (only meaningful when youCouple exists).
+  const spouseX = useMemo(() => {
+    if (!youCouple) return null;
+    return centerX + (YOU_CARD_W + COUPLE_GAP + CARD_W) / 2 - CARD_W / 2;
+  }, [centerX, youCouple]);
+
+  // The "left edge" + "right edge" of the gen-0 You-unit (couple-or-single).
+  // Used to position sibling cards flanking the unit.
+  const gen0UnitHalfW = youCouple
+    ? (YOU_CARD_W + COUPLE_GAP + CARD_W) / 2
+    : YOU_CARD_W / 2;
+
+  // Same-gen members (gen 0, excluding You and excluding the consumed spouse)
+  // flank the You-unit: half left, half right.
   const gen0Members = genOffset.get(0) ?? [];
   const gen0Xs = useMemo(() => {
     const n = gen0Members.length;
@@ -242,16 +463,16 @@ export default function KulvrikshTreeView({
     const positions: number[] = [];
     for (let i = 0; i < halfLeft; i++) {
       positions.push(
-        centerX - YOU_CARD_W / 2 - COL_GAP - (halfLeft - i) * (CARD_W + COL_GAP) + CARD_W / 2
+        centerX - gen0UnitHalfW - COL_GAP - (halfLeft - i) * (CARD_W + COL_GAP) + CARD_W / 2
       );
     }
     for (let i = halfLeft; i < n; i++) {
       positions.push(
-        centerX + YOU_CARD_W / 2 + COL_GAP + (i - halfLeft) * (CARD_W + COL_GAP) + CARD_W / 2
+        centerX + gen0UnitHalfW + COL_GAP + (i - halfLeft) * (CARD_W + COL_GAP) + CARD_W / 2
       );
     }
     return positions;
-  }, [gen0Members.length, centerX]);
+  }, [gen0Members.length, centerX, gen0UnitHalfW]);
 
   // ── gestures: pinch + pan ─────────────────────────────────────────────
   const scale = useSharedValue(1);
@@ -300,7 +521,82 @@ export default function KulvrikshTreeView({
     ],
   }));
 
+  // Pre-compute x positions for each non-You generation row.
+  // Keyed by generation offset; value is an array of x-centers (one per
+  // member in that row, in the same order as genOffset.get(g)).
+  //
+  // v0.16.1 fix (2026-05-17): this useMemo was BELOW the empty-state early
+  // return. When the screen first mounts with members=[] and then re-renders
+  // with the fetched list, React saw N hooks then N+1 hooks → "Rendered more
+  // hooks than during the previous render" exception in Hermes prod, caught
+  // by ErrorBoundary as "कुछ गलत हो गया". Jest tests didn't catch it because
+  // every test rendered with a static populated members prop, so the
+  // empty→populated transition never happened in tests.
+  //
+  // Moved ABOVE the early-return so the hook count stays stable across renders.
+  //
+  // v0.16.2 (2026-05-18): couples render as a single wide unit centered in
+  // the row; singles flank them. `rowXs` holds card-center xs for the
+  // SINGLE members only (same order as genOffset.get(g)). Couple unit
+  // midpoints live in `coupleRowMidXs`.
+  const rowXs = useMemo(() => {
+    const map = new Map<number, number[]>();
+    for (const g of usedGenerations) {
+      if (g === 0) continue; // handled separately via gen0Xs
+      const singles = genOffset.get(g) ?? [];
+      const cpls = couplesByGen.get(g) ?? [];
+      if (cpls.length === 0) {
+        map.set(g, spreadX(singles.length, CARD_W));
+        continue;
+      }
+      // Couples cluster around centerX; singles flank them.
+      // Couple-unit total width:
+      const cplsTotalW = cpls.length * COUPLE_W + (cpls.length - 1) * COL_GAP;
+      const halfL = Math.ceil(singles.length / 2);
+      const positions: number[] = [];
+      for (let i = 0; i < halfL; i++) {
+        positions.push(
+          centerX - cplsTotalW / 2 - COL_GAP - (halfL - i) * (CARD_W + COL_GAP) + CARD_W / 2,
+        );
+      }
+      for (let i = halfL; i < singles.length; i++) {
+        positions.push(
+          centerX + cplsTotalW / 2 + COL_GAP + (i - halfL) * (CARD_W + COL_GAP) + CARD_W / 2,
+        );
+      }
+      map.set(g, positions);
+    }
+    return map;
+  }, [usedGenerations, genOffset, couplesByGen, spreadX, centerX]);
+
+  // Couple-midpoint x for every couple in every non-You generation.
+  // The midpoint is what child trunk lines connect to.
+  const coupleRowMidXs = useMemo(() => {
+    const map = new Map<number, number[]>();
+    for (const g of usedGenerations) {
+      if (g === 0) continue;
+      const cpls = couplesByGen.get(g) ?? [];
+      if (cpls.length === 0) continue;
+      const totalW = cpls.length * COUPLE_W + (cpls.length - 1) * COL_GAP;
+      const startX = centerX - totalW / 2 + COUPLE_W / 2;
+      map.set(
+        g,
+        Array.from({ length: cpls.length }, (_, i) => startX + i * (COUPLE_W + COL_GAP)),
+      );
+    }
+    return map;
+  }, [usedGenerations, couplesByGen, centerX]);
+
+  // Trunk anchor for the gen-0 You-unit, used by children's connection
+  // lines. With a spouse → midpoint between You and spouse (= centerX).
+  // Without a spouse → just centerX, which is You's card center anyway.
+  const gen0AnchorX = centerX;
+
+  const yYou = yOfGen(0);
+
   // ── empty state ───────────────────────────────────────────────────────
+  // MUST come AFTER every hook call above. See note on rowXs about the
+  // Rules-of-Hooks regression this position prevents.
   if (members.length === 0) {
     return (
       <View style={styles.emptyContainer}>
@@ -316,21 +612,6 @@ export default function KulvrikshTreeView({
       </View>
     );
   }
-
-  // Pre-compute x positions for each non-You generation row.
-  // Keyed by generation offset; value is an array of x-centers (one per
-  // member in that row, in the same order as genOffset.get(g)).
-  const rowXs = useMemo(() => {
-    const map = new Map<number, number[]>();
-    for (const g of usedGenerations) {
-      if (g === 0) continue; // handled separately via gen0Xs
-      const list = genOffset.get(g) ?? [];
-      map.set(g, spreadX(list.length, CARD_W));
-    }
-    return map;
-  }, [usedGenerations, genOffset, spreadX]);
-
-  const yYou = yOfGen(0);
 
   // ── render ────────────────────────────────────────────────────────────
   return (
@@ -361,45 +642,78 @@ export default function KulvrikshTreeView({
               </LinearGradient>
             </Defs>
 
-            {/* For each non-You generation, draw a line from each card to
-                the trunk point on the next row closer to You. This builds a
-                clean trunk-style tree — grandparents → parents → You →
-                children → grandchildren. */}
+            {/* For each non-You generation, draw a line from each card (and
+                couple midpoint) to the trunk point on the next row closer
+                to You. v0.16.2: children attach to the (You+spouse) midpoint
+                via gen0AnchorX. Couple units use a single trunk line from
+                their midpoint, NOT two separate lines per card. */}
             {usedGenerations.map((g) => {
               if (g === 0) return null;
               const xs = rowXs.get(g) ?? [];
+              const cplsMidXs = coupleRowMidXs.get(g) ?? [];
               const isUp = g < 0;
               // The "downstream" anchor: where this row connects toward You.
-              // For gen=±1 the anchor is the You-card edge.
-              // For gen=±2 the anchor is centerX on the gen=±1 row (or You-row
-              // if no gen=±1 members exist).
+              // For gen=±1 the anchor is the gen-0 anchor (couple-midpoint
+              //   or You-center).
+              // For gen=±2 the anchor is the gen=±1 couple-midpoint if any,
+              //   else the centerX on that row, else gen-0 anchor.
               const stepTowardYou = isUp ? g + 1 : g - 1;
-              const hasIntermediate = stepTowardYou !== 0 && genOffset.has(stepTowardYou);
+              const interCpls = stepTowardYou !== 0
+                ? coupleRowMidXs.get(stepTowardYou) ?? []
+                : [];
+              const hasIntermediate =
+                stepTowardYou !== 0 &&
+                ((genOffset.get(stepTowardYou)?.length ?? 0) > 0 ||
+                  interCpls.length > 0);
               const anchorY = hasIntermediate
                 ? yOfGen(stepTowardYou)
                 : isUp
                 ? yYou - YOU_CARD_H / 2
                 : yYou + YOU_CARD_H / 2;
+              // The anchor X: gen-0 anchor unless a closer intermediate row
+              // is present, in which case use its first couple midpoint or
+              // centerX. Kept simple — visual hierarchy matters more than
+              // perfect graph-routing here.
+              const anchorX = hasIntermediate
+                ? interCpls[0] ?? centerX
+                : gen0AnchorX;
               const cardEdgeY = yOfGen(g) + (isUp ? CARD_H / 2 : -CARD_H / 2);
-              return xs.map((x, i) => (
-                <Path
-                  key={`line-${g}-${i}`}
-                  d={bezierPath(x, cardEdgeY, centerX, anchorY)}
-                  stroke={isUp ? 'url(#lineUp)' : 'url(#lineDown)'}
-                  strokeWidth={2}
-                  fill="none"
-                />
-              ));
+              return (
+                <React.Fragment key={`line-frag-${g}`}>
+                  {/* singles → anchor */}
+                  {xs.map((x, i) => (
+                    <Path
+                      key={`line-${g}-s-${i}`}
+                      d={bezierPath(x, cardEdgeY, anchorX, anchorY)}
+                      stroke={isUp ? 'url(#lineUp)' : 'url(#lineDown)'}
+                      strokeWidth={2}
+                      fill="none"
+                    />
+                  ))}
+                  {/* couples (midpoint) → anchor */}
+                  {cplsMidXs.map((mx, i) => (
+                    <Path
+                      key={`line-${g}-c-${i}`}
+                      d={bezierPath(mx, cardEdgeY, anchorX, anchorY)}
+                      stroke={isUp ? 'url(#lineUp)' : 'url(#lineDown)'}
+                      strokeWidth={2}
+                      fill="none"
+                    />
+                  ))}
+                </React.Fragment>
+              );
             })}
 
-            {/* Same-gen members (spouse, siblings) — short horizontal connector */}
+            {/* Same-gen members (siblings) — short horizontal connector to
+                the You-unit. Skips the spouse case because the spouse is
+                now rendered as part of the couple wrapper, not a flank. */}
             {gen0Xs.map((x, i) => (
               <Path
                 key={`gen0-curve-${i}`}
                 d={horizBezier(
                   x,
                   yYou,
-                  centerX + (x < centerX ? -YOU_CARD_W / 2 : YOU_CARD_W / 2),
+                  centerX + (x < centerX ? -gen0UnitHalfW : gen0UnitHalfW),
                   yYou,
                 )}
                 stroke={COLOR.lineL2}
@@ -432,7 +746,50 @@ export default function KulvrikshTreeView({
             );
           })}
 
-          {/* Cards for every non-You generation */}
+          {/* couple-pair render — soft haldi-gold rounded wrapper spanning
+              both cards, drawn BEHIND cards so the cards sit on top. One
+              wrapper per couple across every generation including gen 0. */}
+          {/* Non-gen-0 couple wrappers */}
+          {usedGenerations.map((g) => {
+            if (g === 0) return null;
+            const cpls = couplesByGen.get(g) ?? [];
+            const midXs = coupleRowMidXs.get(g) ?? [];
+            const y = yOfGen(g);
+            return cpls.map((c, i) => (
+              <View
+                key={`couple-wrap-${c.id}-${i}`}
+                style={[
+                  styles.couplePairWrapper,
+                  {
+                    left: midXs[i] - COUPLE_W / 2 - COUPLE_PAD,
+                    top: y - CARD_H / 2 - COUPLE_PAD,
+                    width: COUPLE_W + COUPLE_PAD * 2,
+                    height: CARD_H + COUPLE_PAD * 2,
+                  },
+                ]}
+                pointerEvents="none"
+              />
+            ));
+          })}
+          {/* Gen 0 You+spouse wrapper */}
+          {youCouple ? (
+            <View
+              style={[
+                styles.couplePairWrapper,
+                styles.couplePairWrapperYou,
+                {
+                  left: centerX - (YOU_CARD_W + COUPLE_GAP + CARD_W) / 2 - COUPLE_PAD,
+                  top: yYou - YOU_CARD_H / 2 - COUPLE_PAD,
+                  width: YOU_CARD_W + COUPLE_GAP + CARD_W + COUPLE_PAD * 2,
+                  height: YOU_CARD_H + COUPLE_PAD * 2,
+                },
+              ]}
+              pointerEvents="none"
+            />
+          ) : null}
+
+          {/* Cards for every non-You generation — singles first, then
+              couples (both halves rendered as standard cards). */}
           {usedGenerations.map((g) => {
             if (g === 0) return null;
             const list = genOffset.get(g) ?? [];
@@ -450,10 +807,43 @@ export default function KulvrikshTreeView({
               />
             ));
           })}
+          {/* couple-pair render — paired cards per non-gen-0 row */}
+          {usedGenerations.map((g) => {
+            if (g === 0) return null;
+            const cpls = couplesByGen.get(g) ?? [];
+            const midXs = coupleRowMidXs.get(g) ?? [];
+            const y = yOfGen(g);
+            return cpls.flatMap((c, i) => {
+              const mx = midXs[i];
+              const leftX = mx - COUPLE_W / 2 + CARD_W / 2;
+              const rightX = mx + COUPLE_W / 2 - CARD_W / 2;
+              if (c.primary === 'you') return []; // gen 0 handled below
+              return [
+                <MemberCardNode
+                  key={`${c.id}-primary`}
+                  member={c.primary}
+                  x={leftX}
+                  y={y}
+                  width={CARD_W}
+                  height={CARD_H}
+                  onPress={onMemberPress}
+                />,
+                <MemberCardNode
+                  key={`${c.id}-spouse`}
+                  member={c.spouse}
+                  x={rightX}
+                  y={y}
+                  width={CARD_W}
+                  height={CARD_H}
+                  onPress={onMemberPress}
+                />,
+              ];
+            });
+          })}
 
           {/* You card — center of the universe, haldi-gold border */}
           <YouCardNode
-            x={centerX}
+            x={youX}
             y={yYou}
             width={YOU_CARD_W}
             height={YOU_CARD_H}
@@ -462,7 +852,19 @@ export default function KulvrikshTreeView({
             isHindi={isHindi}
           />
 
-          {/* Same-gen members (gen 0) — flanking the You-card */}
+          {/* Spouse card (paired with You) */}
+          {youCouple && spouseX !== null ? (
+            <MemberCardNode
+              member={youCouple.spouse}
+              x={spouseX}
+              y={yYou}
+              width={CARD_W}
+              height={CARD_H}
+              onPress={onMemberPress}
+            />
+          ) : null}
+
+          {/* Same-gen members (gen 0) — flanking the You-unit */}
           {gen0Members.map((m, i) => (
             <MemberCardNode
               key={m.id}
@@ -681,6 +1083,20 @@ const styles = StyleSheet.create({
     letterSpacing: 0.3,
   },
 
+  // v0.16.2 couple-pair wrapper: subtle haldi-tinted rounded background
+  // spanning both cards of a husband-wife couple. Sits BEHIND the cards.
+  couplePairWrapper: {
+    position: 'absolute',
+    backgroundColor: 'rgba(200, 168, 75, 0.06)',
+    borderWidth: 1,
+    borderColor: 'rgba(200, 168, 75, 0.18)',
+    borderRadius: 22,
+  },
+  couplePairWrapperYou: {
+    backgroundColor: 'rgba(200, 168, 75, 0.10)',
+    borderColor: 'rgba(200, 168, 75, 0.32)',
+  },
+
   // empty state
   emptyContainer: {
     flex: 1,
@@ -767,8 +1183,13 @@ const cardStyles = StyleSheet.create({
     fontWeight: '700',
     color: COLOR.haldiDeep,
   },
+  // v0.16.1 Design Lead audit fix (2026-05-17): card text was 13/11/11/10
+  // which is below the Dadi Test 16px-body minimum and read as cramped.
+  // Bumped to 15/13/12 + tightened margin to keep cards from growing too tall.
+  // Card dimensions (CARD_W 110, CARD_H 132) remain unchanged so the existing
+  // generation-row layout math is undisturbed.
   name: {
-    fontSize: 13,
+    fontSize: 15,
     fontWeight: '700',
     color: COLOR.text,
     textAlign: 'center',
@@ -776,7 +1197,7 @@ const cardStyles = StyleSheet.create({
     maxWidth: '100%',
   },
   nameYou: {
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: '800',
     color: COLOR.text,
     textAlign: 'center',
@@ -784,13 +1205,13 @@ const cardStyles = StyleSheet.create({
     letterSpacing: 0.2,
   },
   rel: {
-    fontSize: 11,
+    fontSize: 13,
     color: COLOR.textMuted,
     textAlign: 'center',
     marginTop: 1,
   },
   relYou: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: '700',
     color: COLOR.haldiDeep,
     textAlign: 'center',
@@ -799,7 +1220,7 @@ const cardStyles = StyleSheet.create({
     letterSpacing: 1,
   },
   years: {
-    fontSize: 10,
+    fontSize: 11,
     color: COLOR.textMuted,
     textAlign: 'center',
     marginTop: 2,

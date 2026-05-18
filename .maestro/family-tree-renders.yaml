@@ -1,0 +1,55 @@
+# family-tree-renders.yaml
+#
+# Canonical reproducer for the gen-tree regression class.
+# Background — 2026-05-17, v0.16.1: an ego-centric generation-tree refactor
+# introduced a Rules-of-Hooks violation in KulvrikshTreeView that only fired
+# when the component re-rendered with Kumar's real family data. Jest's
+# `render(<KulvrikshTreeView/>)` mounted the component cleanly because there
+# was no re-render, so the unit tier missed it. The simulator caught it on
+# the first post-build smoke walk.
+#
+# This flow IS the contract: launch Aangan, tap परिवार, confirm कुलवृक्ष
+# is the default tab, confirm the canvas does NOT show the ErrorBoundary
+# fallback (which would say "कुछ गलत हो गया").
+#
+# Prereq:
+#   - iOS 17 Pro simulator booted, UDID 2B795901-B185-4FDE-B0EE-63D2DD9B1501
+#   - Aangan installed (debug build, EAS preview-ios-sim, or production IPA)
+#   - Already signed in as test account 9876543210 / 123456 (Maestro doesn't
+#     need to handle login for this flow — that's signin-phone.yaml's job)
+#
+# Run:
+#   maestro test .maestro/family-tree-renders.yaml
+
+appId: app.aangan.family
+---
+- launchApp:
+    appId: app.aangan.family
+    clearState: false
+
+# If a splash / onboarding modal is on screen, dismiss it. Use tapOn with
+# optional: true so the flow doesn't fail when the modal isn't present.
+- runFlow:
+    when:
+      visible: "स्किप"
+    commands:
+      - tapOn: "स्किप"
+
+# Tap the परिवार bottom-nav tab. Maestro selects by visible text.
+- tapOn: "परिवार"
+
+# कुलवृक्ष tab must be present AND selected by default (per v0.16.1 fix —
+# structural lockdown also asserts this in
+# src/__tests__/structural/v0_16_1_lockdown.test.ts).
+- assertVisible: "कुलवृक्ष"
+
+# The ErrorBoundary fallback would render the Hindi string "कुछ गलत हो गया".
+# If we ever see that text on this screen, the canvas crashed.
+- assertNotVisible: "कुछ गलत हो गया"
+
+# Smoke-check: the +/- zoom buttons OR an SVG canvas should be present. We
+# can't directly assert SVG in Maestro, so we check for the visible zoom-in
+# control which only appears when the tree mounted successfully.
+- assertVisible:
+    id: "kulvriksh-zoom-in"
+    optional: true  # testID not yet plumbed; revisit when we add it
