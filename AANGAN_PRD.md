@@ -90,12 +90,44 @@
 - Member profile cards with photo, relationship, location
 - Tab views: L1 / L2 / L3 / All / Tree
 
-**Interactive SVG Tree (v0.4)**
+**Interactive SVG Tree (v0.4 → v0.16.x lineage)**
 - Visual generational layout with connection lines
-- Gold lines = L1, dashed = L2/L3
-- Member circles with initials, names, relationship labels
-- Current user shown as larger Mehndi Green node
-- Nested ScrollView for pan navigation
+- Gold lines = descendants, green = same-generation/spouse, brown = extended
+- Member circles → premium card nodes with avatar + name + relationship + dates (v0.15.9 redesign)
+- Pinch-to-zoom + pan (Reanimated 4 + Gesture v2)
+- Generation labels per row in Hindi (पीढ़ी 1 · पूर्वज / Previous generation, etc.)
+
+**Ego-centric generation layout (v0.16.1)**
+- Every user opens THEIR OWN tree and sits at the center as the "आप" (You) card with haldi-gold border.
+- Elders rise upward, descendants flow downward — genealogically correct, not connection-distance.
+- Generation offset derived from relationship: -2 grandparents, -1 parents+gen, 0 same-gen (spouse, siblings, cousins, in-laws), +1 children+gen, +2 grandchildren. Mapping covers 40+ Hindi + English relationship strings.
+- Unknown relationship falls back to gen 0 (same row as You) — never wrongly placed up/down.
+
+**Couple-pair visualization (v0.16.2, Kumar directive 2026-05-18)**
+- Husband + wife render as a **paired unit** — two cards side-by-side inside a subtle haldi-tinted background — so the visual mirrors how the family actually maps.
+- **Children connect to the COUPLE MIDPOINT**, not to each parent individually. A single trunk line descends from between the two parent cards to the row of their children.
+- Pair detection (Phase 1, shipped):
+  - You + spouse — wife/husband/spouse/पति/पत्नी
+  - Father + mother — पिता + माता
+  - Father-in-law + mother-in-law — ससुर + सास
+  - Paternal grandparents — दादा + दादी
+  - Maternal grandparents — नाना + नानी
+- Pair detection (Phase 2, planned): uncle/aunt couple pairs — चाचा+चाची, मामा+मामी, मौसा+मौसी, बुआ+फूफा. Deferred because the data model currently doesn't capture "this चाचा is married to this चाची"; needs an explicit `married_to` linkage on `family_members` / `offline_family_members`.
+
+**Multi-spouse + proper child→parent-couple linkage (v0.17 planned, Kumar directive 2026-05-18 8:09am IST)**
+
+Real Indian families include cases with more than one spouse — historical second marriages, post-widowhood remarriage, polygamy-permitted communities, etc. The tree must support this **without sacrificing the "every child belongs to a couple" promise**.
+
+Spec:
+- A user MAY have N spouse rows (where N ≥ 0; typically 1 but sometimes 2+). Each spouse renders as its own couple-pair next to You — `(You + Wife 1)`, `(You + Wife 2)`, etc., laid out left-to-right in birth-of-marriage order if known.
+- Each child member carries an EXPLICIT pointer to their parent couple — currently `daughter` only tells us "child of You", not "child of which couple". The model must extend to capture mother_id (or parent_couple_id).
+- Visual: children of (You + Wife 1) anchor under that couple's midpoint; children of (You + Wife 2) anchor under THEIR midpoint. No child is drawn under the wrong pair.
+- If a child has only one known parent in the tree (single-parent family), child anchors to the lone parent's card and the couple wrapper is omitted for that lineage.
+- Add-member UX: when adding a child, the form must include a "Who is the other parent?" picker (defaulting to the user's primary spouse if any). The picker accepts an existing in-tree member OR "unknown / not in tree yet".
+- Data model: add `mother_member_id` and `father_member_id` (both nullable, foreign key into `family_members`/`offline_family_members`) to the child row OR introduce a separate `couples` table where each couple has its own UUID and children point at the couple. The `couples` table is cleaner for second-marriage scenarios.
+- Edge cases: same-sex couples, step-parent/adoption rollups, deceased spouse with children + remarriage — all naturally fit the couples-table model.
+
+This is a data-migration + UI-uplift. Targeted for v0.17 once the v0.16.x stabilization completes.
 
 **Life Events tab (v0.4.3)**
 - Birth events: person name, gender, birth place, relationship
@@ -433,7 +465,10 @@ Most features in §4.1–4.13 are shipped. Asterisks below mark partial / regres
 | Feature | Status | Note |
 |---------|--------|------|
 | Phone OTP auth + Email OTP + Google OAuth | ✅ SHIPPED | |
-| Family tree (L1/L2/L3) + interactive zoomable diagram | ✅ SHIPPED | v0.11.0 overhaul |
+| Family tree (L1/L2/L3) + interactive zoomable diagram | ✅ SHIPPED | v0.11.0 overhaul; v0.15.9 premium card redesign |
+| Ego-centric generation layout (elders above, descendants below, You at centre) | ✅ SHIPPED v0.16.1 | Per Kumar directive 2026-05-17 |
+| Couple-pair visualization in tree (You+spouse, parents, in-laws, grandparents — Phase 1) | ✅ SHIPPED v0.16.2 | Per Kumar directive 2026-05-18. Children connect to couple midpoint. |
+| Multi-spouse + per-couple child linkage (Phase 2 — second marriages, multiple wives, single-parent families) | 🔴 Planned v0.17 | Requires `couples` table + add-member "other parent" picker. Tracked in §9.x below. |
 | Posts & feed with audience control + polls + stories | ✅ SHIPPED | |
 | Events & RSVP with multi-ceremony, GPS check-in, QR upload | ✅ SHIPPED | |
 | Voice messages + voice-to-text + voice commands | ✅ SHIPPED | M4A 120s, 8 commands |
@@ -519,6 +554,48 @@ Highest-leverage growth lever in §9 — landed 2026-04-29. As-built shape:
 - Slideshow mode (auto-play with transitions).
 - Download album as ZIP.
 - Album sharing via link (privacy-respecting).
+
+### 9.4b Multi-spouse + Per-couple Child Linkage in Kulvriksh — 🔴 Planned v0.17
+
+Added 2026-05-18 per Kumar directive: *"Also add a feature of showing more than 1 wife/husband in some cases, but to show parents of children, proper couple pairing should be there in kulvriksha GUI."*
+
+Aangan must support family graphs that include second marriages, polygamous unions (where legally permitted in the user's community), and single-parent families — without losing the v0.16.2 "every child belongs to a couple" promise.
+
+**Requirements:**
+- A user MAY have N spouse rows (N ≥ 0). Each spouse renders as its own couple-pair next to "You": `(You + Wife 1)`, `(You + Wife 2)`, left-to-right ordered by marriage date if known.
+- Each child member explicitly carries a pointer to ITS parent couple. Today the data model only encodes "child of You" via `relationship_type=daughter`; it does NOT distinguish "from which marriage". v0.17 fixes this.
+- Children draw their connection line under the correct couple midpoint. No child sits under the wrong pair.
+- Single-parent case (no spouse in tree, OR spouse member not added yet): child anchors to the lone parent; the couple-pair wrapper is omitted for that lineage.
+- Same-sex couples + step-parent/adoption rollups + deceased-spouse-then-remarriage all fit the same model.
+
+**Data-model change (one of two options, pick at design time):**
+
+*Option A — explicit parent IDs on child*
+- Add `mother_member_id` (nullable, FK → `family_members.id`) and `father_member_id` (nullable, FK → `family_members.id`) to both `family_members` and `offline_family_members`.
+- Backfill: existing rows where `relationship_type ∈ {son,daughter,बेटा,बेटी}` get `father_member_id` set to the inviting user; `mother_member_id` left NULL pending UX backfill.
+- Pros: simple. Cons: no first-class "couple" entity — relationships are inferred from pairs of parent IDs.
+
+*Option B — separate `couples` table* ← recommended
+- New table `couples (id UUID PK, partner_a UUID FK, partner_b UUID FK, started_at DATE, ended_at DATE NULL, family_owner UUID)`.
+- Add `parent_couple_id` (nullable, FK → `couples.id`) on `family_members` + `offline_family_members`.
+- Backfill: for each existing child, derive a couple row from (the inviting user, their spouse) if known, else leave NULL.
+- Pros: clean second-marriage chronology; couples can have status (current/divorced/deceased); UI logic simplifies; future feature like anniversaries-per-couple is trivial. Cons: schema migration + small backfill script.
+
+**UX changes:**
+- Add-member form (currently `aangan_rn/src/screens/family/FamilyTreeScreen.tsx` AddMemberModal) gains a "Who is the other parent?" picker when relationship is `son`/`daughter`/`बेटा`/`बेटी`. Picker lists existing in-tree members + "unknown / not in tree yet".
+- Edit-member flow lets users correct/assign the couple post-hoc.
+- Settings → Family Settings → "Manage marriages" surface for users with multiple unions (rare but real).
+
+**Visual changes:**
+- `detectCouples()` (currently in `aangan_rn/src/components/family/KulvrikshTreeView.tsx`) becomes couples-table-aware: returns N couples per generation instead of capping at 1.
+- Couple-pair wrappers stack horizontally on a row with `COUPLE_GAP + COL_GAP` between groups.
+- Generation-0 layout for the user becomes: `(You + Spouse 1) (You + Spouse 2) ...` — the "You" card appears once, anchored, with multiple right-side spouse slots.
+
+**Tests:**
+- T1 unit tests for `detectCouples` covering: 2 spouses → 2 couples for gen 0; child with `parent_couple_id` set → correctly anchored under that couple's midpoint; child with NULL `parent_couple_id` → falls back to old behaviour (anchored to user).
+- T3 Maestro flow for the "add child, pick mother" funnel.
+
+**Out of scope for v0.17:** divorce timeline visualization, ex-spouse hiding rules (privacy), inheritance-aware family-tree printing.
 
 ### 9.5 Performance Improvements — 🟡 Partial
 

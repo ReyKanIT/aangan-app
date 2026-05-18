@@ -225,3 +225,33 @@
 - Noted the 5-invites real-user validation as a positive signal for the forced-invite mechanic (Kumar testing the existing WhatsApp invite path in TestFlight v0.15.10/v0.16.0; v0.16.2 will ship the forced-invite gate).
 
 **Outcome:** Log file live. Couple-pair refactor in flight. 5-invites validation logged.
+
+---
+
+### [8:00am - 18May26]
+**Kumar:** upload latest versions with all fixes for testing in ios & android
+
+**Claude:**
+- Verified 143 → 168 Jest tests passing (couple-pair refactor agent landed +25 tests). `tsc --noEmit` clean.
+- Bumped version 0.16.1 → 0.16.2 in `aangan_rn/app.json` + `aangan_rn/package.json`.
+- Committed everything in one big v0.16.2 commit ([`71bc919`](https://github.com/ReyKanIT/aangan-app/commit/71bc919)) — couple-pair tree + 3 Design Lead quick-wins + CEO+CMO #1 forced-invite bet + 168 tests + Maestro scaffold + Husky pre-commit + 14 strategy docs + AANGAN_AI_LOG.md + AANGAN_REGRESSION_SUITE.xlsx. Diff: 55 files / +18148 / -5292.
+- Pushed `claude/interesting-tesla-0c90df` to origin.
+- Kicked off 4 EAS builds in parallel: iOS production with `--auto-submit` (TestFlight target), iOS `preview-ios-sim` (simulator verify gate), Android AAB (`production`), Android APK (`production-apk`). All v0.16.2+31.
+
+**Outcome:** v0.16.2 in flight. Wakeup scheduled 8:33am IST to install sim build, drive new-user verification, surface AAB+APK URLs.
+
+---
+
+### [8:08am - 18May26]
+**Kumar:** Add the Couples GUI feature in PRD / Also Add a feature of showing more than 1 wife/husband in some cases, but to show parents of children, proper couple pairing should be there in kulvriksha GUI.
+
+**Claude:**
+- Updated `AANGAN_PRD.md` §4.2 Family Tree:
+  - Documented **ego-centric generation layout** (v0.16.1) as the canonical tree behaviour.
+  - Documented **couple-pair visualization** (v0.16.2, Phase 1) — You+spouse, parents, in-laws, both grandparent sides — with children attaching to couple midpoint.
+  - Added **multi-spouse + per-couple child linkage** as a Phase-2 v0.17 requirement with full spec.
+- Updated §8 Shipped Features with three new rows (ego-centric layout ✅ v0.16.1, couple-pair ✅ v0.16.2, multi-spouse 🔴 planned v0.17).
+- Added §9.4b Multi-spouse Roadmap entry with **two data-model options** (Option A: parent IDs on child; Option B: separate `couples` table — Option B recommended) + UX changes (add-member "other parent" picker, manage-marriages settings surface) + T1 + T3 test specs.
+- Appended P2 entry to `notes/design-backlog.md` for the multi-spouse add-member UX work so the Design Lead picks it up when v0.17 starts.
+
+**Outcome:** PRD now reflects both shipped (v0.16.2) and planned (v0.17) family-tree work. Multi-spouse design ready for v0.17 kickoff.

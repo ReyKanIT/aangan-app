@@ -234,3 +234,18 @@ End-state DoD: a single `.maestro/family-tree.yaml` that runs end-to-end on iOS 
 2. **P0 KulvrikshTree card-text bump to 15/13 px + wire `onMemberPress` to MemberProfile** — `KulvrikshTreeView.tsx:783, 799` + `FamilyTreeScreen.tsx:1143-1151`. ~20 min including verifying offline-id route handling. Makes the freshly-refactored tree (the "wow feature") tappable AND readable — closes the biggest Dadi-Test miss on a screen Kumar specifically called out as "looks like a newbie's job" last week.
 
 3. **P1 Settings sign-out → `useConfirm()` (Hindi-first dialog)** — `SettingsScreen.tsx:135-151`. This is explicitly in `CRITICAL_FEATURES.md` row 70 as the Jyotsna ticket regression to never repeat. Find or port `useConfirm` from web (~15 min), replace the native Alert (~5 min), add a structural test that `Alert.alert` is NOT imported into SettingsScreen for the signOut path (~10 min). Total ~30 min and closes a manifest item.
+
+---
+
+## P2 — v0.17 Multi-spouse + per-couple child linkage (added 2026-05-18 by CEO + CMO + CTO consensus, Kumar directive)
+
+See `AANGAN_PRD.md` §9.4b for the full spec.
+
+**Design work needed (for v0.17 — not v0.16.2):**
+- [ ] AddMemberModal: when relationship is `son`/`daughter`/`बेटा`/`बेटी`, show a "Who is the other parent?" picker (defaults to user's primary spouse if known; allows existing in-tree member; allows "unknown / not in tree yet"). 52px tap targets, Hindi-first.
+- [ ] EditMember (in MemberProfileScreen): expose a "Correct other parent" action.
+- [ ] New `notes/design-spec-multi-spouse.md` once data-model option (A vs B) is chosen by CTO. Wireframes for: tree with 2 wives, tree with sequential second marriage + children from both, single-parent lineage.
+- [ ] Settings → "Manage marriages" surface for users with >1 union — list of couples with started/ended dates + edit affordance.
+- [ ] Decide visual: do co-wives share a colour? Show marriage-date overlay? Hide ended marriages by default with a toggle?
+
+**Dependencies:** CTO selects Option A vs Option B for the data model. Backfill plan for existing children → couple linkage.
