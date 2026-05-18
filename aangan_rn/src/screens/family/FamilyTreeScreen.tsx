@@ -33,6 +33,9 @@ import VoiceMicButton from '../../components/voice/VoiceMicButton';
 import ErrorBoundary from '../../components/common/ErrorBoundary';
 import { secureLog } from '../../utils/security';
 import KulvrikshTreeView from '../../components/family/KulvrikshTreeView';
+import TreeCardActionSheet, { TreeCardAction } from '../../components/family/TreeCardActionSheet';
+import useConfirm from '../../components/common/useConfirm';
+import { trackFunnelEvent } from '../../utils/funnelEvents';
 
 type Props = NativeStackScreenProps<any, 'FamilyTree'>;
 
@@ -230,26 +233,55 @@ interface AddMemberModalProps {
   }) => void;
   isSubmitting: boolean;
   isHindi: boolean;
+  // v0.16.3 direct tree editing — when opened from a TreeCardActionSheet
+  // "Add child/spouse/parent" action, the relationship is already known.
+  // Backwards-compatible: all three are optional.
+  /** Hindi key from RELATIONSHIP_OPTIONS (e.g. 'बेटा'). */
+  prefilledRelationship?: string;
+  /** If true, the relationship picker is read-only — prevents the user
+   *  from accidentally turning "Add child" into "Add spouse". */
+  lockedRelationship?: boolean;
+  /** Optional context line ("Adding child of Krishna Kumar") rendered at
+   *  the top of the modal body so the user remembers what they tapped. */
+  contextLabel?: string | null;
 }
 
-function AddMemberModal({ visible, onClose, onSubmit, onSubmitOffline, isSubmitting, isHindi }: AddMemberModalProps) {
+function AddMemberModal({
+  visible,
+  onClose,
+  onSubmit,
+  onSubmitOffline,
+  isSubmitting,
+  isHindi,
+  prefilledRelationship,
+  lockedRelationship,
+  contextLabel,
+}: AddMemberModalProps) {
   const [phone, setPhone] = useState('');
   const [displayName, setDisplayName] = useState('');
   const [displayNameHindi, setDisplayNameHindi] = useState('');
   const [isDeceased, setIsDeceased] = useState(false);
-  const [selectedRelationship, setSelectedRelationship] = useState('');
+  const [selectedRelationship, setSelectedRelationship] = useState(prefilledRelationship || '');
   const [level, setLevel] = useState(1);
   const [showRelationshipPicker, setShowRelationshipPicker] = useState(false);
+
+  // When opened with a prefilled relationship, sync the state so a re-open
+  // with a different prefill (e.g. spouse → child) is honored.
+  useEffect(() => {
+    if (visible) {
+      setSelectedRelationship(prefilledRelationship || '');
+    }
+  }, [visible, prefilledRelationship]);
 
   const resetForm = useCallback(() => {
     setPhone('');
     setDisplayName('');
     setDisplayNameHindi('');
     setIsDeceased(false);
-    setSelectedRelationship('');
+    setSelectedRelationship(prefilledRelationship || '');
     setLevel(1);
     setShowRelationshipPicker(false);
-  }, []);
+  }, [prefilledRelationship]);
 
   const handleClose = useCallback(() => {
     resetForm();
@@ -317,6 +349,13 @@ function AddMemberModal({ visible, onClose, onSubmit, onSubmitOffline, isSubmitt
         </View>
 
         <ScrollView style={modalStyles.body} keyboardShouldPersistTaps="handled">
+          {/* v0.16.3: context banner when opened from a TreeCardActionSheet.
+              "Adding child of Krishna Kumar" etc. — keeps the user oriented. */}
+          {contextLabel ? (
+            <View style={modalStyles.contextBanner}>
+              <Text style={modalStyles.contextBannerText}>{contextLabel}</Text>
+            </View>
+          ) : null}
           {/* Name — REQUIRED, always first (v0.16.1: Kumar reported the name
               field was hidden behind a mode toggle and never discovered) */}
           <Text style={modalStyles.fieldLabel}>{isHindi ? 'नाम — ज़रूरी' : 'Name — required'}</Text>
@@ -383,10 +422,20 @@ function AddMemberModal({ visible, onClose, onSubmit, onSubmitOffline, isSubmitt
           {/* Relationship Dropdown */}
           <Text style={modalStyles.fieldLabel}>{'रिश्ता (Relationship)'}</Text>
           <TouchableOpacity
-            style={modalStyles.dropdownButton}
-            onPress={() => setShowRelationshipPicker(!showRelationshipPicker)}
+            style={[
+              modalStyles.dropdownButton,
+              lockedRelationship && { opacity: 0.6 },
+            ]}
+            onPress={() => {
+              // v0.16.3: when opened from a tree-card "Add child/spouse/parent"
+              // action, the relationship is fixed — picker is read-only.
+              if (lockedRelationship) return;
+              setShowRelationshipPicker(!showRelationshipPicker);
+            }}
+            disabled={lockedRelationship}
             accessibilityRole="button"
             accessibilityLabel="Select relationship"
+            accessibilityState={{ disabled: !!lockedRelationship }}
           >
             <Text style={[
               modalStyles.dropdownText,
@@ -467,6 +516,195 @@ function AddMemberModal({ visible, onClose, onSubmit, onSubmitOffline, isSubmitt
                   ? (isHindi ? 'निमंत्रण भेजें (Send Invite)' : 'Send Invite')
                   : (isHindi ? 'जोड़ें (Add to Family)' : 'Add to Family')
               }</Text>
+            )}
+          </TouchableOpacity>
+        </ScrollView>
+      </View>
+    </Modal>
+  );
+}
+
+// -- v0.16.3 EditMemberModal: lightweight edit-only modal for name/relationship
+// quick-edits from the TreeCardActionSheet. Kept separate from AddMemberModal
+// to avoid mode-flag spaghetti — this modal only edits an existing row.
+interface EditMemberModalProps {
+  visible: boolean;
+  /** What to edit: 'name' or 'relationship'. The two cases share form but
+   *  toggle which fields are interactive vs read-only. */
+  mode: 'name' | 'relationship' | null;
+  /** The member being edited. The form pre-fills from this row. */
+  member: FamilyMember | null;
+  onClose: () => void;
+  onSave: (patch: {
+    displayName?: string;
+    displayNameHindi?: string | null;
+    relationshipType?: string;
+    relationshipLabelHindi?: string | null;
+  }) => Promise<void>;
+  isSubmitting: boolean;
+  isHindi: boolean;
+}
+
+function EditMemberModal({
+  visible,
+  mode,
+  member,
+  onClose,
+  onSave,
+  isSubmitting,
+  isHindi,
+}: EditMemberModalProps) {
+  const [displayName, setDisplayName] = useState('');
+  const [displayNameHindi, setDisplayNameHindi] = useState('');
+  const [selectedRelationship, setSelectedRelationship] = useState('');
+  const [showRelationshipPicker, setShowRelationshipPicker] = useState(false);
+
+  // Re-prefill the form each time the modal opens or the member changes.
+  useEffect(() => {
+    if (visible && member) {
+      setDisplayName(member.member?.display_name ?? '');
+      setDisplayNameHindi(member.member?.display_name_hindi ?? '');
+      setSelectedRelationship(member.relationship_label_hindi || member.relationship_type || '');
+      setShowRelationshipPicker(false);
+    }
+  }, [visible, member]);
+
+  const handleSubmit = useCallback(async () => {
+    if (!member) return;
+    if (mode === 'name') {
+      if (!displayName.trim()) {
+        Alert.alert('त्रुटि / Error', 'कृपया नाम दर्ज करें (Please enter a name)');
+        return;
+      }
+      await onSave({
+        displayName: displayName.trim(),
+        displayNameHindi: displayNameHindi.trim() || null,
+      });
+    } else if (mode === 'relationship') {
+      if (!selectedRelationship) {
+        Alert.alert('त्रुटि / Error', 'कृपया रिश्ता चुनें (Please pick relationship)');
+        return;
+      }
+      await onSave({
+        relationshipType: selectedRelationship,
+        relationshipLabelHindi: selectedRelationship,
+      });
+    }
+  }, [mode, member, displayName, displayNameHindi, selectedRelationship, onSave]);
+
+  const selectedLabel = useMemo(() => {
+    const found = RELATIONSHIP_OPTIONS.find((r) => r.key === selectedRelationship);
+    return found?.label || selectedRelationship;
+  }, [selectedRelationship]);
+
+  if (!mode) return null;
+
+  return (
+    <Modal
+      visible={visible}
+      animationType="slide"
+      presentationStyle="pageSheet"
+      onRequestClose={onClose}
+    >
+      <View style={modalStyles.container}>
+        <View style={modalStyles.header}>
+          <TouchableOpacity
+            onPress={onClose}
+            style={modalStyles.closeButton}
+            accessibilityRole="button"
+            accessibilityLabel="Close"
+          >
+            <Text style={modalStyles.closeText}>{'✕'}</Text>
+          </TouchableOpacity>
+          <Text style={modalStyles.headerTitle}>
+            {mode === 'name'
+              ? (isHindi ? 'नाम बदलें' : 'Edit name')
+              : (isHindi ? 'रिश्ता बदलें' : 'Edit relationship')}
+          </Text>
+          <View style={modalStyles.closeButton} />
+        </View>
+
+        <ScrollView style={modalStyles.body} keyboardShouldPersistTaps="handled">
+          {mode === 'name' ? (
+            <>
+              <Text style={modalStyles.fieldLabel}>{isHindi ? 'नाम' : 'Name'}</Text>
+              <TextInput
+                style={modalStyles.nameInput}
+                value={displayName}
+                onChangeText={setDisplayName}
+                placeholder={isHindi ? 'जैसे: राम सिंह' : 'e.g. Ram Singh'}
+                placeholderTextColor={Colors.gray400}
+                autoCapitalize="words"
+                accessibilityLabel="Display name"
+              />
+              <Text style={modalStyles.fieldLabel}>{isHindi ? 'हिंदी नाम (वैकल्पिक)' : 'Hindi name (optional)'}</Text>
+              <TextInput
+                style={modalStyles.nameInput}
+                value={displayNameHindi}
+                onChangeText={setDisplayNameHindi}
+                placeholder={'जैसे: राम सिंह'}
+                placeholderTextColor={Colors.gray400}
+                accessibilityLabel="Hindi name (optional)"
+              />
+            </>
+          ) : (
+            <>
+              <Text style={modalStyles.fieldLabel}>{'रिश्ता (Relationship)'}</Text>
+              <TouchableOpacity
+                style={modalStyles.dropdownButton}
+                onPress={() => setShowRelationshipPicker(!showRelationshipPicker)}
+                accessibilityRole="button"
+                accessibilityLabel="Select relationship"
+              >
+                <Text style={[
+                  modalStyles.dropdownText,
+                  !selectedRelationship && { color: Colors.gray400 },
+                ]}>
+                  {selectedLabel || 'रिश्ता चुनें...'}
+                </Text>
+                <Text style={modalStyles.dropdownArrow}>{'▼'}</Text>
+              </TouchableOpacity>
+              {showRelationshipPicker && (
+                <View style={modalStyles.pickerList}>
+                  {RELATIONSHIP_OPTIONS.map((opt) => (
+                    <TouchableOpacity
+                      key={opt.key}
+                      style={[
+                        modalStyles.pickerItem,
+                        selectedRelationship === opt.key && modalStyles.pickerItemSelected,
+                      ]}
+                      onPress={() => {
+                        setSelectedRelationship(opt.key);
+                        setShowRelationshipPicker(false);
+                      }}
+                      accessibilityRole="button"
+                    >
+                      <Text style={[
+                        modalStyles.pickerItemText,
+                        selectedRelationship === opt.key && modalStyles.pickerItemTextSelected,
+                      ]}>
+                        {opt.label}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              )}
+            </>
+          )}
+
+          <TouchableOpacity
+            style={[modalStyles.submitButton, isSubmitting && { opacity: 0.6 }]}
+            onPress={handleSubmit}
+            disabled={isSubmitting}
+            accessibilityRole="button"
+            accessibilityLabel="Save changes"
+          >
+            {isSubmitting ? (
+              <ActivityIndicator color={Colors.white} size="small" />
+            ) : (
+              <Text style={modalStyles.submitButtonText}>
+                {isHindi ? 'सहेजें (Save)' : 'Save'}
+              </Text>
             )}
           </TouchableOpacity>
         </ScrollView>
@@ -862,6 +1100,10 @@ export default function FamilyTreeScreen({ navigation }: Props) {
     addMember,
     addOfflineMember,
     searchMembers,
+    deleteMember,
+    deleteOfflineMember,
+    updateMember,
+    updateOfflineMember,
   } = useFamilyStore();
   const { isHindi } = useLanguageStore();
 
@@ -873,6 +1115,18 @@ export default function FamilyTreeScreen({ navigation }: Props) {
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const currentUser = useAuthStore((s) => s.user);
+
+  // v0.16.3 direct tree editing — Kumar directive 2026-05-18 8:48 IST.
+  // The action sheet target is either a FamilyMember or the literal 'you'.
+  const [actionSheetTarget, setActionSheetTarget] = useState<FamilyMember | 'you' | null>(null);
+  // Pre-fill plumbing for AddMemberModal when opened from the sheet.
+  const [addPrefillRelationship, setAddPrefillRelationship] = useState<string | undefined>(undefined);
+  const [addLockedRelationship, setAddLockedRelationship] = useState(false);
+  const [addContextLabel, setAddContextLabel] = useState<string | null>(null);
+  // EditMemberModal state.
+  const [editMode, setEditMode] = useState<'name' | 'relationship' | null>(null);
+  const [editTarget, setEditTarget] = useState<FamilyMember | null>(null);
+  const { confirm, dialog: confirmDialog } = useConfirm();
 
   useEffect(() => {
     fetchMembers();
@@ -1028,6 +1282,161 @@ export default function FamilyTreeScreen({ navigation }: Props) {
     setIsSubmitting(false);
   }, [addOfflineMember]);
 
+  // ── v0.16.3 direct tree editing ────────────────────────────────────────
+  // Handles the six action-sheet rows. Dispatches to the right modal /
+  // confirm-dialog / store-mutator and fires the matching funnel event.
+  const handleTreeCardLongPress = useCallback((m: FamilyMember) => {
+    trackFunnelEvent('tree_card_longpress', { memberId: m.id });
+    setActionSheetTarget(m);
+  }, []);
+
+  const handleYouCardLongPress = useCallback(() => {
+    trackFunnelEvent('tree_card_longpress', { memberId: 'you' });
+    setActionSheetTarget('you');
+  }, []);
+
+  const openAddFromSheet = useCallback((relHindi: string, contextHindi: string) => {
+    setAddPrefillRelationship(relHindi);
+    setAddLockedRelationship(true);
+    setAddContextLabel(contextHindi);
+    setShowAddModal(true);
+  }, []);
+
+  const handleTreeCardAction = useCallback(async (
+    action: TreeCardAction,
+    target: FamilyMember | 'you',
+  ) => {
+    // Always close the sheet first so the next modal/dialog gets focus.
+    setActionSheetTarget(null);
+
+    const isYou = target === 'you';
+    const targetName = isYou
+      ? (isHindi ? 'आप' : 'You')
+      : (target.member?.display_name_hindi || target.member?.display_name || (isHindi ? 'सदस्य' : 'member'));
+
+    switch (action) {
+      case 'add_child': {
+        trackFunnelEvent('tree_add_child_from_card', { from: isYou ? 'you' : (target as FamilyMember).id });
+        openAddFromSheet(
+          'बेटा',
+          isHindi ? `${targetName} के बच्चे को जोड़ रहे हैं` : `Adding child of ${targetName}`,
+        );
+        break;
+      }
+      case 'add_spouse': {
+        trackFunnelEvent('tree_add_spouse_from_card', { from: isYou ? 'you' : (target as FamilyMember).id });
+        openAddFromSheet(
+          'पत्नी',
+          isHindi ? `${targetName} के साथी को जोड़ रहे हैं` : `Adding spouse of ${targetName}`,
+        );
+        break;
+      }
+      case 'add_parent': {
+        trackFunnelEvent('tree_add_parent_from_card', { from: isYou ? 'you' : (target as FamilyMember).id });
+        openAddFromSheet(
+          'पिता',
+          isHindi ? `${targetName} के माता-पिता को जोड़ रहे हैं` : `Adding parent of ${targetName}`,
+        );
+        break;
+      }
+      case 'edit_relationship': {
+        if (isYou) return; // No-op — covered by YOU_ACTIONS not including this row
+        trackFunnelEvent('tree_edit_relationship', { memberId: (target as FamilyMember).id });
+        setEditTarget(target as FamilyMember);
+        setEditMode('relationship');
+        break;
+      }
+      case 'edit_name': {
+        if (isYou) return;
+        trackFunnelEvent('tree_edit_name', { memberId: (target as FamilyMember).id });
+        setEditTarget(target as FamilyMember);
+        setEditMode('name');
+        break;
+      }
+      case 'remove': {
+        if (isYou) return;
+        const m = target as FamilyMember;
+        const ok = await confirm({
+          title: isHindi ? 'सदस्य हटाएँ?' : 'Remove member?',
+          body: isHindi
+            ? `${targetName} को परिवार वृक्ष से हटा दिया जाएगा। यह कार्य वापस नहीं किया जा सकता।`
+            : `${targetName} will be removed from your family tree. This cannot be undone.`,
+          confirmText: isHindi ? 'हाँ, हटाएँ' : 'Yes, remove',
+          cancelText: isHindi ? 'रद्द करें' : 'Cancel',
+          destructive: true,
+        });
+        if (!ok) return;
+        trackFunnelEvent('tree_remove_member', { memberId: m.id });
+        // Online row vs offline-adapter row routes to the right store call.
+        const isOfflineAdapter = m.id.startsWith('offline-');
+        let success = false;
+        if (isOfflineAdapter) {
+          // family_member_id is the raw offline_family_members.id.
+          success = await deleteOfflineMember(m.family_member_id);
+        } else {
+          success = await deleteMember(m.family_member_id);
+        }
+        if (!success) {
+          Alert.alert(
+            isHindi ? 'त्रुटि' : 'Error',
+            isHindi ? 'सदस्य हटाने में समस्या हुई' : 'Failed to remove member',
+          );
+        }
+        break;
+      }
+    }
+  }, [isHindi, confirm, deleteMember, deleteOfflineMember, openAddFromSheet]);
+
+  const handleEditSave = useCallback(async (patch: {
+    displayName?: string;
+    displayNameHindi?: string | null;
+    relationshipType?: string;
+    relationshipLabelHindi?: string | null;
+  }) => {
+    if (!editTarget) return;
+    setIsSubmitting(true);
+    try {
+      const m = editTarget;
+      const isOfflineAdapter = m.id.startsWith('offline-');
+      let success = false;
+      if (isOfflineAdapter) {
+        success = await updateOfflineMember(m.family_member_id, patch);
+      } else {
+        // family_members rows only carry relationship_* fields; name/display
+        // live on the joined `users` row, which the current user does NOT
+        // own. We can update the relationship for online members but not the
+        // name — surface a friendly hint in that case.
+        if (patch.displayName !== undefined || patch.displayNameHindi !== undefined) {
+          Alert.alert(
+            isHindi ? 'जानकारी' : 'Heads up',
+            isHindi
+              ? 'ऑनलाइन सदस्यों का नाम केवल वे खुद ही बदल सकते हैं। केवल ऑफ़लाइन रिश्तेदारों के नाम यहाँ बदले जा सकते हैं।'
+              : 'Only the member themselves can change their own name. Names of offline relatives can be edited here.',
+          );
+          setIsSubmitting(false);
+          setEditMode(null);
+          setEditTarget(null);
+          return;
+        }
+        success = await updateMember(m.family_member_id, {
+          relationshipType: patch.relationshipType,
+          relationshipLabelHindi: patch.relationshipLabelHindi,
+        });
+      }
+      if (success) {
+        setEditMode(null);
+        setEditTarget(null);
+      } else {
+        Alert.alert(
+          isHindi ? 'त्रुटि' : 'Error',
+          isHindi ? 'परिवर्तन सहेजने में समस्या हुई' : 'Failed to save changes',
+        );
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, [editTarget, isHindi, updateMember, updateOfflineMember]);
+
   const renderItem = useCallback(({ item }: { item: FamilyMember }) => (
     <MemberCard member={item} />
   ), []);
@@ -1161,6 +1570,8 @@ export default function FamilyTreeScreen({ navigation }: Props) {
                 connectionLevel: m.connection_level,
               });
             }}
+            onMemberLongPress={handleTreeCardLongPress}
+            onYouLongPress={handleYouCardLongPress}
           />
         </ErrorBoundary>
       ) : (
@@ -1220,9 +1631,42 @@ export default function FamilyTreeScreen({ navigation }: Props) {
       {/* Add Member Modal */}
       <AddMemberModal
         visible={showAddModal}
-        onClose={() => setShowAddModal(false)}
+        onClose={() => {
+          setShowAddModal(false);
+          // Clear v0.16.3 prefill state so a future bottom-bar tap opens
+          // the modal with a clean slate (no leftover lock / context).
+          setAddPrefillRelationship(undefined);
+          setAddLockedRelationship(false);
+          setAddContextLabel(null);
+        }}
         onSubmit={handleAddMember}
         onSubmitOffline={handleAddOfflineMember}
+        isSubmitting={isSubmitting}
+        isHindi={isHindi}
+        prefilledRelationship={addPrefillRelationship}
+        lockedRelationship={addLockedRelationship}
+        contextLabel={addContextLabel}
+      />
+
+      {/* v0.16.3 — TreeCardActionSheet: long-press a member card opens
+          this bottom sheet with contextual actions. */}
+      <TreeCardActionSheet
+        member={actionSheetTarget}
+        onClose={() => setActionSheetTarget(null)}
+        onAction={handleTreeCardAction}
+        isHindi={isHindi}
+      />
+
+      {/* v0.16.3 — EditMemberModal: name / relationship quick-edit. */}
+      <EditMemberModal
+        visible={editMode !== null}
+        mode={editMode}
+        member={editTarget}
+        onClose={() => {
+          setEditMode(null);
+          setEditTarget(null);
+        }}
+        onSave={handleEditSave}
         isSubmitting={isSubmitting}
         isHindi={isHindi}
       />
@@ -1233,6 +1677,11 @@ export default function FamilyTreeScreen({ navigation }: Props) {
         onClose={() => setShowInviteModal(false)}
         inviterDisplayName={currentUser?.display_name_hindi || currentUser?.display_name || undefined}
       />
+
+      {/* v0.16.3 — useConfirm() dialog node, mounted here per the hook's
+          API contract. Required for "Remove from tree" to show its
+          Hindi-first confirm UI. */}
+      {confirmDialog}
     </View>
   );
 }
@@ -1566,6 +2015,23 @@ const modalStyles = StyleSheet.create({
     fontSize: 11,
     color: Colors.brownLight,
     marginTop: 2,
+  },
+  // v0.16.3 — context banner shown at the top of AddMemberModal when it
+  // was opened from a TreeCardActionSheet action. Keeps the user oriented.
+  contextBanner: {
+    marginHorizontal: Spacing.lg,
+    marginTop: Spacing.md,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    backgroundColor: Colors.haldiGold + '20',
+    borderRadius: BorderRadius.md,
+    borderLeftWidth: 3,
+    borderLeftColor: Colors.haldiGold,
+  },
+  contextBannerText: {
+    ...Typography.bodySmall,
+    color: Colors.brown,
+    fontWeight: '600',
   },
   // v0.15.8: name input for offline-add mode
   nameInput: {

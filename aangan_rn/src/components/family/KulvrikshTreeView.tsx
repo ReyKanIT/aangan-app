@@ -302,6 +302,12 @@ export interface KulvrikshTreeViewProps {
   selfAvatarUrl?: string | null;
   /** Optional tap handler for navigating to a member's profile. */
   onMemberPress?: (m: FamilyMember) => void;
+  /** v0.16.3 direct tree editing: long-press a member card → screen opens
+   *  the TreeCardActionSheet. Receives the long-pressed FamilyMember. */
+  onMemberLongPress?: (m: FamilyMember) => void;
+  /** v0.16.3 direct tree editing: long-press the central "You" card →
+   *  screen opens the TreeCardActionSheet in You-card mode. */
+  onYouLongPress?: () => void;
 }
 
 export default function KulvrikshTreeView({
@@ -311,6 +317,8 @@ export default function KulvrikshTreeView({
   selfDisplayNameHindi,
   selfAvatarUrl,
   onMemberPress,
+  onMemberLongPress,
+  onYouLongPress,
 }: KulvrikshTreeViewProps) {
   const { width: screenW } = useWindowDimensions();
 
@@ -804,6 +812,7 @@ export default function KulvrikshTreeView({
                 width={CARD_W}
                 height={CARD_H}
                 onPress={onMemberPress}
+                onLongPress={onMemberLongPress}
               />
             ));
           })}
@@ -827,6 +836,7 @@ export default function KulvrikshTreeView({
                   width={CARD_W}
                   height={CARD_H}
                   onPress={onMemberPress}
+                  onLongPress={onMemberLongPress}
                 />,
                 <MemberCardNode
                   key={`${c.id}-spouse`}
@@ -836,6 +846,7 @@ export default function KulvrikshTreeView({
                   width={CARD_W}
                   height={CARD_H}
                   onPress={onMemberPress}
+                  onLongPress={onMemberLongPress}
                 />,
               ];
             });
@@ -850,6 +861,7 @@ export default function KulvrikshTreeView({
             displayName={selfDisplayNameHindi || selfDisplayName || 'आप'}
             avatarUrl={selfAvatarUrl ?? null}
             isHindi={isHindi}
+            onLongPress={onYouLongPress}
           />
 
           {/* Spouse card (paired with You) */}
@@ -861,6 +873,7 @@ export default function KulvrikshTreeView({
               width={CARD_W}
               height={CARD_H}
               onPress={onMemberPress}
+              onLongPress={onMemberLongPress}
             />
           ) : null}
 
@@ -874,6 +887,7 @@ export default function KulvrikshTreeView({
               width={CARD_W}
               height={CARD_H}
               onPress={onMemberPress}
+              onLongPress={onMemberLongPress}
             />
           ))}
         </Animated.View>
@@ -902,6 +916,7 @@ function MemberCardNode({
   width,
   height,
   onPress,
+  onLongPress,
 }: {
   member: FamilyMember;
   x: number;
@@ -909,6 +924,8 @@ function MemberCardNode({
   width: number;
   height: number;
   onPress?: (m: FamilyMember) => void;
+  /** v0.16.3 direct tree editing: long-press opens TreeCardActionSheet. */
+  onLongPress?: (m: FamilyMember) => void;
 }) {
   const m = member.member;
   const displayName = m?.display_name_hindi || m?.display_name || '—';
@@ -934,6 +951,8 @@ function MemberCardNode({
   return (
     <Pressable
       onPress={onPress ? () => onPress(member) : undefined}
+      onLongPress={onLongPress ? () => onLongPress(member) : undefined}
+      delayLongPress={350}
       style={[
         cardStyles.card,
         {
@@ -945,7 +964,16 @@ function MemberCardNode({
       ]}
       accessibilityRole="button"
       accessibilityLabel={`${displayName}, ${relLabel}`}
+      accessibilityHint={onLongPress ? 'Long press for edit options / लंबे दबाव से विकल्प' : undefined}
     >
+      {/* v0.16.3: visible "⋯" handle in top-right as a discoverability
+          fallback for users who don't know about long-press. Decorative
+          only — the whole card is the long-press target. */}
+      {onLongPress ? (
+        <View style={cardStyles.actionHandle} pointerEvents="none">
+          <Text style={cardStyles.actionHandleDots}>{'⋯'}</Text>
+        </View>
+      ) : null}
       <View style={[cardStyles.avatarRing, { borderColor: ringColor }]}>
         {avatarUrl ? (
           <Image source={{ uri: avatarUrl }} style={cardStyles.avatar} />
@@ -982,6 +1010,7 @@ function YouCardNode({
   displayName,
   avatarUrl,
   isHindi,
+  onLongPress,
 }: {
   x: number;
   y: number;
@@ -990,9 +1019,15 @@ function YouCardNode({
   displayName: string;
   avatarUrl: string | null;
   isHindi: boolean;
+  /** v0.16.3 direct tree editing: long-press opens TreeCardActionSheet in
+   *  You-card mode (Add-only actions). No tap handler — You is not
+   *  navigable. */
+  onLongPress?: () => void;
 }) {
   return (
-    <View
+    <Pressable
+      onLongPress={onLongPress}
+      delayLongPress={350}
       style={[
         cardStyles.card,
         cardStyles.cardYou,
@@ -1003,7 +1038,16 @@ function YouCardNode({
           height,
         },
       ]}
+      accessibilityRole={onLongPress ? 'button' : undefined}
+      accessibilityLabel={isHindi ? 'आप' : 'You'}
+      accessibilityHint={onLongPress ? 'Long press for add options / लंबे दबाव से जोड़ें विकल्प' : undefined}
     >
+      {/* v0.16.3: visible "⋯" handle as a discoverability fallback. */}
+      {onLongPress ? (
+        <View style={cardStyles.actionHandle} pointerEvents="none">
+          <Text style={cardStyles.actionHandleDots}>{'⋯'}</Text>
+        </View>
+      ) : null}
       <View style={[cardStyles.avatarRing, cardStyles.avatarRingYou, { borderColor: COLOR.haldi }]}>
         {avatarUrl ? (
           <Image source={{ uri: avatarUrl }} style={cardStyles.avatarYou} />
@@ -1019,7 +1063,7 @@ function YouCardNode({
         {displayName}
       </Text>
       <Text style={cardStyles.relYou}>{isHindi ? 'आप' : 'You'}</Text>
-    </View>
+    </Pressable>
   );
 }
 
@@ -1225,5 +1269,24 @@ const cardStyles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 2,
     fontVariant: ['tabular-nums'],
+  },
+  // v0.16.3 — small "⋯" affordance in the top-right corner of each card.
+  // Decorative — the entire card is the long-press target. Purely a
+  // discoverability hint for users who don't know about long-press.
+  actionHandle: {
+    position: 'absolute',
+    top: 4,
+    right: 6,
+    width: 18,
+    height: 18,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  actionHandleDots: {
+    fontSize: 18,
+    lineHeight: 18,
+    color: COLOR.textMuted,
+    fontWeight: '700',
+    opacity: 0.55,
   },
 });

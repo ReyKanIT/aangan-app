@@ -255,3 +255,40 @@
 - Appended P2 entry to `notes/design-backlog.md` for the multi-spouse add-member UX work so the Design Lead picks it up when v0.17 starts.
 
 **Outcome:** PRD now reflects both shipped (v0.16.2) and planned (v0.17) family-tree work. Multi-spouse design ready for v0.17 kickoff.
+
+---
+
+### [8:13am - 18May26]
+**Kumar:** do increment versions like 16.2 to 16.3 to 16.4 for consistency
+
+**Claude:**
+- Saved `feedback_version_bump.md` to memory: every release = exactly one patch increment (no skipping, no merging multiple feature batches into the same version). Doc-only commits don't bump.
+- Edge cases codified: minor/major bumps are founder-only; hot reverts still increment patch (don't reuse a broken version number).
+- Current in-flight builds stay tagged `v0.16.2` (the directive is forward-looking, not retroactive). Next release after these builds finish will be `v0.16.3`.
+
+**Outcome:** Versioning convention encoded. Next ship after v0.16.2 → v0.16.3.
+
+---
+
+### [8:47am - 18May26]
+**Wakeup task** (self-scheduled): check v0.16.2 build statuses + verify in sim if possible.
+
+**Claude:**
+- iOS production v0.16.2+31 → **FINISHED + auto-submitted to App Store Connect**. IPA: https://expo.dev/artifacts/eas/kPhvSUXEXNkw34owGysBax.ipa. Apple processing (~5-10 min); appears in TestFlight thereafter.
+- Android AAB v0.16.2+31 → **FINISHED**. AAB: https://expo.dev/artifacts/eas/cRD9wospSWepByGHAshNT2.aab. Kumar uploads to Play Console internal track manually (no service-account configured locally).
+- Android APK v0.16.2+31 → IN_PROGRESS (~5 min remaining).
+- iOS sim v0.16.2+31 → still NEW (EAS free-tier queue ~33 min in). When it lands, runs the simulator regression-suite verify. Not a ship blocker since iOS prod is already at TestFlight; Kumar can use his real iPhone for testing.
+
+**Outcome:** v0.16.2 is testable on iOS (TestFlight) immediately + Android (AAB upload + APK incoming). Sim verify deferred until iOS sim build finishes.
+
+---
+
+### [8:48am - 18May26]
+**Kumar:** Another feature in kulvriksha make GUI editable for relations change or person addition etc.
+
+**Claude:**
+- Documented in `AANGAN_PRD.md` §4.2 as the "Direct tree editing (v0.16.3 Phase 1)" feature: long-press any card → bottom-sheet menu (बच्चा जोड़ें / साथी जोड़ें / माता-पिता जोड़ें / रिश्ता बदलें / नाम बदलें / मिटाएँ), with the You card always exposing the three "Add" actions. Couple-aware add-child for (You+spouse) pairs. Includes T1 + T3 test specs.
+- Added the new row to §8 Shipped Features as "🟡 In flight v0.16.3".
+- Dispatched sub-agent to implement Phase 1 for the v0.16.3 cycle while v0.16.2 finishes its build → TestFlight loop.
+
+**Outcome:** Direct-tree-editing spec'd. v0.16.3 implementation in flight. v0.16.2 ship continues unaffected.

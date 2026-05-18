@@ -53,6 +53,52 @@ interface FamilyState {
   }) => Promise<boolean>;
   removeMember: (memberId: string) => Promise<boolean>;
   updateMemberLevel: (memberId: string, level: number) => Promise<boolean>;
+
+  // v0.16.3 direct tree editing (Kumar directive 2026-05-18 8:48 IST).
+  // These mirror addMember/addOfflineMember semantics: online rows route
+  // through family_members (RLS scoped by user_id = auth.uid()); offline
+  // rows route through offline_family_members (added_by = auth.uid()).
+  // All four do optimistic local update + revert on error, matching the
+  // existing addMember pattern.
+
+  /** Delete an online family_members row by family_member_id. Returns
+   *  true on success, false on failure. The relationship is removed for
+   *  the current user only — the reverse edge (their tree) is handled by
+   *  the same SECURITY DEFINER RPC `remove_family_member_bidirectional`
+   *  that `removeMember` uses. v0.16.3: `deleteMember` is an alias kept
+   *  for the new tree-edit UI; both call sites end up at the same RPC. */
+  deleteMember: (familyMemberId: string) => Promise<boolean>;
+
+  /** Delete an offline_family_members row by id (the raw offline id, NOT
+   *  the synthetic `offline-…` adapter id used in the tree view).
+   *  Returns true on success. */
+  deleteOfflineMember: (offlineId: string) => Promise<boolean>;
+
+  /** Patch a family_members row's relationship/level fields. Only the
+   *  fields supplied in `patch` are updated. Returns true on success. */
+  updateMember: (
+    familyMemberId: string,
+    patch: {
+      relationshipType?: string;
+      relationshipLabelHindi?: string | null;
+      connectionLevel?: number;
+    },
+  ) => Promise<boolean>;
+
+  /** Patch an offline_family_members row. The offline row has name +
+   *  relationship fields that the user can edit inline. Returns true on
+   *  success. */
+  updateOfflineMember: (
+    offlineId: string,
+    patch: {
+      displayName?: string;
+      displayNameHindi?: string | null;
+      relationshipType?: string;
+      relationshipLabelHindi?: string | null;
+      connectionLevel?: number;
+    },
+  ) => Promise<boolean>;
+
   searchMembers: (query: string) => Promise<Partial<User>[]>;
   getMembersByLevel: (level: number) => FamilyMember[];
   setError: (error: string | null) => void;
@@ -280,6 +326,151 @@ export const useFamilyStore = create<FamilyState>((set, get) => ({
       return true;
     } catch (error: any) {
       set({ error: safeError(error, 'Failed to update member level') });
+      return false;
+    }
+  },
+
+  // ── v0.16.3 direct tree editing ─────────────────────────────────────────
+  // Optimistic mutation pattern mirrors addMember: snapshot the old slice,
+  // apply the local update, fire the network call, revert on error. Keeps
+  // the tree feeling instant while still surfacing failures via `error`.
+
+  deleteMember: async (familyMemberId: string) => {
+    set({ error: null });
+    const prevMembers = get().members;
+    // Optimistic local removal.
+    set({ members: prevMembers.filter((m) => m.family_member_id !== familyMemberId) });
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user) {
+        set({ members: prevMembers, error: 'Not authenticated' });
+        return false;
+      }
+      const { error } = await supabase.rpc('remove_family_member_bidirectional', {
+        p_member_id: familyMemberId,
+      });
+      if (error) {
+        set({ members: prevMembers, error: safeError(error, 'कुछ गलत हो गया।') });
+        return false;
+      }
+      return true;
+    } catch (error: any) {
+      set({ members: prevMembers, error: safeError(error, 'Failed to delete family member') });
+      return false;
+    }
+  },
+
+  deleteOfflineMember: async (offlineId: string) => {
+    set({ error: null });
+    const prev = get().offlineMembers;
+    set({ offlineMembers: prev.filter((o) => o.id !== offlineId) });
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user) {
+        set({ offlineMembers: prev, error: 'Not authenticated' });
+        return false;
+      }
+      const { error } = await supabase
+        .from('offline_family_members')
+        .delete()
+        .eq('id', offlineId)
+        .eq('added_by', session.user.id);
+      if (error) {
+        set({ offlineMembers: prev, error: safeError(error, 'कुछ गलत हो गया।') });
+        return false;
+      }
+      return true;
+    } catch (error: any) {
+      set({ offlineMembers: prev, error: safeError(error, 'Failed to delete offline member') });
+      return false;
+    }
+  },
+
+  updateMember: async (familyMemberId, patch) => {
+    set({ error: null });
+    const prev = get().members;
+    // Build the optimistic patch + payload.
+    const updates: Record<string, any> = { updated_at: new Date().toISOString() };
+    if (patch.relationshipType !== undefined) updates.relationship_type = patch.relationshipType;
+    if (patch.relationshipLabelHindi !== undefined) updates.relationship_label_hindi = patch.relationshipLabelHindi;
+    if (patch.connectionLevel !== undefined) updates.connection_level = patch.connectionLevel;
+
+    set({
+      members: prev.map((m) =>
+        m.family_member_id === familyMemberId
+          ? {
+              ...m,
+              ...(patch.relationshipType !== undefined ? { relationship_type: patch.relationshipType } : {}),
+              ...(patch.relationshipLabelHindi !== undefined ? { relationship_label_hindi: patch.relationshipLabelHindi } : {}),
+              ...(patch.connectionLevel !== undefined ? { connection_level: patch.connectionLevel } : {}),
+            }
+          : m,
+      ),
+    });
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user) {
+        set({ members: prev, error: 'Not authenticated' });
+        return false;
+      }
+      const { error } = await supabase
+        .from('family_members')
+        .update(updates)
+        .eq('user_id', session.user.id)
+        .eq('family_member_id', familyMemberId);
+      if (error) {
+        set({ members: prev, error: safeError(error, 'कुछ गलत हो गया।') });
+        return false;
+      }
+      return true;
+    } catch (error: any) {
+      set({ members: prev, error: safeError(error, 'Failed to update family member') });
+      return false;
+    }
+  },
+
+  updateOfflineMember: async (offlineId, patch) => {
+    set({ error: null });
+    const prev = get().offlineMembers;
+    const updates: Record<string, any> = {};
+    if (patch.displayName !== undefined) updates.display_name = patch.displayName;
+    if (patch.displayNameHindi !== undefined) updates.display_name_hindi = patch.displayNameHindi;
+    if (patch.relationshipType !== undefined) updates.relationship_type = patch.relationshipType;
+    if (patch.relationshipLabelHindi !== undefined) updates.relationship_label_hindi = patch.relationshipLabelHindi;
+    if (patch.connectionLevel !== undefined) updates.connection_level = patch.connectionLevel;
+
+    set({
+      offlineMembers: prev.map((o) =>
+        o.id === offlineId
+          ? {
+              ...o,
+              ...(patch.displayName !== undefined ? { display_name: patch.displayName } : {}),
+              ...(patch.displayNameHindi !== undefined ? { display_name_hindi: patch.displayNameHindi } : {}),
+              ...(patch.relationshipType !== undefined ? { relationship_type: patch.relationshipType } : {}),
+              ...(patch.relationshipLabelHindi !== undefined ? { relationship_label_hindi: patch.relationshipLabelHindi } : {}),
+              ...(patch.connectionLevel !== undefined ? { connection_level: patch.connectionLevel } : {}),
+            }
+          : o,
+      ),
+    });
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user) {
+        set({ offlineMembers: prev, error: 'Not authenticated' });
+        return false;
+      }
+      const { error } = await supabase
+        .from('offline_family_members')
+        .update(updates)
+        .eq('id', offlineId)
+        .eq('added_by', session.user.id);
+      if (error) {
+        set({ offlineMembers: prev, error: safeError(error, 'कुछ गलत हो गया।') });
+        return false;
+      }
+      return true;
+    } catch (error: any) {
+      set({ offlineMembers: prev, error: safeError(error, 'Failed to update offline member') });
       return false;
     }
   },

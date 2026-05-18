@@ -129,6 +129,33 @@ Spec:
 
 This is a data-migration + UI-uplift. Targeted for v0.17 once the v0.16.x stabilization completes.
 
+**Direct tree editing (v0.16.3 Phase 1, Kumar directive 2026-05-18 8:48am IST)**
+
+Today the kulvriksh is read-only — adding or editing members requires navigating to the बॉटम जोड़ें bar and opening a separate modal, which loses the user's "I want to add Kanak's husband HERE" mental context. The tree gains contextual editing:
+
+- **Long-press any card** → bottom-sheet action menu with:
+  - बच्चा जोड़ें / Add child — opens AddMemberModal pre-set with this person as the "father" or "mother" context (and the user's primary spouse as the other parent, if known).
+  - साथी जोड़ें / Add spouse — opens AddMemberModal with `relationship_type=wife/husband` pre-set + an explicit "paired with" link to the long-pressed person.
+  - माता-पिता जोड़ें / Add parent — opens AddMemberModal with `relationship_type=father/mother` pre-set.
+  - रिश्ता बदलें / Edit relationship — inline edit of `relationship_type` + `relationship_label_hindi`.
+  - नाम बदलें / Edit name — quick-edit `display_name` + `display_name_hindi`.
+  - मिटाएँ / Remove from tree — confirms via Hindi-first `useConfirm` dialog, then deletes the edge (keeps the user account if it's an online member; deletes the offline_family_members row if offline-adapted).
+
+- **"You" card** gets the same long-press menu plus the always-visible "Add parent / spouse / child" affordance — since You is the anchor everyone else hangs off.
+
+- **Couple-pair cards** (v0.16.2): long-press EITHER half of the pair to act on that specific spouse; the menu auto-uses the couple context for "Add child" (so a child added from the (You+Wife 1) pair gets `parent_couple_id` of that couple once the v0.17 couples table lands).
+
+- **Visual affordance:** subtle "⋯" handle in the top-right corner of each card on hover/focus. Tappable for users who don't discover long-press.
+
+- **Tests (T1):**
+  - long-press on a card opens the action menu component
+  - tapping "Add child" navigates with the correct pre-fill props
+  - tapping "Remove from tree" raises useConfirm and only deletes on `true`
+  - "You" card's menu lists all three "Add ..." actions
+
+- **Tests (T3 Maestro, deferred to v0.16.4):**
+  - long-press → Add child → fill form → child appears in tree under correct couple midpoint
+
 **Life Events tab (v0.4.3)**
 - Birth events: person name, gender, birth place, relationship
 - Death events: person name, age, relationship
@@ -469,6 +496,7 @@ Most features in §4.1–4.13 are shipped. Asterisks below mark partial / regres
 | Ego-centric generation layout (elders above, descendants below, You at centre) | ✅ SHIPPED v0.16.1 | Per Kumar directive 2026-05-17 |
 | Couple-pair visualization in tree (You+spouse, parents, in-laws, grandparents — Phase 1) | ✅ SHIPPED v0.16.2 | Per Kumar directive 2026-05-18. Children connect to couple midpoint. |
 | Multi-spouse + per-couple child linkage (Phase 2 — second marriages, multiple wives, single-parent families) | 🔴 Planned v0.17 | Requires `couples` table + add-member "other parent" picker. Tracked in §9.x below. |
+| Direct tree editing (long-press add/edit/remove inside kulvriksh GUI) | 🟡 In flight v0.16.3 | Per Kumar directive 2026-05-18. Phase 1 in v0.16.3; richer Maestro coverage in v0.16.4. |
 | Posts & feed with audience control + polls + stories | ✅ SHIPPED | |
 | Events & RSVP with multi-ceremony, GPS check-in, QR upload | ✅ SHIPPED | |
 | Voice messages + voice-to-text + voice commands | ✅ SHIPPED | M4A 120s, 8 commands |

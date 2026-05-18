@@ -18,7 +18,17 @@ export type FunnelEventName =
   | 'forced_invite_phone_filled'
   | 'forced_invite_whatsapp_sent'
   | 'forced_invite_continued'
-  | 'forced_invite_skipped';
+  | 'forced_invite_skipped'
+  // Direct tree editing v0.16.3 (Kumar directive 2026-05-18 8:48 IST).
+  // Fired from FamilyTreeScreen action handlers when the user picks a row
+  // from TreeCardActionSheet or completes the resulting action.
+  | 'tree_card_longpress'
+  | 'tree_add_child_from_card'
+  | 'tree_add_spouse_from_card'
+  | 'tree_add_parent_from_card'
+  | 'tree_edit_relationship'
+  | 'tree_edit_name'
+  | 'tree_remove_member';
 
 export type FunnelEventProps = Record<string, string | number | boolean | null>;
 

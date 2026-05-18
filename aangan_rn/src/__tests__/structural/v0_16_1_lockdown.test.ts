@@ -263,6 +263,95 @@ describe('v0.16.1 fixes — structural lockdown', () => {
     });
   });
 
+  // v0.16.3 — Direct tree editing (Kumar directive 2026-05-18 8:48 IST).
+  // Long-press a tree card → action sheet → contextual add/edit/remove.
+  // Lockdown asserts the structural pieces are in place so a future refactor
+  // can't silently rip them out.
+  describe('v0.16.3: direct tree editing (long-press action sheet)', () => {
+    const tree = read('components/family/KulvrikshTreeView.tsx');
+    const screen = read('screens/family/FamilyTreeScreen.tsx');
+    const store = read('stores/familyStore.ts');
+    const funnel = read('utils/funnelEvents.ts');
+
+    it('KulvrikshTreeView declares the onMemberLongPress prop', () => {
+      expect(tree).toMatch(/onMemberLongPress\?:\s*\(m:\s*FamilyMember\)\s*=>\s*void/);
+    });
+
+    it('KulvrikshTreeView declares the onYouLongPress prop', () => {
+      expect(tree).toMatch(/onYouLongPress\?:\s*\(\s*\)\s*=>\s*void/);
+    });
+
+    it('KulvrikshTreeView wires onLongPress on Pressable in MemberCardNode', () => {
+      expect(tree).toMatch(/onLongPress=\{onLongPress\s*\?\s*\(\)\s*=>\s*onLongPress\(member\)/);
+    });
+
+    it('KulvrikshTreeView wires onLongPress on the YouCardNode Pressable', () => {
+      // YouCardNode is now a Pressable (not a View) so it can handle the
+      // long-press gesture for the "You — actions" sheet.
+      expect(tree).toMatch(/function YouCardNode[\s\S]+?<Pressable/);
+    });
+
+    it('FamilyTreeScreen imports TreeCardActionSheet from components/family', () => {
+      expect(screen).toMatch(
+        /import\s+TreeCardActionSheet[\s\S]+?from\s+['"][^'"]*components\/family\/TreeCardActionSheet['"]/,
+      );
+    });
+
+    it('FamilyTreeScreen imports useConfirm for the Remove flow', () => {
+      expect(screen).toMatch(
+        /import\s+useConfirm\s+from\s+['"][^'"]*components\/common\/useConfirm['"]/,
+      );
+    });
+
+    it('FamilyTreeScreen renders <TreeCardActionSheet> in its JSX', () => {
+      expect(screen).toMatch(/<TreeCardActionSheet[\s\S]+?\/>/);
+    });
+
+    it('FamilyTreeScreen mounts {confirmDialog} (otherwise Remove confirm never shows)', () => {
+      expect(screen).toMatch(/\{confirmDialog\}/);
+    });
+
+    it('AddMemberModal accepts prefilledRelationship + lockedRelationship props', () => {
+      expect(screen).toMatch(/prefilledRelationship\?\s*:\s*string/);
+      expect(screen).toMatch(/lockedRelationship\?\s*:\s*boolean/);
+    });
+
+    it('familyStore exports deleteMember + deleteOfflineMember', () => {
+      expect(store).toMatch(/deleteMember:\s*\(/);
+      expect(store).toMatch(/deleteOfflineMember:\s*\(/);
+    });
+
+    it('familyStore exports updateMember + updateOfflineMember', () => {
+      expect(store).toMatch(/updateMember:\s*\(/);
+      expect(store).toMatch(/updateOfflineMember:\s*\(/);
+    });
+
+    it('funnelEvents declares all 7 tree-editing event names', () => {
+      expect(funnel).toMatch(/tree_card_longpress/);
+      expect(funnel).toMatch(/tree_add_child_from_card/);
+      expect(funnel).toMatch(/tree_add_spouse_from_card/);
+      expect(funnel).toMatch(/tree_add_parent_from_card/);
+      expect(funnel).toMatch(/tree_edit_relationship/);
+      expect(funnel).toMatch(/tree_edit_name/);
+      expect(funnel).toMatch(/tree_remove_member/);
+    });
+
+    it('Rules-of-Hooks: KulvrikshTreeView new longpress wiring stays ABOVE empty-state early return', () => {
+      // No new hook can be added below the empty-state check. We assert
+      // that nothing matches `useMemo|useCallback|useState` BETWEEN the
+      // empty-state `if (...)` and the final `return (` of the component.
+      const emptyReturnIdx = tree.search(/if\s*\(\s*members\.length\s*===\s*0\s*\)/);
+      const renderReturnIdx = tree.search(/\/\/\s*──\s*render/);
+      expect(emptyReturnIdx).toBeGreaterThan(-1);
+      expect(renderReturnIdx).toBeGreaterThan(emptyReturnIdx);
+      const between = tree.slice(emptyReturnIdx, renderReturnIdx);
+      // Allow `return` keyword but no hook calls in between.
+      expect(between).not.toMatch(/\buseMemo\s*\(/);
+      expect(between).not.toMatch(/\buseCallback\s*\(/);
+      expect(between).not.toMatch(/\buseState\s*\(/);
+    });
+  });
+
   describe('CRITICAL_FEATURES: login surfaces always present', () => {
     // Echoes the highest-priority feature from CRITICAL_FEATURES.md: Google
     // sign-in. The v0.10.1 regression that lost ~7 days of Google signups
